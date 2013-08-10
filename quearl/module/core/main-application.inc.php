@@ -38,7 +38,7 @@ class QlApplication {
 	## CRC of $_APP’s persistent storage.
 	public /*int*/ $m_iCRC;
 	## Style sections.
-	public /*array*/ $m_arrCssSections = array();
+	public /*array*/ $m_arrStyleSections = array();
 
 
 	## Constructor.
@@ -46,7 +46,7 @@ class QlApplication {
 	public function __construct() {
 		global $_APP;
 		# Create a default $_APP array, loading only core.conf which is necessary to successfully call
-		# lock() and _read(). This will be overwritten by a successful call to _read().
+		# _read(). This will be overwritten by a successful call to _read().
 		$_APP = array(
 			'core' => ql_php_get_array_file_contents($_SERVER['LROOTDIR'] . 'config/core/module.conf'),
 		);
@@ -67,13 +67,13 @@ class QlApplication {
 	}
 
 
-	## Returns an array with all the CSS sections loaded thus far.
+	## Returns an array with all the style sections loaded thus far.
 	#
 	# array<array<string => string>> return
-	#    Array of CSS sections.
+	#    Array of style sections.
 	#
-	public function & getcsssections() {
-		return $this->m_arrCssSections;
+	public function & getstylesections() {
+		return $this->m_arrStyleSections;
 	}
 
 
@@ -82,8 +82,8 @@ class QlApplication {
 	# in the file will cause the corresponding key in the $_APP section to be deleted. Keys not
 	# present in the config file will remain unaffected.
 	#
-	# If the section name ends in “-css”, the section will also be stored to a separate array of
-	# style sections, obtainable by calling QlApplication::getcsssections().
+	# If the section name ends in “-style”, the section will also be stored to a separate array of
+	# style sections, obtainable by calling QlApplication::getstylesections().
 	#
 	# string $sSection
 	#    $_APP section to be loaded.
@@ -112,16 +112,15 @@ class QlApplication {
 				if ($mValue === null)
 					unset($arrSection[$sVar]);
 				else if ($bIsCss && strncmp($sVar, 'XHTML', 5) == 0)
-					# This is a CSS section: style any XML fragments within.
+					# Style this XHTML fragment in this style section.
 					$arrSection[$sVar] = preg_replace(
-						'/(\r?\n|\r)\t*/', ' ', ql_template_subst($mValue, $this->m_arrCssSections)
+						'/(\r?\n|\r)\t*/', ' ', ql_template_subst($mValue, $this->m_arrStyleSections)
 					);
 			if ($bIsCss)
-				$this->m_arrCssSections[$sSection] =& $arrSection;
+				$this->m_arrStyleSections[$sSection] =& $arrSection;
 			$arrSection['__ql_mtime'] = filemtime($sFileName);
 			$this->unlock();
-		} else if ($bIsCss)
-			$this->m_arrCssSections[$sSection] =& $_APP[$sSection];
+		}
 		return $bLoad;
 	}
 
