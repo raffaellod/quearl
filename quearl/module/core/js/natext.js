@@ -30,12 +30,12 @@
 // found.
 //
 // fn:Function
-//   Function whose arguments are to be checked.
+//    Function whose arguments are to be checked.
 // vArgs:arguments
-//   The arguments object of the function that is requesting argument validation.
+//    The arguments object of the function that is requesting argument validation.
 // […:var*]
-//   Each of the remaining arguments indicates the requested type (if it’s a Function/class) or a
-//   list of allowed types (if it’s an Array) for the corresponding argument in vArgs.
+//    Each of the remaining arguments indicates the requested type (if it’s a Function/class) or a
+//    list of allowed types (if it’s an Array) for the corresponding argument in vArgs.
 //
 function $Function$checkArgs_debug(fn, vArgs/*, …*/) {
 	for (var iArg = 2, cArgs = arguments.length, iFnArg = 0; iArg < cArgs; ++iArg, ++iFnArg) {
@@ -113,9 +113,9 @@ Function.checkArgs = $Function$checkArgs_debug;
 // ClassName is the specified string.
 //
 // sType:String
-//   Full name of the class.
+//    Full name of the class.
 // return:Function
-//   Generated function.
+//    Generated function.
 //
 function $Function$createToStringMethod(sType) {
 	Function.checkArgs($Function$createToStringMethod, arguments, String);
@@ -144,7 +144,7 @@ Object.ANYTYPEOPT.toString = Function.createToStringMethod("Object.ANYTYPEOPT");
 /// Adjusts a sparse array, making up for browser bugs.
 //
 // return:Array(var*)
-//   this.
+//    this.
 //
 if ([, ].length == 2) {
 	// IE5.5 bug, IE6 bug, IE7 bug, IE8 bug: a trailing sparse element is not ignored.
@@ -177,11 +177,11 @@ if ([, ].length == 2) {
 /// Calls the specified method on every object contained in the array.
 //
 // sProp:String
-//   Name of the method to call.
+//    Name of the method to call.
 // arrArgs:Array(var*)
-//   Arguments to be passed to the method.
+//    Arguments to be passed to the method.
 // return:Array
-//   this.
+//    this.
 //
 function $Array$applyOnEach(sProp, arrArgs) {
 	Function.checkArgs($Array$applyOnEach, arguments, String, Array);
@@ -199,11 +199,11 @@ Array.prototype.applyOnEach = $Array$applyOnEach;
 /// Calls the specified method on every object contained in the array.
 //
 // sProp:String
-//   Name of the method to call.
+//    Name of the method to call.
 // …:var*
-//   Arguments to be passed to the method.
+//    Arguments to be passed to the method.
 // return:Array
-//   this.
+//    this.
 //
 function $Array$callOnEach(sProp/*, …*/) {
 	// Make an array of the arguments past sProp.
@@ -239,9 +239,9 @@ if (0 in [].concat([, ].s())) {
 // values.
 //
 // arrValues:Array(var*)
-//   Set of values.
+//    Set of values.
 // return:Object(var*)
-//   Newly created map.
+//    Newly created map.
 //
 function $Array$combine(arrValues) {
 	Function.checkArgs($Array$combine, arguments, Array);
@@ -280,13 +280,13 @@ if (!Array.every) {
 // be repeated for each value.
 //
 // c:int
-//   Number of elements the new array will contain.
+//    Number of elements the new array will contain.
 // [vFiller:(Function|var)]
-//   Either a Function which will be called with the pair (current index, total) for each of the
-//   elements, or a value which will be identically repeated in each element. If omitted, a sparse
-//   array will be created.
+//    Either a Function which will be called with the pair (current index, total) for each of the
+//    elements, or a value which will be identically repeated in each element. If omitted, a sparse
+//    array will be created.
 // return:Array(var*)
-//   Newly generated array.
+//    Newly generated array.
 //
 function $Array$fill(c, vFiller /*= undefined*/) {
 	Function.checkArgs($Array$fill, arguments, Number, Object.ANYTYPEOPT);
@@ -308,17 +308,17 @@ Array.fill = $Array$fill;
 // calculated according to the number of steps and the requested function.
 //
 // sAnim:String
-//   Animation to be obtained; can be one of these values:
-//   "linear"       y = x / c; [0, c) => [0, 1];
-//   "accelerated"  y = (x / c) ^ 2; [0, c) => [0, 1];
-//   "braked"       same as "accelerated", but with both x and y flipped;
-//   "smoothscroll" y = 4 * (x / c) ^ 3; [0, c / 2] => [0, 0.5]; for each point, x and y are
-//     flipped, and the second half of the array is filled with the resulting values; this gives a
-//     quick acceleration, which is then stopped and reverted.
+//    Animation to be obtained; can be one of these values:
+//    "linear"       y = x / c; [0, c) => [0, 1];
+//    "accelerated"  y = (x / c) ^ 2; [0, c) => [0, 1];
+//    "braked"       same as "accelerated", but with both x and y flipped;
+//    "smoothscroll" y = 4 * (x / c) ^ 3; [0, c / 2] => [0, 0.5]; for each point, x and y are
+//       flipped, and the second half of the array is filled with the resulting values; this gives a
+//       quick acceleration, which is then stopped and reverted.
 // c:int
-//   Number of steps in which the animation will be split.
+//    Number of steps in which the animation will be split.
 // return:Array(float*)
-//   Array of step values.
+//    Array of step values.
 //
 function $Array$fillAnimSteps(sAnim, c) {
 	Function.checkArgs($Array$fillAnimSteps, arguments, String, Number);
@@ -389,7 +389,7 @@ if (!Array.filter) {
 // values being the original keys.
 //
 // return:Object(var*)
-//   Resulting map.
+//    Resulting map.
 //
 function $Array$prototype$flip() {
 	Function.checkArgs($Array$prototype$flip, arguments);
@@ -434,10 +434,10 @@ if (!Array.forEach) {
 /// Creates an array by shallow-copying elements from an Array-look-alike, such as a DOM NodeList.
 //
 // o:Object
-//   Object that behaves like an Array (i.e. provides .length and is addressable with square
-//   brackets notation).
+//    Object that behaves like an Array (i.e. provides .length and is addressable with square
+//    brackets notation).
 // return:Array(var*)
-//   New array, with the same contents as the source object.
+//    New array, with the same contents as the source object.
 //
 function $Array$from(o) {
 	Function.checkArgs($Array$from, arguments, Object);
@@ -478,13 +478,13 @@ if (!Array.indexOf) {
 /// Searches an array for an object with a specified property.
 //
 // vProp:(String|int)
-//   Name or index of the value to be checked in each item.
+//    Name or index of the value to be checked in each item.
 // v:var
-//   Value the property must have to pass the filtering.
+//    Value the property must have to pass the filtering.
 // [iStart:int]
-//   Index of the first item to scan; defaults to 0.
+//    Index of the first item to scan; defaults to 0.
 // return:int
-//   Index of the first item satisfying the criterion.
+//    Index of the first item satisfying the criterion.
 //
 function $Array$indexOfByProp(vProp, v, iStart /*= 0*/) {
 	return Array.indexOfByProp(this, vProp, v, iStart);
@@ -510,11 +510,11 @@ Array.indexOfByProp = $Array$indexOfByProp;
 /// Adds an item to the array at a specific index.
 //
 // i:int
-//   Index of the new item.
+//    Index of the new item.
 // v:var
-//   Value to be inserted.
+//    Value to be inserted.
 // return:Array
-//   this.
+//    this.
 //
 function $Array$insertAt(i, v) {
 	Function.checkArgs($Array$insertAt, arguments, Number, Object.ANYTYPEOPT);
@@ -527,11 +527,12 @@ Array.prototype.insertAt = $Array$insertAt;
 /// Adds an item to the array, maintaining the order in the (already sorted) array.
 //
 // v:var
-//   Value to be added.
+//    Value to be added.
 // [fnCompare:Function]
-//   Function to be called to compare to items; defaults to using the standard comparison operators.
+//    Function to be called to compare to items; defaults to using the standard comparison
+//    operators.
 // return:int
-//   Index of the newly inserted item.
+//    Index of the newly inserted item.
 //
 function $Array$insertSorted(v, fnCompare /*= undefined*/) {
 	Function.checkArgs($Array$insertSorted, arguments, Object.ANYTYPEOPT, [undefined, Function]);
@@ -647,9 +648,9 @@ if (!Array.reduce) {
 /// Searches the array for a value, and removes it from the array.
 //
 // v:var
-//   Value to remove.
+//    Value to remove.
 // return:var
-//   Removed item.
+//    Removed item.
 //
 function $Array$remove(v) {
 	Function.checkArgs($Array$remove, arguments, Object.ANYTYPEOPT);
@@ -664,9 +665,9 @@ Array.prototype.remove = $Array$remove;
 /// Removes from the array an item, based on its index.
 //
 // i:int
-//   Index of the item to be removed.
+//    Index of the item to be removed.
 // return:var
-//   Removed item.
+//    Removed item.
 //
 function $Array$removeAt(i) {
 	Function.checkArgs($Array$removeAt, arguments, Number);
@@ -678,13 +679,13 @@ Array.prototype.removeAt = $Array$removeAt;
 /// Searches an array for an object with a specified property, and removes it.
 //
 // vProp:(String|int)
-//   Name or index of the value to be checked in each item.
+//    Name or index of the value to be checked in each item.
 // v:var
-//   Value the property must have to pass the filtering.
+//    Value the property must have to pass the filtering.
 // [iStart:int]
-//   Index of the first item to scan; defaults to 0.
+//    Index of the first item to scan; defaults to 0.
 // return:var
-//   Removed item.
+//    Removed item.
 //
 function $Array$removeByProp(vProp, v, iStart /*= 0*/) {
 	Function.checkArgs(
@@ -699,7 +700,7 @@ Array.prototype.removeByProp = $Array$removeByProp;
 /// Redistributes the value in the array in a random order.
 //
 // return:Array
-//   this.
+//    this.
 //
 function $Array$shuffle() {
 	Function.checkArgs($Array$shuffle, arguments);
@@ -835,9 +836,9 @@ Browser.version/*:int*/ = (function() {
 /// Write debug messages to a browser-provided facility.
 //
 // s:String
-//   Debug message.
+//    Debug message.
 // return:String
-//   The message. This allows to write func(Browser.log("test")).
+//    The message. This allows to write func(Browser.log("test")).
 //
 function $Browser$log(s) {
 	Function.checkArgs($Browser$log, arguments, String);
@@ -993,7 +994,7 @@ Function.Abstract = null;
 // and augmentation].
 //
 // vParent:(Function|Object)
-//   The parent class (Function), or an Object to be used as prototype.
+//    The parent class (Function), or an Object to be used as prototype.
 //
 function $Function$augmentWith(vParent) {
 	Function.checkArgs($Function$augmentWith, arguments, [Function, Object]);
@@ -1011,11 +1012,11 @@ Function.prototype.augmentWith = $Function$augmentWith;
 // calls, will be appended to those specified here.
 //
 // [o:Object]
-//   this to be bound.
+//    this to be bound.
 // […:var*]
-//   Arguments to be bound.
+//    Arguments to be bound.
 // return:Function
-//   Function that will invoke this with additional arguments.
+//    Function that will invoke this with additional arguments.
 //
 if (!Function.prototype.bind) {
 	function $Function$bind(o/*, …*/) {
@@ -1052,17 +1053,18 @@ if (!Function.prototype.bind) {
 
 /// Returns the specified non-Function, permanently bound to the specified arguments. Any further
 // arguments passed during calls, will be appended to those specified here.
+//
 // Alternate version of Function.bind() for browsers whose DOM objects aren’t instances of Function
 // (IE6/IE7/IE8, maybe others: DOM does not mandate so).
 //
 // fn:non-Function
-//   Method to be invoked.
+//    Method to be invoked.
 // [o:Object]
-//   this to be bound.
+//    this to be bound.
 // […:var*]
-//   Arguments to be bound.
+//    Arguments to be bound.
 // return:Function
-//   Function that will invoke fn with additional arguments.
+//    Function that will invoke fn with additional arguments.
 //
 (function() {
 	// Non-random counter of temporary properties. They only have to be unique for each (callback,
@@ -1132,7 +1134,7 @@ if (!Function.prototype.bind) {
 /// Empty (no-op) function. It may take any arguments, which will be entirely ignored.
 //
 // […:var*]
-//   Unused arguments.
+//    Unused arguments.
 //
 function $Function$Empty(/*…*/) {
 }
@@ -1142,9 +1144,9 @@ Function.Empty = $Function$Empty;
 /// False function. It may take any arguments, which will be entirely ignored.
 //
 // […:var*]
-//   Unused arguments.
+//    Unused arguments.
 // return:bool
-//   false.
+//    false.
 //
 function $Function$False(/*…*/) {
 	return false;
@@ -1155,9 +1157,9 @@ Function.False = $Function$False;
 /// Identity function. It returns the (first) argument it was passed.
 //
 // v:var
-//   Argument to be returned.
+//    Argument to be returned.
 // return:var
-//   Argument passed.
+//    Argument passed.
 //
 function $Function$Identity(v) {
 	Function.checkArgs($Function$Identity, arguments, Object.ANYTYPEOPT);
@@ -1170,9 +1172,9 @@ Function.Identity = $Function$Identity;
 // Inheritance and augmentation] for more information.
 //
 // vParent:(Function|Object)
-//   The parent class (Function), or an Object to be used as prototype.
+//    The parent class (Function), or an Object to be used as prototype.
 // return:Function
-//   this.
+//    this.
 //
 function $Function$inheritFrom(vParent) {
 	Function.checkArgs($Function$inheritFrom, arguments, [Function, Object]);
@@ -1191,9 +1193,9 @@ Function.prototype.inheritFrom = $Function$inheritFrom;
 /// True function. It may take any arguments, which will be entirely ignored.
 //
 // […:var*]
-//   Unused arguments.
+//    Unused arguments.
 // return:bool
-//   true.
+//    true.
 //
 function $Function$True(/*…*/) {
 	return true;
@@ -1204,9 +1206,9 @@ Function.True = $Function$True;
 /// Returns the name of the function.
 //
 // fn:Function
-//   Function whose name is to be retrieved.
+//    Function whose name is to be retrieved.
 // return:String
-//   The name of the function, i.e. identifier on the right of “function” in its declaration.
+//    The name of the function, i.e. identifier on the right of “function” in its declaration.
 //
 function $Function$getName(fn) {
 	Function.checkArgs($Function$getName, arguments, Object.ANYTYPE);
@@ -1251,15 +1253,15 @@ Math.UI_SMOOTH_RATE/*:int*/ = 40;
 /// Calculates the distance between the specified 2D points.
 //
 // x1:float
-//   Abscissa of the first point.
+//    Abscissa of the first point.
 // y1:float
-//   Ordinate of the first point.
+//    Ordinate of the first point.
 // x2:float
-//   Abscissa of the second point.
+//    Abscissa of the second point.
 // y2:float
-//   Ordinate of the second point.
+//    Ordinate of the second point.
 // return:float
-//   Distance between the points.
+//    Distance between the points.
 //
 function $Math$distance(x1, y1, x2, y2) {
 	Function.checkArgs($Math$distance, arguments, Number, Number, Number, Number);
@@ -1281,11 +1283,11 @@ Number.INT_SIGN_MASK/*:int*/ = 0x80000000;
 /// Formats a number for display.
 //
 // v:(Number|String)
-//   Number to be formatted, or a string that will be converted to a number.
+//    Number to be formatted, or a string that will be converted to a number.
 // [cDecs:int]
-//   Decimal digits to include in the returned string; defaults to 0.
+//    Decimal digits to include in the returned string; defaults to 0.
 // return:String
-//   String representation of the number.
+//    String representation of the number.
 //
 (function() {
 	// Cache of RegExps built so far.
@@ -1368,9 +1370,9 @@ Number.formatCy = $Number$formatCy;
 /// Rotates leftwards the bits in the number.
 //
 // c:int
-//   Number of bits to be rotated.
+//    Number of bits to be rotated.
 // return:int
-//   Resulting number.
+//    Resulting number.
 //
 function $Number$rotateLeft(c) {
 	Function.checkArgs($Number$rotateLeft, arguments, Number);
@@ -1382,7 +1384,7 @@ Number.prototype.rotateLeft = $Number$rotateLeft;
 /// Returns a fixed-length hexadecimal representation of the number.
 //
 // return:String
-//   Representation of the number.
+//    Representation of the number.
 //
 function $Number$toHexString() {
 	Function.checkArgs($Number$toHexString, arguments);
@@ -1405,7 +1407,7 @@ Number.prototype.toJSONString = $Number$toJSONString;
 /// Returns a little-endian fixed-length hexadecimal representation of the number.
 //
 // return:String
-//   Representation of the number.
+//    Representation of the number.
 //
 function $Number$toLEHexString() {
 	Function.checkArgs($Number$toLEHexString, arguments);
@@ -1422,9 +1424,9 @@ Number.prototype.toLEHexString = $Number$toLEHexString;
 // performed.
 //
 // i2:int
-//   Second addend.
+//    Second addend.
 // return:int
-//   Unsigned sum of this and the second addend.
+//    Unsigned sum of this and the second addend.
 //
 function $Number$uAdd(i2) {
 	Function.checkArgs($Number$uAdd, arguments, Number);
@@ -1442,7 +1444,7 @@ Number.prototype.uAdd = $Number$uAdd;
 /// Returns a shallow copy of the object.
 //
 // return:Object(var*)
-//   Copy of the object.
+//    Copy of the object.
 //
 function $Object$clone(oSrc) {
 	Function.checkArgs($Object$clone, arguments, Object);
@@ -1485,11 +1487,11 @@ if (!Object.getPrototypeOf)
 // precedence over same-name properties in the first.
 //
 // oDst:Object
-//   Object to be augmented.
+//    Object to be augmented.
 // oSrc:Object
-//   Object from which properties will be copied to oDst.
+//    Object from which properties will be copied to oDst.
 // return:Object
-//   The destination object.
+//    The destination object.
 //
 function $Object$merge(oDst, oSrc) {
 	Function.checkArgs($Object$merge, arguments, Object.ANYTYPE, Object.ANYTYPE);
@@ -1503,11 +1505,11 @@ Object.merge = $Object$merge;
 /// Returns a JSON representation of the object.
 //
 // v:var
-//   Variable to convert.
+//    Variable to convert.
 // [oParserStatus:Object]
-//   Internal data. Do not provide a value for this argument.
+//    Internal data. Do not provide a value for this argument.
 // return:String
-//   JSON representation.
+//    JSON representation.
 //
 function $Object$toJSONString(v, oParserStatus /*= undefined*/) {
 	Function.checkArgs($Object$toJSONString, arguments, Object.ANYTYPEOPT, [undefined, Object]);
@@ -1582,9 +1584,9 @@ RegExp.ZERO/*:RegExp*/ = /^0$/;
 /// Converts a string into a RegExp fragment, escaping any special characters.
 //
 // s:String
-//   String to be escaped.
+//    String to be escaped.
 // return:String
-//   Escaped string.
+//    Escaped string.
 //
 function $RegExp$escape(s) {
 	Function.checkArgs($RegExp$escape, arguments, String);
@@ -1597,9 +1599,9 @@ RegExp.escape = $RegExp$escape;
 // converted to their corresponding RegExp character sequences.
 //
 // s:String
-//   String to be escaped.
+//    String to be escaped.
 // return:String
-//   Escaped string.
+//    Escaped string.
 //
 function $RegExp$escapeWithWildcards(s) {
 	Function.checkArgs($RegExp$escapeWithWildcards, arguments, String);
@@ -1614,8 +1616,8 @@ RegExp.escapeWithWildcards = $RegExp$escapeWithWildcards;
 /// Determine whether the regular expression is little more than a string comparison.
 //
 // return:bool
-//   true if the regular expression does not contain any special characters other than ^ and $, or
-//   false otherwise.
+//    true if the regular expression does not contain any special characters other than ^ and $, or
+//    false otherwise.
 //
 function $RegExp$isSimple() {
 	Function.checkArgs($RegExp$isSimple, arguments);
@@ -1642,9 +1644,9 @@ RegExp.prototype.toJSONString = $RegExp$toJSONString;
 /// Converts a RegExp fragment into a String, interpreting any PCRE escaped characters.
 //
 // s:String
-//   String with excaped sequences.
+//    String with excaped sequences.
 // return:String
-//   String with PCRE sequences.
+//    String with PCRE sequences.
 //
 function $RegExp$unescape(s) {
 	Function.checkArgs($RegExp$unescape, arguments, String);
@@ -1667,14 +1669,14 @@ Sorting.toString = Function.createToStringMethod("Sorting");
 /// Default comparison function.
 //
 // v1:var
-//   First value.
+//    First value.
 // v2:var
-//   Other value.
+//    Other value.
 // return:int
-//   Standard comparison result integer:
-//   > 0 if v1 > v2;
-//     0 if v1 == v2;
-//   < 0 if v1 < v2.
+//    Standard comparison result integer:
+//       > 0 if v1 > v2;
+//         0 if v1 == v2;
+//       < 0 if v1 < v2.
 //
 function $Sorting$defaultCompare(v1, v2) {
 	return v1 <= v2 ? v1 < v2 ? -1 : 0 : 1;
@@ -1686,15 +1688,15 @@ Sorting.defaultCompare = $Sorting$defaultCompare;
 // according to the provided sorting function.
 //
 // vValue:var
-//   Value to be inserted.
+//    Value to be inserted.
 // cItems:int
-//   Number of items in the collection.
+//    Number of items in the collection.
 // fnGetItem:Function
-//   Callback which retrieves an item by index.
+//    Callback which retrieves an item by index.
 // [fnCompare:Function]
-//   Callback which compares two items; defaults to using the standard comparison operators.
+//    Callback which compares two items; defaults to using the standard comparison operators.
 // return:int
-//   Index at which the item should be inserted.
+//    Index at which the item should be inserted.
 //
 function $Sorting$insertionIndex(
 	vValue, cItems, fnGetItem, fnCompare /*= Sorting.defaultCompare*/
@@ -1727,13 +1729,13 @@ Sorting.insertionIndex = $Sorting$insertionIndex;
 // ECMA-ST/Ecma-262.pdf>.
 //
 // cItems:int
-//   Number of items in the collection.
+//    Number of items in the collection.
 // fnGetItem:Function
-//   Callback which retrieves an item by index.
+//    Callback which retrieves an item by index.
 // fnSetItem:Function
-//   Callback which assigns a new value to an item.
+//    Callback which assigns a new value to an item.
 // [fnCompare:Function]
-//   Callback which compares two items; defaults to using the standard comparison operators.
+//    Callback which compares two items; defaults to using the standard comparison operators.
 //
 function $Sorting$sort(cItems, fnGetItem, fnSetItem, fnCompare /*= Sorting.defaultCompare*/) {
 	Function.checkArgs($Sorting$sort, arguments, Number, Function, Function, [undefined, Function]);
@@ -1749,13 +1751,13 @@ Sorting.sort = $Sorting$sort;
 // equal items (stable sort).
 //
 // cItems:int
-//   Number of items in the collection.
+//    Number of items in the collection.
 // fnGetItem:Function
-//   Callback which retrieves an item by index.
+//    Callback which retrieves an item by index.
 // fnSetItem:Function
-//   Callback which assigns a new value to an item.
+//    Callback which assigns a new value to an item.
 // [fnCompare:Function]
-//   Callback which compares two items; defaults to using the standard comparison operators.
+//    Callback which compares two items; defaults to using the standard comparison operators.
 //
 function $Sorting$stableSort(cItems, fnGetItem, fnSetItem, fnCompare /*= Sorting.defaultCompare*/) {
 	Function.checkArgs(
@@ -1820,13 +1822,13 @@ Perf.toString = Function.createToStringMethod("Perf");
 /// Runs a function multiple times, returning the average duration of the invocations.
 //
 // fn:Function
-//   Function to be timed.
+//    Function to be timed.
 // oThis:Object
-//   Function’s this.
+//    Function’s this.
 // arrArgs:Array
-//   Function arguments.
+//    Function arguments.
 // return:float
-//   Average execution duration, in milliseconds.
+//    Average execution duration, in milliseconds.
 //
 (function() {
 	var arrRunCounts = [10, 30, 100, 300, 1000, 3000, 10000, 300000, 1000000, 3000000];
@@ -1866,9 +1868,9 @@ String.WHITESPACE/*:String*/ =
 // sprintf().
 //
 // […:var*]
-//   Arguments to format.
+//    Arguments to format.
 // return:String
-//   Resulting string.
+//    Resulting string.
 //
 function $String$asFormat(/*…*/) {
 	var arrArgs = arguments,
@@ -1907,9 +1909,9 @@ String.prototype.clone = $String$clone;
 /// Truncates the string at the required length, adding ellipsis.
 //
 // cch:int
-//   Maximum length allowed for the string.
+//    Maximum length allowed for the string.
 // return:String
-//   Truncated string.
+//    Truncated string.
 //
 function $String$ellipsis(cch) {
 	Function.checkArgs($String$ellipsis, arguments, Number);
@@ -1921,7 +1923,7 @@ String.prototype.ellipsis = $String$ellipsis;
 /// Determine whether the string is made up entirely by whitespace, or empty.
 //
 // return:bool
-//   false if the string contains any non-whitespace characters, or false otherwise.
+//    false if the string contains any non-whitespace characters, or false otherwise.
 //
 (function() {
 	var reWhitespace = new RegExp("[^" + RegExp.WHITESPACE_s + "]");
@@ -1937,7 +1939,7 @@ String.prototype.ellipsis = $String$ellipsis;
 /// Decodes a JSON string into a variabile.
 //
 // return:var
-//   Rendered value.
+//    Rendered value.
 //
 function $String$jsonDecode() {
 	Function.checkArgs($String$jsonDecode, arguments);
@@ -1968,19 +1970,19 @@ String.jsonEncode = $String$jsonEncode;
 // <http://tools.ietf.org/html/bcp47>). The return value is nonzero if the longer string begins with
 // the shorter string followed by ‘-’, of if the strings are equal; the return value is 0 in any
 // other case. Examples:
-//   "it"      =1= "it"
-//   "it-IT"   =1= "it"
-//   "it-IT"   =2= "it-IT"
-//   "fr"       != "it"
-//   "en"      =1= "en-US"
-//   "en-UK"    != "en-US"
-//   "az"      =1= "az-Arab-IR"
-//   "az-Arab" =2= "az-Arab-IR"
+//    "it"      =1= "it"
+//    "it-IT"   =1= "it"
+//    "it-IT"   =2= "it-IT"
+//    "fr"       != "it"
+//    "en"      =1= "en-US"
+//    "en-UK"    != "en-US"
+//    "az"      =1= "az-Arab-IR"
+//    "az-Arab" =2= "az-Arab-IR"
 //
 // s2:String
-//   Other string.
+//    Other string.
 // return:int
-//   Degree of precision of the match, or 0 if the strings specify two different languages.
+//    Degree of precision of the match, or 0 if the strings specify two different languages.
 //
 function $String$languageTagCompare(s2) {
 	Function.checkArgs($String$languageTagCompare, arguments, String);
@@ -2008,9 +2010,9 @@ String.prototype.languageTagCompare = $String$languageTagCompare;
 /// Performs a locale-dependant, case-insensitive string comparison.
 //
 // s2:String
-//   Right side of the comparison.
+//    Right side of the comparison.
 // return:int
-//   Comparison result.
+//    Comparison result.
 //
 function $String$localeCompareNoCase(s2) {
 	Function.checkArgs($String$localeCompareNoCase, arguments, String);
@@ -2025,7 +2027,7 @@ String.prototype.localeCompareNoCase = $String$localeCompareNoCase;
 // JavaScript). Non-BMP code points are fully supported.
 //
 // return:String
-//   MD5 hash.
+//    MD5 hash.
 //
 (function() {
 	// Greatest string padding.
@@ -2175,56 +2177,57 @@ String.prototype.localeCompareNoCase = $String$localeCompareNoCase;
 
 
 /// Compares the string to another, using a natural order algorithm:
-// - numbers have the same precedence as in regular sorting, but are grouped (i.e. digits have no
-//   individual weight);
-// - differences in whitespace are ignored, but will be used to break a tie;
-// - leading zeroes in numbers can make two otherwise identical numbers different, but are otherwise
-//   ignored, and less important than whitespace anyway (because they appear later in the string).
+// •  numbers have the same precedence as in regular sorting, but are grouped (i.e. digits have no
+//    individual weight);
+// •  differences in whitespace are ignored, but will be used to break a tie;
+// •  leading zeroes in numbers can make two otherwise identical numbers different, but are
+//    otherwise ignored, and less important than whitespace anyway (because they appear later in the
+//    string).
 //
 // The algorithm was developed after this table:
-//   Ws = whitespace characters
-//   0s = zeroes
-//   Num = sort order, from any numbers in the string
-//   Str = sort order, from any non-whitespace non-digit in the string
-//   Len = sort order, according to length (whitespace and digits excluded)
+//    Ws = whitespace characters
+//    0s = zeroes
+//    Num = sort order, from any numbers in the string
+//    Str = sort order, from any non-whitespace non-digit in the string
+//    Len = sort order, according to length (whitespace and digits excluded)
 //
-//          Ws 0s Num Str Len
-//   "a"     0  -   -  1   1
-//   "a "    1  -   -  1   1
-//   "a  "   2  -   -  1   1
-//   "a0"    0  1   0  1   1
-//   "a00"   0  2   0  1   1
-//   "a 0"   1  1   0  1   1
-//   "a  0"  2  1   0  1   1
-//   "a1"    0  0   1  1   2
-//   "a01"   0  1   1  1   2
-//   "a 1"   1  0   1  1   2
-//   "a  1"  2  0   1  1   2
-//   "a2"    0  0   2  1   2
-//   "a02"   0  1   2  1   2
-//   "a 2"   1  0   2  1   2
-//   "a  2"  2  0   2  1   2
-//   "a11"   0  0  11  1   2
-//   "a011"  0  1  11  1   2
-//   "a 11"  1  0  11  1   2
-//   "aa"    0  -   -  2   2
-//   "a a"   1  -   -  2   2
-//   "a  a"  2  -   -  2   2
-//   "a aa"  1  -   -  3   3
-//   "a ab"  1  -   -  4   3
-//   "a b"   1  -   -  5   2
-//   "a  b"  2  -   -  5   2
+//           Ws 0s Num Str Len
+//    "a"     0  -   -  1   1
+//    "a "    1  -   -  1   1
+//    "a  "   2  -   -  1   1
+//    "a0"    0  1   0  1   1
+//    "a00"   0  2   0  1   1
+//    "a 0"   1  1   0  1   1
+//    "a  0"  2  1   0  1   1
+//    "a1"    0  0   1  1   2
+//    "a01"   0  1   1  1   2
+//    "a 1"   1  0   1  1   2
+//    "a  1"  2  0   1  1   2
+//    "a2"    0  0   2  1   2
+//    "a02"   0  1   2  1   2
+//    "a 2"   1  0   2  1   2
+//    "a  2"  2  0   2  1   2
+//    "a11"   0  0  11  1   2
+//    "a011"  0  1  11  1   2
+//    "a 11"  1  0  11  1   2
+//    "aa"    0  -   -  2   2
+//    "a a"   1  -   -  2   2
+//    "a  a"  2  -   -  2   2
+//    "a aa"  1  -   -  3   3
+//    "a ab"  1  -   -  4   3
+//    "a b"   1  -   -  5   2
+//    "a  b"  2  -   -  5   2
 //
 // s2:String
-//   Other string.
+//    Other string.
 // [bNoCase:bool]
-//   If true, case differences in the two strings will be ignored; i.e. the comparison will be
-//   case-insensitive. Defaults to false.
+//    If true, case differences in the two strings will be ignored; i.e. the comparison will be
+//    case-insensitive. Defaults to false.
 // return:int
-//   Standard comparison result integer:
-//   > 0 if this > s2;
-//     0 if this == s2;
-//   < 0 if this < s2.
+//    Standard comparison result integer:
+//       > 0 if this > s2;
+//         0 if this == s2;
+//       < 0 if this < s2.
 //
 function $String$natCompare(s2, bNoCase /*= false*/) {
 	Function.checkArgs($String$natCompare, arguments, String, [undefined, Boolean]);
@@ -2302,12 +2305,12 @@ String.prototype.natCompare = $String$natCompare;
 /// Case-insensitive version of String.natCompare().
 //
 // s2:String
-//   Other string.
+//    Other string.
 // return:int
-//   Standard comparison result integer:
-//   > 0 if this > s2;
-//     0 if this == s2;
-//   < 0 if this < s2.
+//    Standard comparison result integer:
+//       > 0 if this > s2;
+//         0 if this == s2;
+//       < 0 if this < s2.
 //
 function $String$natCompareNoCase(s2) {
 	Function.checkArgs($String$natCompareNoCase, arguments, String);
@@ -2319,18 +2322,18 @@ String.prototype.natCompareNoCase = $String$natCompareNoCase;
 /// Ensures the string is of a certain length, padding it as necessary.
 //
 // cchPad:int
-//   Number of desired total characters.
+//    Number of desired total characters.
 // sPadder:String
-//   String to be used as padding.
+//    String to be used as padding.
 // iDir:int
-//   Side of the string which should be padded if necessary:
-//   < 0 turns “nopad” into “    nopad”;
-//     0 turns “nopad” into “  nopad  ”;
-//   > 0 turns “nopad” into “nopad    ”.
-//   It may help to think of the original string as the origin, and iDir as a point relative to it,
-//   where the padding will be applied.
+//    Side of the string which should be padded if necessary:
+//       < 0 turns “nopad” into “    nopad”;
+//         0 turns “nopad” into “  nopad  ”;
+//       > 0 turns “nopad” into “nopad    ”.
+//    It may help to think of the original string as the origin, and iDir as a point relative to it,
+//    where the padding will be applied.
 // return:String
-//   Padded string.
+//    Padded string.
 //
 function $String$pad(cchPad, sPadder, iDir) {
 	Function.checkArgs($String$pad, arguments, Number, String, Number);
@@ -2358,9 +2361,9 @@ String.prototype.pad = $String$pad;
 /// Returns this string, repeated as many times as specified.
 //
 // iMult:int
-//   Number of repetitions desired.
+//    Number of repetitions desired.
 // return:String
-//   Repeated string.
+//    Repeated string.
 //
 function $String$repeat(iMult) {
 	Function.checkArgs($String$repeat, arguments, Number);
@@ -2375,7 +2378,7 @@ String.prototype.repeat = $String$repeat;
 /// Returns the string, backwards.
 //
 // return:String
-//   Reversed string.
+//    Reversed string.
 //
 function $String$reverse() {
 	Function.checkArgs($String$reverse, arguments);
@@ -2390,11 +2393,11 @@ String.prototype.reverse = $String$reverse;
 /// Replaces a set of substrings according to the provided replacement map.
 //
 // map:Object(var*)
-//   Maps each source string to each destination string. If a RegExp is to be used for the search,
-//   the corresponding item will have a number as key, and the item will be an array with the pair
-//   (search RegExp, substitution) instead of a string.
+//    Maps each source string to each destination string. If a RegExp is to be used for the search,
+//    the corresponding item will have a number as key, and the item will be an array with the pair
+//    (search RegExp, substitution) instead of a string.
 // return:String
-//   Resulting string.
+//    Resulting string.
 //
 function $String$replacePairs(map) {
 	Function.checkArgs($String$replacePairs, arguments, Object);
@@ -2434,9 +2437,9 @@ if ("ab".substr(-1) != "b")
 /// Counts the occurrences of the specified string into this one.
 //
 // v:(String|RegExp)
-//   String or RegExp of which to count occurrences.
+//    String or RegExp of which to count occurrences.
 // return:int
-//   Number of occurrences.
+//    Number of occurrences.
 //
 function $String$substrCount(v) {
 	Function.checkArgs($String$substrCount, arguments, [String, RegExp]);
@@ -2448,7 +2451,7 @@ String.prototype.substrCount = $String$substrCount;
 /// Converts “some-dashed-text” to “someDashedText”.
 //
 // return:String
-//   Converted string.
+//    Converted string.
 //
 (function() {
 
@@ -2601,7 +2604,7 @@ if (!String.prototype.trimRight)
 /// Constructor.
 //
 // [s:String]
-//   String used to initialize the URL components.
+//    String used to initialize the URL components.
 //
 function $Url(s /*= undefined*/) {
 	if (arguments[0] === Function.PROTOTYPING)
@@ -2625,12 +2628,12 @@ Url.prototype.fragment/*:String*/ = null;
 
 
 /// Splits an URL into its components. The URL must be in this format:
-//   http://[user[:pass]@]{[[…]www.]example.com|123.45.67.89}[:80][/dir/path/][?query][#fragment]
+//    http://[user[:pass]@]{[[…]www.]example.com|123.45.67.89}[:80][/dir/path/][?query][#fragment]
 //
 // s:String
-//   URL to parse.
+//    URL to parse.
 // return:Url
-//   this.
+//    this.
 //
 function $Url$fromString(s) {
 	Function.checkArgs($Url$fromString, arguments, String);
@@ -2718,9 +2721,9 @@ Url.prototype.fromString = $Url$fromString;
 /// Encodes a string, making it a legal URL.
 //
 // s:String
-//   String to be encoded.
+//    String to be encoded.
 // return:String
-//   Resulting URL.
+//    Resulting URL.
 //
 function $Url$encode(s) {
 	Function.checkArgs($Url$encode, arguments, String);
@@ -2732,9 +2735,9 @@ Url.encode = $Url$encode;
 /// Encodes a string, making it a legal URL query component.
 //
 // s:String
-//   String to be encoded.
+//    String to be encoded.
 // return:String
-//   Resulting URL.
+//    Resulting URL.
 //
 function $Url$encodeComponent(s) {
 	Function.checkArgs($Url$encodeComponent, arguments, String);
@@ -2746,9 +2749,9 @@ Url.encodeComponent = $Url$encodeComponent;
 /// Encodes a map of query arguments into their string form.
 //
 // mapArgs:Object(String*)
-//   Query arguments.
+//    Query arguments.
 // return:String
-//   Query string.
+//    Query string.
 //
 function $Url$encodeQuery(mapArgs) {
 	Function.checkArgs($Url$encodeQuery, arguments, Object);
@@ -2764,9 +2767,9 @@ Url.encodeQuery = $Url$encodeQuery;
 // of an URI.
 //
 // s:String
-//   String to be cleaned.
+//    String to be cleaned.
 // return:String
-//   String only consisting of valid URI characters.
+//    String only consisting of valid URI characters.
 //
 function $Url$sanitizePath(s) {
 	Function.checkArgs($Url$sanitizePath, arguments, String);
@@ -2779,9 +2782,9 @@ Url.sanitizePath = $Url$sanitizePath;
 // does NOT process full URLs.
 //
 // s:String
-//   Full path to be stripped.
+//    Full path to be stripped.
 // return:String
-//   Last path component in the source string (i.e. the file name).
+//    Last path component in the source string (i.e. the file name).
 //
 function $Url$stripPath(s) {
 	Function.checkArgs($Url$stripPath, arguments, String);
