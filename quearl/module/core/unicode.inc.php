@@ -220,7 +220,7 @@ function utf8_gathernumbers($s) {
 	static $arrToAsciiNumbers = null;
 	if ($arrToAsciiNumbers === null)
 		$arrToAsciiNumbers = ql_php_get_array_file_contents(
-			$_SERVER['LROOTDIR'] . $_APP['core']['rodata_dir'] . 'core/utf-8/toasciinumbers.dat'
+			$_APP['core']['rodata_lpath'] . 'core/utf-8/toasciinumbers.dat'
 		);
 	foreach ($arrToAsciiNumbers as $sSetName => &$arrSet)
 		if ($arrSet['category'] == 'Nd')
@@ -277,7 +277,7 @@ function utf8_getws($sSet = 'BL') {
 	static $arrWhitespace = null;
 	if ($arrWhitespace === null)
 		$arrWhitespace = ql_php_get_array_file_contents(
-			$_SERVER['LROOTDIR'] . $_APP['core']['rodata_dir'] . 'core/utf-8/whitespace.dat'
+			$_APP['core']['rodata_lpath'] . 'core/utf-8/whitespace.dat'
 		);
 	$s = '';
 	if (strpos($sSet, 'B') !== false) $s .= $arrWhitespace['B'];
@@ -399,7 +399,7 @@ function utf8_strtoascii($s) {
 	static $arrAsciiTranslit = null;
 	if ($arrAsciiTranslit === null)
 		$arrAsciiTranslit = ql_php_get_array_file_contents(
-			$_SERVER['LROOTDIR'] . $_APP['core']['rodata_dir'] . 'core/utf-8/asciitranslit.dat'
+			$_APP['core']['rodata_lpath'] . 'core/utf-8/asciitranslit.dat'
 		);
 	$s = strtr($s, $arrAsciiTranslit);
 	# Delete any remaining non-ASCII characters.
@@ -419,7 +419,7 @@ function utf8_strtolower($s) {
 	static $arrToLower = null;
 	if ($arrToLower === null)
 		$arrToLower = ql_php_get_array_file_contents(
-			$_SERVER['LROOTDIR'] . $_APP['core']['rodata_dir'] . 'core/utf-8/tolowercase.dat'
+			$_APP['core']['rodata_lpath'] . 'core/utf-8/tolowercase.dat'
 		);
 	return strtr($s, $arrToLower);
 }
@@ -436,7 +436,7 @@ function utf8_strtoupper($s) {
 	static $arrToUpper = null;
 	if ($arrToUpper === null)
 		$arrToUpper = ql_php_get_array_file_contents(
-			$_SERVER['LROOTDIR'] . $_APP['core']['rodata_dir'] . 'core/utf-8/touppercase.dat'
+			$_APP['core']['rodata_lpath'] . 'core/utf-8/touppercase.dat'
 		);
 	return strtr($s, $arrToUpper);
 }
@@ -524,7 +524,7 @@ function utf8_ucfirst($s) {
 	static $arrToTitle = null;
 	if ($arrToTitle === null)
 		$arrToTitle = ql_php_get_array_file_contents(
-			$_SERVER['LROOTDIR'] . $_APP['core']['rodata_dir'] . 'core/utf-8/totitlecase.dat'
+			$_APP['core']['rodata_lpath'] . 'core/utf-8/totitlecase.dat'
 		);
 	return strtr($s{0}, $arrToTitle) . substr($s, 1);
 }

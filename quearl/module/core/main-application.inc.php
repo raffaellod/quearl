@@ -44,15 +44,15 @@ class QlApplication {
 	## Constructor.
 	#
 	public function __construct() {
-		global $_APP;
-		# Create a default $_APP array, loading only core.conf which is necessary to successfully call
-		# _read(). This will be overwritten by a successful call to _read().
-		$_APP = array(
-			'core' => ql_php_get_array_file_contents($_SERVER['LROOTDIR'] . 'config/core/module.conf'),
+		# Create a default $_APP array loading only core.conf, which is necessary to successfully call
+		# _read().
+		$this->mergesection(
+			'core', ql_php_get_array_file_contents($_SERVER['LROOTDIR'] . 'config/core/module.conf')
 		);
 
-		$this->m_sFileName = $_SERVER['LROOTDIR'] . $_APP['core']['rwdata_dir'] . 'core/app.dat';
-		$this->m_sLockFileName = $_SERVER['LROOTDIR'] . $_APP['core']['lock_dir'] . 'app.dat.lock';
+		global $_APP;
+		$this->m_sFileName = $_APP['core']['rwdata_lpath'] . 'core/app.dat';
+		$this->m_sLockFileName = $_APP['core']['lock_lpath'] . 'app.dat.lock';
 		$this->m_cLocks = 0;
 		$this->_read();
 	}
@@ -77,13 +77,8 @@ class QlApplication {
 	}
 
 
-	## Loads a $_APP section from a config file. If the section has been loaded before, this will
-	# overwrite any values with those specified in the file for each given key; keys assigned to null
-	# in the file will cause the corresponding key in the $_APP section to be deleted. Keys not
-	# present in the config file will remain unaffected.
-	#
-	# If the section name ends in “-style”, the section will also be stored to a separate array of
-	# style sections, obtainable by calling QlApplication::getstylesections().
+	## Loads a $_APP section from a config file. See QlApplication::mergesection() for details on how
+	# the section’s contents are processed.
 	#
 	# string $sSection
 	#    $_APP section to be loaded.
@@ -97,28 +92,11 @@ class QlApplication {
 	#
 	public function loadsection($sSection, $sFileName, $bForce = false) {
 		global $_APP;
-		$bIsCss = (substr($sSection, -10) == 'style.conf');
-		$bLoad = $bForce ||
-			!isset($_APP[$sSection]['__ql_mtime']) ||
-			$_APP[$sSection]['__ql_mtime'] < filemtime($sFileName);
+		$bLoad = $bForce || (int)@$_APP[$sSection]['__ql_mtime'] < filemtime($sFileName);
 		if ($bLoad) {
 			$this->lock();
-			if (!isset($_APP[$sSection]))
-				$_APP[$sSection] = array();
-			$arrSection =& $_APP[$sSection];
-			$arrNew = ql_php_get_array_file_contents($sFileName);
-			$arrSection = $arrNew + $arrSection;
-			foreach ($arrNew as $sVar => $mValue)
-				if ($mValue === null)
-					unset($arrSection[$sVar]);
-				else if ($bIsCss && strncmp($sVar, 'XHTML', 5) == 0)
-					# Style this XHTML fragment in this style section.
-					$arrSection[$sVar] = preg_replace(
-						'/(\r?\n|\r)\t*/', ' ', ql_template_subst($mValue, $this->m_arrStyleSections)
-					);
-			if ($bIsCss)
-				$this->m_arrStyleSections[$sSection] =& $arrSection;
-			$arrSection['__ql_mtime'] = filemtime($sFileName);
+			$this->mergesection($sSection, ql_php_get_array_file_contents($sFileName));
+			$_APP[$sSection]['__ql_mtime'] = filemtime($sFileName);
 			$this->unlock();
 		}
 		return $bLoad;
@@ -141,6 +119,43 @@ class QlApplication {
 			$this->_read();
 		}
 		return true;
+	}
+
+
+	## Merges a $_APP section. If the section has been loaded before, this will overwrite any values
+	# with those specified in the file for each given key; keys assigned to null in the file will
+	# cause the corresponding key in the $_APP section to be deleted. Keys not present in $arrNew
+	# will remain unaffected.
+	#
+	# If the section name ends in “-style”, the section will also be stored to a separate array of
+	# style sections, obtainable by calling QlApplication::getstylesections().
+	#
+	# string $sSection
+	#    Name of the $_APP section to be loaded.
+	# array<string => mixed> $arrNew
+	#    New section contents.
+	#
+	protected function mergesection($sSection, array $arrNew) {
+		global $_APP;
+		$bIsCss = (substr($sSection, -6) == '-style');
+		if (!isset($_APP[$sSection]))
+			$_APP[$sSection] = array();
+		$arrSection =& $_APP[$sSection];
+		$arrSection = $arrNew + $arrSection;
+		foreach ($arrNew as $sVar => $sValue)
+			if ($sValue === null)
+				# This value must be removed.
+				unset($arrSection[$sVar]);
+			else if (substr($sVar, -5) == '_lpath')
+				# Make local paths absolute.
+				$arrSection[$sVar] = $_SERVER['LROOTDIR'] . $sValue;
+			else if ($bIsCss && strncmp($sVar, 'XHTML', 5) == 0)
+				# Style XHTML fragments in this style section.
+				$arrSection[$sVar] = preg_replace(
+					'/(\r?\n|\r)\t*/', ' ', ql_template_subst($sValue, $this->m_arrStyleSections)
+				);
+		if ($bIsCss)
+			$this->m_arrStyleSections[$sSection] =& $arrSection;
 	}
 
 
