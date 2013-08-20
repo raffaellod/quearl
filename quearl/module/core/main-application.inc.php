@@ -45,7 +45,7 @@ class QlApplication {
 	#
 	public function __construct() {
 		# Create a default $_APP array loading only core.conf, which is necessary to successfully call
-		# _read().
+		# read().
 		$this->mergesection(
 			'core', ql_php_get_array_file_contents($_SERVER['LROOTDIR'] . 'config/core/module.conf')
 		);
@@ -54,15 +54,18 @@ class QlApplication {
 		$this->m_sFileName = $_APP['core']['rwdata_lpath'] . 'core/app.dat';
 		$this->m_sLockFileName = $_APP['core']['lock_lpath'] . 'app.dat.lock';
 		$this->m_cLocks = 0;
-		$this->_read();
+		$this->read();
 	}
 
 
 	## Destructor.
 	#
 	public function __destruct() {
-		if ($this->m_cLocks > 0)
+		if ($this->m_cLocks > 0) {
+			# Cheat on the number of locks to force writing to persistent storage.
+			$this->m_cLocks = 1;
 			$this->unlock();
+		}
 		unset($GLOBALS['_APP']);
 	}
 
@@ -103,22 +106,21 @@ class QlApplication {
 	}
 
 
-	## Serializes access to $_APP.
-	#
-	# bool return
-	#    true. This method does not return on error.
+	## Serializes access to $_APP. Does not return on error.
 	#
 	public function lock() {
-		if ($this->m_cLocks <= 0) {
-			while (!($this->m_fileLock = fopen($this->m_sLockFileName, 'ab')))
+		if ($this->m_cLocks == 0) {
+			$cRetries = 60;
+			while (!($this->m_fileLock = fopen($this->m_sLockFileName, 'ab')) && $cRetries--)
 				sleep(1);
 			if (!$this->m_fileLock)
+				# Number of attempts exhausted.
 				trigger_error('Unable to acquire application lock', E_USER_ERROR);
 			flock($this->m_fileLock, LOCK_EX);
-			++$this->m_cLocks;
-			$this->_read();
+			# Make sure that $_APP is up to date.
+			$this->reload();
 		}
-		return true;
+		++$this->m_cLocks;
 	}
 
 
@@ -146,7 +148,7 @@ class QlApplication {
 			if ($sValue === null)
 				# This value must be removed.
 				unset($arrSection[$sVar]);
-			else if (substr($sVar, -5) == '_lpath')
+			else if (substr($sVar, -6) == '_lpath')
 				# Make local paths absolute.
 				$arrSection[$sVar] = $_SERVER['LROOTDIR'] . $sValue;
 			else if ($bIsCss && strncmp($sVar, 'XHTML', 5) == 0)
@@ -165,7 +167,7 @@ class QlApplication {
 	#    true if $_APP was loaded from persistent storage, or false if the latter was unavailable,
 	#    which means that $_APP has the default contents loaded from the configuration files.
 	#
-	private function _read() {
+	private function read() {
 		global $_APP;
 		# Keep a backup of the default core section, so we can restore it in case something goes
 		# wrong.
@@ -203,20 +205,20 @@ class QlApplication {
 	# amount of time.
 	#
 	public function reload() {
-		$this->_read();
+		$this->read();
 	}
 
 
 	## Leaves the serialized context started with QlApplication::lock().
 	#
 	public function unlock() {
-		if ($this->m_cLocks > 0) {
-			$this->_write();
+		if ($this->m_cLocks == 1) {
+			$this->write();
 			fclose($this->m_fileLock);
 			@unlink($this->m_sLockFileName);
 			$this->m_fileLock = null;
-			--$this->m_cLocks;
 		}
+		--$this->m_cLocks;
 	}
 
 
@@ -225,7 +227,7 @@ class QlApplication {
 	# bool return
 	#    true if writing was successful or not necessary, false if it was necessary but failed.
 	#
-	private function _write() {
+	private function write() {
 		global $_APP;
 		$s = serialize($_APP);
 		# Recalculate size and CRC of the serialized $_APP; if different, we’ll need to update the
