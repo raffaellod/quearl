@@ -21,7 +21,7 @@
 # JSON decoding functions. JSON encoding functions are in Quearl.core.main.
 
 
-define('QUEARL_JSONDEC_INCLUDED', true);
+define('QUEARL_CORE_JSONDEC_INCLUDED', true);
 
 require_once 'main.inc.php';
 

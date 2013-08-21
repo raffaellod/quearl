@@ -21,7 +21,7 @@
 # Language syntax highlighting.
 
 
-define('QUEARL_SOURCETOOLS_INCLUDED', true);
+define('QUEARL_CORE_SOURCETOOLS_INCLUDED', true);
 
 require_once 'main.inc.php';
 

@@ -21,7 +21,7 @@
 # Definition of the application class. Same prerequisite constraints as main.inc.php.
 
 
-define('QUEARL_MAIN_SESSION_INCLUDED', true);
+define('QUEARL_CORE_MAIN_APPLICATION_INCLUDED', true);
 
 # This is just an explicit dependency declaration; were it not for require_once, this would be a
 # circular dependency.

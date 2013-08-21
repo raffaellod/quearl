@@ -21,7 +21,7 @@
 # UTF-8-string handling and conversion from/to other encodings.
 
 
-define('QUEARL_UNICODE_INCLUDED', true);
+define('QUEARL_CORE_UNICODE_INCLUDED', true);
 
 # This is just an explicit dependency declaration; were it not for require_once, this would be a
 # circular dependency.
