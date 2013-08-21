@@ -18,11 +18,12 @@
 # not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------------
 
-# JSON decoding functions.
-# Can only depend on Quearl.core.main; JSON encoding functions are in Quearl.core.main.
+# JSON decoding functions. JSON encoding functions are in Quearl.core.main.
 
 
 define('QUEARL_JSONDEC_INCLUDED', true);
+
+require_once 'main.inc.php';
 
 
 
@@ -145,7 +146,9 @@ function ql_json_decode($s) {
 						trigger_error('JSON syntax error: invalid key in object', E_USER_WARNING);
 						return null;
 					}
-					$arr[ql_json_decode($arrMatch[1])] = ql_json_decode(substr($sItem, strlen($arrMatch[0])));
+					$arr[ql_json_decode($arrMatch[1])] = ql_json_decode(
+						substr($sItem, strlen($arrMatch[0]))
+					);
 				}
 				$ichItemStart = $ich + 1;
 				unset($sItem);

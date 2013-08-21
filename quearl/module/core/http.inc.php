@@ -18,10 +18,12 @@
 # not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------------
 
-# HTTP server-to-server communication. Can only depend on Quearl.core.main.
+# HTTP server-to-server communication.
 
 
 define('QUEARL_HTTP_INCLUDED', true);
+
+require_once 'main.inc.php';
 
 
 

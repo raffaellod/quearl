@@ -21,6 +21,18 @@
 # Definition of the application class. Same prerequisite constraints as main.inc.php.
 
 
+define('QUEARL_MAIN_SESSION_INCLUDED', true);
+
+# This is just an explicit dependency declaration; were it not for require_once, this would be a
+# circular dependency.
+require_once 'main.inc.php';
+
+
+
+####################################################################################################
+# Classes
+
+
 ## Manages the application (cross-session) data, stored in $_APP.
 #
 class QlApplication {

@@ -19,10 +19,11 @@
 #---------------------------------------------------------------------------------------------------
 
 # Language syntax highlighting.
-# Can only depend on main.inc.php.
 
 
 define('QUEARL_SOURCETOOLS_INCLUDED', true);
+
+require_once 'main.inc.php';
 
 
 
