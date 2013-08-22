@@ -129,10 +129,11 @@ class QlApplication {
 	#
 	public function lock() {
 		if ($this->m_cLocks == 0) {
-			$cRetries = 60;
-			while (!($this->m_fileLock = fopen($this->m_sLockFileName, 'ab')) && $cRetries--)
-				sleep(1);
-			if (!$this->m_fileLock)
+			$cRetries = 15;
+			do
+				$this->m_fileLock = fopen($this->m_sLockFileName, 'ab');
+			while (!$this->m_fileLock && --$cRetries && (sleep(1) || true));
+			if (!$cRetries)
 				# Number of attempts exhausted.
 				trigger_error('Unable to acquire application lock', E_USER_ERROR);
 			flock($this->m_fileLock, LOCK_EX);
