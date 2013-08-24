@@ -58,7 +58,7 @@ class QlApplication {
 	public function __construct() {
 		# Create a default $_APP array loading only core.conf, which is necessary to successfully call
 		# read().
-		$this->mergesection(
+		$this->merge_section(
 			'core', ql_php_get_array_file_contents($_SERVER['LROOTDIR'] . 'config/core/module.conf')
 		);
 
@@ -94,13 +94,13 @@ class QlApplication {
 	# array<array<string => string>> return
 	#    Array of style sections.
 	#
-	public function & getstylesections() {
+	public function & get_style_sections() {
 		return $this->m_arrStyleSections;
 	}
 
 
-	## Loads a $_APP section from a config file. See QlApplication::mergesection() for details on how
-	# the section’s contents are processed.
+	## Loads a $_APP section from a config file. See QlApplication::merge_section() for details on
+	# how the section’s contents are processed.
 	#
 	# string $sSection
 	#    $_APP section to be loaded.
@@ -112,12 +112,12 @@ class QlApplication {
 	#    true if the section was loaded as a result of this call, or false if loading was not
 	#    necessary.
 	#
-	public function loadsection($sSection, $sFileName, $bForce = false) {
+	public function load_section($sSection, $sFileName, $bForce = false) {
 		global $_APP;
 		$bLoad = $bForce || (int)@$_APP[$sSection]['__ql_mtime'] < filemtime($sFileName);
 		if ($bLoad) {
 			$this->lock();
-			$this->mergesection($sSection, ql_php_get_array_file_contents($sFileName));
+			$this->merge_section($sSection, ql_php_get_array_file_contents($sFileName));
 			$_APP[$sSection]['__ql_mtime'] = filemtime($sFileName);
 			$this->unlock();
 		}
@@ -150,14 +150,14 @@ class QlApplication {
 	# will remain unaffected.
 	#
 	# If the section name ends in “-style”, the section will also be stored to a separate array of
-	# style sections, obtainable by calling QlApplication::getstylesections().
+	# style sections, obtainable by calling QlApplication::get_style_sections().
 	#
 	# string $sSection
 	#    Name of the $_APP section to be loaded.
 	# array<string => mixed> $arrNew
 	#    New section contents.
 	#
-	protected function mergesection($sSection, array $arrNew) {
+	protected function merge_section($sSection, array $arrNew) {
 		global $_APP;
 		$bIsCss = (substr($sSection, -6) == '-style');
 		if (!isset($_APP[$sSection]))
