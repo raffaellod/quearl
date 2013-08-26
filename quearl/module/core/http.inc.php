@@ -31,15 +31,15 @@ require_once 'main.inc.php';
 # Constants
 
 
-# Enumeration values for ql_file_http()::$fiOptions.
+# Enumeration values for ql_http_get()::$fiOptions.
 
 ## Do not follow server-mandated redirects.
-define('QL_FHO_NOREDIRECT', 0x00000001);
+define('QL_HG_NOREDIRECT', 0x00000001);
 ## Only return the response body; discard any headers.
-define('QL_FHO_RETURNBODY', 0x10000000);
+define('QL_HG_RETURNBODY', 0x10000000);
 
 
-# Internal states of ql_file_http*().
+# Internal states of ql_http_get*().
 
 ## End.
 define('QL__FH_END',      0);
@@ -287,7 +287,7 @@ function & ql_str_parsehttpresponse($s, $sNL = null) {
 # string $sUrl
 #    URL to request.
 # [int $fiOptions]
-#    Determines the behavior of the function; it can be 0 or a combination of QL_FHO_* constants.
+#    Determines the behavior of the function; it can be 0 or a combination of QL_HG_* constants.
 # [array<string => mixed> $arrHeaders]
 #    Array of request headers; array field values are joined as strings using “; ” as separator as
 #    required by e.g. cookies.
@@ -295,7 +295,7 @@ function & ql_str_parsehttpresponse($s, $sNL = null) {
 #    If provided, this string will be used as the payload of a POST request (which replaces the
 #    default GET request).
 # mixed return
-#    false if any error occurs; otherwise if $fiOptions includes QL_FHO_RETURNBODY, the return value
+#    false if any error occurs; otherwise if $fiOptions includes QL_HG_RETURNBODY, the return value
 #    will be a string containing the body of the server’s response; else the return value will be a
 #    map with these keys:
 #    “newline”   New-line sequence used in the response.
@@ -308,8 +308,8 @@ function & ql_str_parsehttpresponse($s, $sNL = null) {
 #    “headers”   Map of header fields => values.
 #    “body”      Body of the response, as a single string.
 #
-function & ql_file_http(
-	$sUrl, $fiOptions = QL_FHO_RETURNBODY, array $arrHeaders = array(), $sPostData = null
+function & ql_http_get(
+	$sUrl, $fiOptions = QL_HG_RETURNBODY, array $arrHeaders = array(), $sPostData = null
 ) {
 	global $ql_debug_http_fread;
 	$arrUrl = @parse_url($sUrl);
@@ -414,7 +414,7 @@ function & ql_file_http(
 				if ($ql_debug_http_fread)
 					ql_log(
 						'DEBUG',
-						'ql_file_http() - initial read',
+						'ql_http_get() - initial read',
 						'<pre>' . ql_lenc($s) . '</pre>'
 					);
 				if (!$arrResponse)
@@ -434,7 +434,7 @@ function & ql_file_http(
 						strtolower($arrResponse['headers']['Transfer-Encoding']) != 'identity'
 					) {
 						if ($ql_debug_http_fread)
-							ql_log('DEBUG', 'ql_file_http() - transfer: chunked');
+							ql_log('DEBUG', 'ql_http_get() - transfer: chunked');
 						$cbNL = strlen($arrResponse['newline']);
 						# The first read could have read more than one chunk, so we have to parse them to
 						# find out the total number of bytes we’re supposed to read.
@@ -461,7 +461,7 @@ function & ql_file_http(
 									if ($ql_debug_http_fread)
 										ql_log(
 											'DEBUG',
-											'ql_file_http() - end; ' .
+											'ql_http_get() - end; ' .
 												$cbRead . ' read, ' . $cbChunks . 'total'
 										);
 									# 0 bytes mean END, even if there’s something else beyond the zero.
@@ -477,7 +477,7 @@ function & ql_file_http(
 							if ($ql_debug_http_fread)
 								ql_log(
 									'DEBUG',
-									'ql_file_http() - before reading; ' .
+									'ql_http_get() - before reading; ' .
 										$cbRead . ' read, ' . $cbChunks . ' total'
 								);
 							# Need at least one digit for the size of the next chunk, which is typically
@@ -498,7 +498,7 @@ function & ql_file_http(
 							if ($ql_debug_http_fread)
 								ql_log(
 									'DEBUG',
-									'ql_file_http() - after reading; ' .
+									'ql_http_get() - after reading; ' .
 										$cbRead . 'read, ' .
 										$cbChunks . ' total, ' .
 										rtrim(substr($s, $cbChunks + $cbNL, 5)) . ' following'
@@ -506,13 +506,13 @@ function & ql_file_http(
 						}
 					} else if (isset($arrResponse['headers']['Content-Length'])) {
 						if ($ql_debug_http_fread)
-							ql_log('DEBUG', 'ql_file_http() - transfer: Content-Length');
+							ql_log('DEBUG', 'ql_http_get() - transfer: Content-Length');
 						$cbBody = $arrResponse['headers']['Content-Length'];
 						$cbRead = strlen($s);
 						if ($ql_debug_http_fread)
 							ql_log(
 								'DEBUG',
-								'ql_file_http() - before reading; ' .
+								'ql_http_get() - before reading; ' .
 									$cbRead . ' read, ' . $cbBody . ' total'
 							);
 						while ($cbBody > $cbRead && !feof($socket)) {
@@ -522,18 +522,18 @@ function & ql_file_http(
 						if ($ql_debug_http_fread)
 							ql_log(
 								'DEBUG',
-								'ql_file_http() - after reading; ' .
+								'ql_http_get() - after reading; ' .
 									$cbRead . ' read, ' . $cbBody . 'total'
 							);
 					} else {
 						if ($ql_debug_http_fread) {
-							ql_log('DEBUG', 'ql_file_http() - transfer: until EOF');
-							ql_log('DEBUG', 'ql_file_http() - before reading; ' . strlen($s) . 'read');
+							ql_log('DEBUG', 'ql_http_get() - transfer: until EOF');
+							ql_log('DEBUG', 'ql_http_get() - before reading; ' . strlen($s) . 'read');
 						}
 						while (!feof($socket))
 							$s .= fread($socket, 4096);
 						if ($ql_debug_http_fread)
-							ql_log('DEBUG', 'ql_file_http() - after reading; ' . strlen($s) . 'read');
+							ql_log('DEBUG', 'ql_http_get() - after reading; ' . strlen($s) . 'read');
 					}
 				}
 
@@ -550,7 +550,7 @@ function & ql_file_http(
 					isset($arrResponse['headers']['Location']) &&
 					($arrRedirectUrl = @parse_url($arrResponse['headers']['Location'])) !== false
 				) {
-					if (!($fiOptions & QL_FHO_NOREDIRECT)) {
+					if (!($fiOptions & QL_HG_NOREDIRECT)) {
 						# Follow the redirection. If the new location is on a different server, don’t try
 						# to use the same login/password.
 						if (isset($arrRedirectUrl['host']))
@@ -558,7 +558,7 @@ function & ql_file_http(
 						$arrUrl = $arrRedirectUrl + $arrUrl;
 						if ($ql_debug_http_fread)
 							ql_log(
-								'DEBUG', 'ql_file_http() - redirect',
+								'DEBUG', 'ql_http_get() - redirect',
 								'<tt>' . ql_lenc($arrResponse['headers']['Location']) . '</tt>' . NL .
 									ql_logdumpvars(array(
 										'$arrRedirectUrl' => &$arrRedirectUrl,
@@ -661,7 +661,8 @@ function & ql_file_http(
 							# Now that we know what charset the response uses, convert it into UTF-8 for
 							# further processing.
 							$sCharset = strtolower($sCharset);
-							if (($sUtf8 = ql_unicode_conv($s, $sCharset)) !== false)
+							$sUtf8 = ql_unicode_conv($s, $sCharset);
+							if ($sUtf8 !== false)
 								$s = $sUtf8;
 						}
 					}
@@ -690,7 +691,7 @@ function & ql_file_http(
 		if ($arrSetCookies)
 			$arrResponse['headers']['Set-Cookie'] =& $arrSetCookies;
 	}
-	if (($fiOptions & QL_FHO_RETURNBODY) && is_array($arrResponse))
+	if (($fiOptions & QL_HG_RETURNBODY) && is_array($arrResponse))
 		# If the caller only wants the response body and we did not encounter errors, return what the
 		# caller asked for.
 		return $arrResponse['body'];
@@ -713,12 +714,12 @@ function & ql_file_http(
 # string return
 #    Body of the server’s (possibly cached) response, or false if any errors occurred.
 #
-function ql_file_http_cached($sUrl, $sCacheFileName, array $arrHeaders = array()) {
+function ql_http_get_cached($sUrl, $sCacheFileName, array $arrHeaders = array()) {
 	if (file_exists($sCacheFileName))
 		$arrHeaders['If-Modified-Since'] = ql_format_timestamp(
 			'%P', filemtime($sCacheFileName), 'UTC'
 		);
-	$arrResponse =& ql_file_http($sUrl, 0, $arrHeaders);
+	$arrResponse =& ql_http_get($sUrl, 0, $arrHeaders);
 	if ($arrResponse === false || $arrResponse['code'] < 200 || $arrResponse['code'] >= 400)
 		return false;
 	if ($arrResponse['code'] == HTTP_STATUS_NOT_MODIFIED)
@@ -740,7 +741,7 @@ function ql_file_http_cached($sUrl, $sCacheFileName, array $arrHeaders = array()
 # callback $fnCallback
 #    Function to be called upon completion of each request.
 #
-function ql_file_http_multi(array $arrUrls, $fnCallback) {
+function ql_http_get_multi(array $arrUrls, $fnCallback) {
 	$arrRemaining = array();
 	foreach ($arrUrls as $sUrl) {
 		$arrUrl = @parse_url($sUrl);
