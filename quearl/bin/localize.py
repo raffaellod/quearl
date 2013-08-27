@@ -143,13 +143,13 @@ class l10n_generator(object):
 			# If the file needs to be (re-)generated, go ahead.
 			if dtOutputFile == None or dtL10nFile > dtOutputFile:
 				sys.stdout.write('Updating {} file {}\n'.format(sType, sOutputFileName))
-				sFile = getattr(self, 'write_' + sType)(dictL10nEntries)
+				sFile = getattr(self, 'l10n_to_' + sType)(dictL10nEntries)
 				with open(sOutputFileName, 'w') as f:
 					f.write(sFile)
 
 
 	@staticmethod
-	def write_php(dictL10nEntries):
+	def l10n_to_php(dictL10nEntries):
 		"""Generates a PHP localization file with the provided entries.
 
 		dict(object) dictL10nEntries
@@ -169,7 +169,7 @@ class l10n_generator(object):
 				# Escape escape sequences.
 				sValue = oValue.replace('\\', '\\\\').replace('\n', '\\n')
 				# Escape the quotes we use, and add them at either ends.
-				sValue = '"' + sValue.replace('"', '\\"') + '"'
+				sValue = "'" + sValue.replace("'", "\\'") + "'"
 			else:
 				# Python and PHP are similar enough that for numeric types we can simply use repr().
 				sValue = repr(oValue)
@@ -180,7 +180,7 @@ class l10n_generator(object):
 
 
 	@staticmethod
-	def write_js(dictL10nEntries):
+	def l10n_to_js(dictL10nEntries):
 		"""Generates a JavaScript localization file with the provided entries.
 
 		dict(object) dictL10nEntries
