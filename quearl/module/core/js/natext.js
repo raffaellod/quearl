@@ -866,11 +866,11 @@ Browser.log = $Browser$log;
 Date.prototype.format = function $Date$format(sFormat) {
 	return sFormat.replace(/%[crRxX]/g, (function($0, ich, s) {
 		switch ($0) {
-			case "%c": return L10n.QL_CORE_FMT_TS_DATE_S + " " + L10n.QL_CORE_FMT_TS_TIME_S;
-			case "%r": return "%i" + L10n.QL_CORE_FMT_TS_TIME_S.substr(2, 1) + "%M %p";
-			case "%R": return "%h" + L10n.QL_CORE_FMT_TS_TIME_S.substr(2, 1) + "%M";
-			case "%x": return L10n.QL_CORE_FMT_TS_DATE_S;
-			case "%X": return L10n.QL_CORE_FMT_TS_TIME_S;
+			case "%c": return L10n.CORE_FMT_TS_DATE_S + " " + L10n.CORE_FMT_TS_TIME_S;
+			case "%r": return "%i" + L10n.CORE_FMT_TS_TIME_S.substr(2, 1) + "%M %p";
+			case "%R": return "%h" + L10n.CORE_FMT_TS_TIME_S.substr(2, 1) + "%M";
+			case "%x": return L10n.CORE_FMT_TS_DATE_S;
+			case "%X": return L10n.CORE_FMT_TS_TIME_S;
 		}
 	}).bind(this)).replace(/%[%aAbBdefFhHiImMnpPSuwWYzZ]/g, (function($0, ich, s) {
 		switch ($0) {
@@ -878,14 +878,14 @@ Date.prototype.format = function $Date$format(sFormat) {
 				return "%";
 			case "%a":
 				var iWeekDay = this.getDay();
-				return Loc["QL_LOC_WEEKDAY_S" + (iWeekDay > 0 && iWeekDay || 7)];
+				return L10n["CORE_WEEKDAY_S" + (iWeekDay > 0 && iWeekDay || 7)];
 			case "%A":
 				var iWeekDay = this.getDay();
-				return Loc["QL_LOC_WEEKDAY_L" + (iWeekDay > 0 && iWeekDay || 7)];
+				return L10n["CORE_WEEKDAY_L" + (iWeekDay > 0 && iWeekDay || 7)];
 			case "%b":
-				return Loc["QL_LOC_MONTH_S" + (this.getMonth() + 1)];
+				return L10n["CORE_MONTH_S" + (this.getMonth() + 1)];
 			case "%B":
-				return Loc["QL_LOC_MONTH_L" + (this.getMonth() + 1)];
+				return L10n["CORE_MONTH_L" + (this.getMonth() + 1)];
 			case "%d":
 				return this.getDate().toString().pad(2, "0", -1);
 			case "%e":
@@ -947,7 +947,7 @@ function $Date$formatDuration(iTD) {
 		var arrStep = Date.formatDuration._arrSteps[sUnit],
 			 i = Math.floor(iTD % arrStep[0]);
 		if (i)
-			s = i + " " + Loc["QL_LOC_TIMELEN_" + sUnit + (i == 1 && "_S" || "S_S")] + " " + s;
+			s = i + " " + L10n["CORE_TIMELEN_" + sUnit + (i == 1 && "_S" || "S_S")] + " " + s;
 		iTD = Math.floor(iTD / arrStep[0]);
 	}
 	return s.substr(0, s.length - 1);
@@ -1308,7 +1308,7 @@ Number.INT_SIGN_MASK/*:int*/ = 0x80000000;
 			s = v.toString();
 		}
 		for (var i = s.length - 3; i > 0; i -= 3)
-			s = s.substr(0, i) + L10n.QL_CORE_NUM_THOUSEP + s.substr(i);
+			s = s.substr(0, i) + L10n.CORE_NUM_THOUSEP + s.substr(i);
 		if (cDecs > 0) {
 			// Cache the RegExp; this should hint the browser to keep the compiled version around,
 			// granting a free speed-up.
@@ -1319,7 +1319,7 @@ Number.INT_SIGN_MASK/*:int*/ = 0x80000000;
 				reDecs = new RegExp("\\.(\\d{0," + cDecs + "})");
 				mapDecsRegExpCache[cDecs] = cDecs;
 			}
-			s += L10n.QL_CORE_NUM_DECSEP + (v.toString().match(reDecs) || {1: ""})[1].pad(cDecs, "0", 1);
+			s += L10n.CORE_NUM_DECSEP + (v.toString().match(reDecs) || {1: ""})[1].pad(cDecs, "0", 1);
 		}
 		return s;
 	}
@@ -1362,7 +1362,7 @@ Number.formatByteSize = $Number$formatByteSize;
 //    Formatted currency.
 //
 function $Number$formatCy(i) {
-	return Number.format(i, L10n.QL_CORE_CUR_DECS);
+	return Number.format(i, L10n.CORE_CUR_DECS);
 }
 Number.formatCy = $Number$formatCy;
 

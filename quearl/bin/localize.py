@@ -67,9 +67,9 @@ class l10n_generator(object):
 			# Maybe this module has no localization.
 			return
 
-		# sModulePrefix like “QL_CORE”, “QL_ECOMM”, …
+		# sModulePrefix like “CORE”, “ECOMM”, …
 		# TODO: FIXME: temp hack!
-		sModulePrefix = 'QL_' + os.path.basename(sModuleDir).upper() + '_'
+		sModulePrefix = os.path.basename(sModuleDir).upper() + '_'
 		for sFileName in os.listdir(sL10nDir):
 			if sFileName.endswith('.l10n'):
 				sFileName = os.path.join(sL10nDir, sFileName)
@@ -173,7 +173,7 @@ class l10n_generator(object):
 			else:
 				# Python and PHP are similar enough that for numeric types we can simply use repr().
 				sValue = repr(oValue)
-			s += "define('" + sName + "', " + sValue + ');\n'
+			s += "define('L10N_" + sName + "', " + sValue + ');\n'
 		s += '\n' \
 			  '?>'
 		return s
