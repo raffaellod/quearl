@@ -18,14 +18,14 @@
 # not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------------
 
-# Definition of the application class. Same prerequisite constraints as main.inc.php.
+# Definition of the application class. Same prerequisite constraints as main.php.
 
 
 define('QUEARL_CORE_MAIN_APPLICATION_INCLUDED', true);
 
 # This is just an explicit dependency declaration; were it not for require_once, this would be a
 # circular dependency.
-require_once 'main.inc.php';
+require_once 'main.php';
 
 
 

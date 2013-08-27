@@ -23,7 +23,7 @@
 
 define('QUEARL_CORE_MIME_INCLUDED', true);
 
-require_once 'main.inc.php';
+require_once 'main.php';
 
 
 
