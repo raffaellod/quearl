@@ -95,7 +95,7 @@ function ql_json_decode($s) {
 			}
 		}
 		$o = new $sClassName();
-		if (!$o->setfromjson($arrArgs)) {
+		if (!$o->set_from_json($arrArgs)) {
 			trigger_error(
 				'Error initializing new instance of \'' . $sClassName . '\'', E_USER_WARNING
 			);
