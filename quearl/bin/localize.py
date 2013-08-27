@@ -148,17 +148,20 @@ class l10n_generator(object):
 					f.write(sFile)
 
 
-	def write_php(self, dictL10nEntries):
+	@staticmethod
+	def write_php(dictL10nEntries):
 		"""Generates a PHP localization file with the provided entries.
 
 		dict(object) dictL10nEntries
 			Localized constants.
+		str return
+			PHP version of the contents of dictL10nEntries.
 		"""
 
-		sFile  = '<?php\n' \
-					'# -*- coding: utf-8; mode: php; tab-width: 3 -*-\n' \
-					'# AUTOMATICALLY-GENERATED FILE - do not edit!\n' \
-					'\n'
+		s = '<?php\n' \
+			 '# -*- coding: utf-8; mode: php; tab-width: 3 -*-\n' \
+			 '# AUTOMATICALLY-GENERATED FILE - do not edit!\n' \
+			 '\n'
 		for sName, oValue in dictL10nEntries.items():
 			if isinstance(oValue, bool):
 				sValue = oValue and 'true' or 'false'
@@ -168,25 +171,28 @@ class l10n_generator(object):
 				# Escape the quotes we use, and add them at either ends.
 				sValue = '"' + sValue.replace('"', '\\"') + '"'
 			else:
-				# Python and PHP are similar enough that for a few types we can simply use repr().
+				# Python and PHP are similar enough that for numeric types we can simply use repr().
 				sValue = repr(oValue)
-			sFile += "define('" + sName + "', " + sValue + ');\n'
-		sFile += '\n' \
-					'?>'
-		return sFile
+			s += "define('" + sName + "', " + sValue + ');\n'
+		s += '\n' \
+			  '?>'
+		return s
 
 
-	def write_js(self, dictL10nEntries):
+	@staticmethod
+	def write_js(dictL10nEntries):
 		"""Generates a JavaScript localization file with the provided entries.
 
 		dict(object) dictL10nEntries
 			Localized constants.
+		str return
+			JavaScript version of the contents of dictL10nEntries.
 		"""
 
-		sFile  = '// -*- coding: utf-8; mode: javascript; tab-width: 3 -*-\n' \
-					'// AUTOMATICALLY-GENERATED FILE - do not edit!\n' \
-					'\n' \
-					'var L = L10n;\n'
+		s = '// -*- coding: utf-8; mode: javascript; tab-width: 3 -*-\n' \
+			 '// AUTOMATICALLY-GENERATED FILE - do not edit!\n' \
+			 '\n' \
+			 'var L = L10n;\n'
 		for sName, oValue in dictL10nEntries.items():
 			if isinstance(oValue, bool):
 				sValue = oValue and 'true' or 'false'
@@ -194,9 +200,9 @@ class l10n_generator(object):
 				# Thanks to the similarities between Python strings and JS strings, for most types we
 				# can simply use repr().
 				sValue = repr(oValue)
-			sFile += 'L.' + sName + '=' + sValue + ';\n'
-		sFile += 'L = undefined;\n'
-		return sFile
+			s += 'L.' + sName + '=' + sValue + ';\n'
+		s += 'L = undefined;\n'
+		return s
 
 
 
