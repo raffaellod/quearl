@@ -21,6 +21,24 @@ with Quearl. If not, see <http://www.gnu.org/licenses/>.
 Introduction
 ------------
 
-Quearl (shortened to Ql or ql in code) is an integrated end-to-end web
-framework, offering modular front-end and back-end services.
+Quearl is an integrated end-to-end web framework, offering modular front-end and
+back-end services.
+
+
+Installing
+----------
+
+The Quearl subdirectory must be installed in the web server root; its name can
+be changed though.
+
+Quearl takes over an entire remote directory; the default behavior is to take
+over the root of the domain, but this can be changed to one of its
+subdirectories instead, allowing for parallel installations or sharing the same
+domain with other software:
+
+•  Modify the URL rewriting rule in the web server root, so that it only engages
+   Quearl for requests into that subdirectory;
+•  Change the “remote_root_dir” entry in quearl/config/core/module.conf to
+   include the subdirectory name. (Note that the quearl subdirectory may be
+   renamed, so use the name it was changed to if that’s the case.)
 
