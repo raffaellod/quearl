@@ -189,12 +189,18 @@ function gzdecode($s) {
 #    New-line sequence used in $s. If omitted, automatic detection will be attempted.
 # array<string => mixed> return
 #    false if the headers were not completed; otherwise map containing these keys:
-#    “newline”   New-line sequence used in the response.
-#    “protocol”  Protocol/version (e.g. HTTP/1.0).
-#    “code”      HTTP response code (HTTP_STATUS_* or newer codes).
-#    “codedesc”  Description provided by the server for “code”.
-#    “headers”   Map of header fields => values.
-#    “body”      Body of the response, as a single string.
+#    “newline” => string
+#       New-line sequence used in the response.
+#    “protocol” => string
+#       Protocol/version (e.g. HTTP/1.0).
+#    “code” => int
+#       HTTP response code (HTTP_STATUS_* or newer codes).
+#    “codedesc” => string
+#       Description provided by the server for “code”.
+#    “headers” => array<string => mixed>
+#       Map of header fields => values.
+#    “body” => string
+#       Body of the response, as a single string.
 #
 function & ql_str_parsehttpresponse($s, $sNL = null) {
 	# Attempt to detect the new-line style if not provided.
@@ -298,15 +304,24 @@ function & ql_str_parsehttpresponse($s, $sNL = null) {
 #    false if any error occurs; otherwise if $fiOptions includes QL_HG_RETURNBODY, the return value
 #    will be a string containing the body of the server’s response; else the return value will be a
 #    map with these keys:
-#    “newline”   New-line sequence used in the response.
-#    “protocol”  Protocol/version (e.g. HTTP/1.0).
-#    “code”      HTTP response code (HTTP_STATUS_* or newer codes).
-#    “codedesc”  Description provided by the server for “code”.
-#    “requrl”    URL that was originally requested.
-#    “url”       URL that was eventually obtained, after redirects (if any) were followed.
-#    “redirects” Number of redirects that were followed before a response was returned.
-#    “headers”   Map of header fields => values.
-#    “body”      Body of the response, as a single string.
+#    “newline” => string
+#       New-line sequence used in the response.
+#    “protocol” => string
+#       Protocol/version (e.g. HTTP/1.0).
+#    “code” => int
+#       HTTP response code (HTTP_STATUS_* or newer codes).
+#    “codedesc” => string
+#       Description provided by the server for “code”.
+#    “requrl” => string
+#       URL that was originally requested.
+#    “url” => string
+#       URL that was eventually obtained, after redirects (if any) were followed.
+#    “redirects” => int
+#       Number of redirects that were followed before a response was returned.
+#    “headers” => array<string => mixed>
+#       Map of header fields => values.
+#    “body” => string
+#       Body of the response, as a single string.
 #
 function & ql_http_get(
 	$sUrl, $fiOptions = QL_HG_RETURNBODY, array $arrHeaders = array(), $sPostData = null
