@@ -91,7 +91,7 @@ class QlApplication {
 
 	## Returns an array with all the style sections loaded thus far.
 	#
-	# array<array<string => string>> return
+	# array<string => array<string => string>> return
 	#    Array of style sections.
 	#
 	public function & get_style_sections() {
@@ -174,7 +174,7 @@ class QlApplication {
 			else if ($bIsCss && strncmp($sVar, 'XHTML', 5) == 0)
 				# Style XHTML fragments in this style section.
 				$arrSection[$sVar] = preg_replace(
-					'/(\r?\n|\r)\t*/', ' ', ql_template_subst($sValue, $this->m_arrStyleSections)
+					'/(\r?\n|\r)\t*/', ' ', QlModule::template_subst($sValue, $this->m_arrStyleSections)
 				);
 		if ($bIsCss)
 			$this->m_arrStyleSections[$sSection] =& $arrSection;
