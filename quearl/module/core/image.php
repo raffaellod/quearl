@@ -89,8 +89,9 @@ function ql_image_resize(
 	$iDstMaxW, $iDstMaxH, $iSrcX = null, $iSrcY = null, $iSrcW = null, $iSrcH = null
 ) {
 	$arrImageInfo = getimagesize($sFileName);
-	if (!$arrImageInfo)
+	if (!$arrImageInfo) {
 		return false;
+	}
 
 	# If no portion of the source image is specified, use the entire image.
 	if ($iSrcX === null || $iSrcY === null || $iSrcW === null || $iSrcH === null) {
@@ -104,13 +105,15 @@ function ql_image_resize(
 	if (
 		$iSrcX == 0 && $iSrcY == 0 && $iSrcW == $arrImageInfo[0] && $iSrcH == $arrImageInfo[1] &&
 		$iSrcW <= $iDstMaxW && $iSrcH <= $iDstMaxH
-	)
+	) {
 		return @file_get_contents($sFileName);
+	}
 
 	# We need to process the image; this currently requires gd.
-	if (!extension_loaded('gd'))
+	if (!extension_loaded('gd')) {
 		# TODO: log a warning about the absence of the gd extension.
 		return false;
+	}
 
 	# Calculate the smallest ratio between source/destination width/height, and apply it to both
 	# dimensions, to keep the aspect ratio unchanged.
@@ -128,12 +131,14 @@ function ql_image_resize(
 			# TODO: warn about the unsupported image type.
 			return false;
 	}
-	if (empty($imgSrc))
+	if (empty($imgSrc)) {
 		return false;
+	}
 	$imgDst = imagecreatetruecolor($cxDst, $cyDst);
-	if (!$imgDst)
+	if (!$imgDst) {
 		# TODO: log an error about being unable to create the destination image (out of memory?).
 		return false;
+	}
 	imagecopyresampled($imgDst, $imgSrc, 0, 0, $iSrcX, $iSrcY, $cxDst, $cyDst, $iSrcW, $iSrcH);
 	imagedestroy($imgSrc);
 	# Create a new output buffer, write the image to it in the requested format…

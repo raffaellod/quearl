@@ -50,44 +50,47 @@ require_once 'main.php';
 #
 function utf8_charnext($s, &$ib) {
 	$cb = strlen($s);
-	if ($ib === null || $ib < 0)
+	if ($ib === null || $ib < 0) {
 		$ib = 0;
-	if ($ib >= $cb)
+	}
+	if ($ib >= $cb) {
 		return false;
+	}
 
 	$b = ord($s{$ib});
-	if ($b <= 0x7f)
+	if ($b <= 0x7f) {
 		# 0xxxxxxx
 		$cbCh = 1;
-	else if ($b <= 0xbf)
+	} else if ($b <= 0xbf) {
 		# 10xxxxxx
 		# Can only appear inside an UTF-8 sequence, so it’s not valid here.
 		return false;
-	else if ($b <= 0xdf)
+	} else if ($b <= 0xdf) {
 		# 110xxxxx 10yyyyyy
 		$cbCh = 2;
-	else if ($b <= 0xef)
+	} else if ($b <= 0xef) {
 		# 1110xxxx 10yyyyyy 10zzzzzz
 		$cbCh = 3;
-	else if ($b <= 0xf7)
+	} else if ($b <= 0xf7) {
 		# 11110www 10xxxxxx 10yyyyyy 10zzzzzz
 		$cbCh = 4;
-	else if ($b <= 0xfb)
+	} else if ($b <= 0xfb) {
 		# 111110vv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 		# Valid sequence, but symbol outside defined Unicode range.
 		$cbCh = 5;
-	else if ($b <= 0xfd)
+	} else if ($b <= 0xfd) {
 		# 1111110u 10vvvvvv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 		# Valid sequence, but symbol outside defined Unicode range.
 		$cbCh = 6;
-	else if ($b <= 0xfe)
+	} else if ($b <= 0xfe) {
 		# 11111110 10uuuuuu 10vvvvvv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 		# Valid sequence, but symbol outside defined Unicode range.
 		$cbCh = 7;
-	else
+	} else {
 		# 11111111 10tttttt 10uuuuuu 10vvvvvv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 		# Valid sequence, but symbol outside defined Unicode range.
 		$cbCh = 8;
+	}
 
 	$ibLast = $ib;
 	$ib += $cbCh;
@@ -107,10 +110,12 @@ function utf8_charnext($s, &$ib) {
 #
 function utf8_charprev($s, &$ib) {
 	$cb = strlen($s);
-	if ($ib === null || $ib > $cb)
+	if ($ib === null || $ib > $cb) {
 		$ib = $cb;
-	if ($ib <= 0)
+	}
+	if ($ib <= 0) {
 		return false;
+	}
 
 	$cbCh = 0;
 	do {
@@ -122,44 +127,52 @@ function utf8_charprev($s, &$ib) {
 		# 0xxxxxxx
 		# It must be the only character collected in the above loop, as ASCII characters are 1-byte
 		# sequences.
-		if ($cbCh != 1)
+		if ($cbCh != 1) {
 			return false;
-	} else if ($b <= 0xbf)
+		}
+	} else if ($b <= 0xbf) {
 		# 110xxxxx 10yyyyyy
 		# Can only appear inside an UTF-8 sequence, so it’s not valid here.
 		return false;
-	else if ($b <= 0xdf) {
+	} else if ($b <= 0xdf) {
 		# 110xxxxx 10yyyyyy
-		if ($cbCh != 2)
+		if ($cbCh != 2) {
 			return false;
+		}
 	} else if ($b <= 0xef) {
 		# 1110xxxx 10yyyyyy 10zzzzzz
-		if ($cbCh != 3)
+		if ($cbCh != 3) {
 			return false;
+		}
 	} else if ($b <= 0xf7) {
 		# 11110www 10xxxxxx 10yyyyyy 10zzzzzz
-		if ($cbCh != 4)
+		if ($cbCh != 4) {
 			return false;
+		}
 	} else if ($b <= 0xfb) {
 		# 111110vv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 		# Valid sequence, but symbol outside defined Unicode range.
-		if ($cbCh != 5)
+		if ($cbCh != 5) {
 			return false;
+		}
 	} else if ($b <= 0xfd) {
 		# 1111110u 10vvvvvv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 		# Valid sequence, but symbol outside defined Unicode range.
-		if ($cbCh != 6)
+		if ($cbCh != 6) {
 			return false;
+		}
 	} else if ($b <= 0xfe) {
 		# 11111110 10uuuuuu 10vvvvvv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 		# Valid sequence, but symbol outside defined Unicode range.
-		if ($cbCh != 7)
+		if ($cbCh != 7) {
 			return false;
+		}
 	} else {
 		# 11111111 10tttttt 10uuuuuu 10vvvvvv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 		# Valid sequence, but symbol outside defined Unicode range.
-		if ($cbCh != 8)
+		if ($cbCh != 8) {
 			return false;
+		}
 	}
 	return substr($s, $ib, $cbCh);
 }
@@ -183,8 +196,9 @@ function utf8_fix($s, $sReplace = '') {
 		$ich = 0;
 		preg_match($sInvalidCharPattern, $s, $arrMatch, 0, $ich);
 		$ich += strlen($arrMatch[0])
-	)
+	) {
 		$sRet .= (isset($arrMatch[1]) ? $sReplace : $arrMatch[0]);
+	}
 	return $sRet;
 }
 
@@ -221,19 +235,21 @@ function utf8_xmlenc($s) {
 #
 function utf8_gathernumbers($s) {
 	static $arrToAsciiNumbers = null;
-	if ($arrToAsciiNumbers === null)
+	if ($arrToAsciiNumbers === null) {
 		$arrToAsciiNumbers = ql_php_get_array_file_contents(
 			$_APP['core']['rodata_lpath'] . 'core/utf-8/toasciinumbers.dat'
 		);
-	foreach ($arrToAsciiNumbers as $sSetName => &$arrSet)
-		if ($arrSet['category'] == 'Nd')
+	}
+	foreach ($arrToAsciiNumbers as $sSetName => &$arrSet) {
+		if ($arrSet['category'] == 'Nd') {
 			$s = strtr($s, $arrSet);
-		else {
+		} else {
 			$converter = new Ql__utf8_gathernumbers_converter($arrSet);
 			$s = preg_replace_callback(
 				$arrSet['match'], array($converter, 'callback_' . $arrSet['category']), $s
 			);
 		}
+	}
 	return $s;
 }
 
@@ -254,8 +270,9 @@ class Ql__utf8_gathernumbers_converter {
 	public function callback_Nl(array& $arrMatch) {
 		$mTotal = 0;
 		$sNumber = $arrMatch[0];
-		while ($ch = utf8_charnext($sNumber, $ib))
+		while ($ch = utf8_charnext($sNumber, $ib)) {
 			$mTotal += $this->m_arrSet['numbers'][$ch];
+		}
 		return $mTotal;
 	}
 
@@ -278,10 +295,11 @@ class Ql__utf8_gathernumbers_converter {
 #
 function utf8_getws($sSet = 'BL') {
 	static $arrWhitespace = null;
-	if ($arrWhitespace === null)
+	if ($arrWhitespace === null) {
 		$arrWhitespace = ql_php_get_array_file_contents(
 			$_APP['core']['rodata_lpath'] . 'core/utf-8/whitespace.dat'
 		);
+	}
 	$s = '';
 	if (strpos($sSet, 'B') !== false) $s .= $arrWhitespace['B'];
 	if (strpos($sSet, 'L') !== false) $s .= $arrWhitespace['L'];
@@ -299,8 +317,9 @@ function utf8_getws($sSet = 'BL') {
 #
 function utf8_ltrim($s) {
 	static $sPattern = null;
-	if ($sPattern === null)
+	if ($sPattern === null) {
 		$sPattern = '/^(?:' . utf8_getws() . ')*/AS';
+	}
 	return preg_replace($sPattern, '', $s);
 }
 
@@ -314,8 +333,9 @@ function utf8_ltrim($s) {
 #
 function utf8_rtrim($s) {
 	static $sPattern = null;
-	if ($sPattern === null)
+	if ($sPattern === null) {
 		$sPattern = '/(?:' . utf8_getws() . ')*$/DS';
+	}
 	return preg_replace($sPattern, '', $s);
 }
 
@@ -352,8 +372,9 @@ function utf8_strpos($sHayStack, $sNeedle, $ichOffset = 0) {
 			'/^(?:' . ($iMult ? '(?:.{32768}){' . $iMult . '}' : '') . '.{' . $iMod . '})(.*)$/us',
 			$sHayStack,
 			$arrMatch
-		))
+		)) {
 			return false;
+		}
 		$sHayStack =& $arrMatch[1];
 	}
 	$ib = strpos($sHayStack, $sNeedle);
@@ -383,8 +404,9 @@ function utf8_strstr($sHayStack, $sNeedle, $ichOffset = 0) {
 			'/^(?:' . ($iMult ? '(?:.{32768}){' . $iMult . '}' : '') . '.{' . $iMod . '})(.*)$/us',
 			$sHayStack,
 			$arrMatch
-		))
+		)) {
 			return false;
+		}
 		$sHayStack =& $arrMatch[1];
 	}
 	return strstr($sHayStack, $sNeedle);
@@ -400,10 +422,11 @@ function utf8_strstr($sHayStack, $sNeedle, $ichOffset = 0) {
 #
 function utf8_strtoascii($s) {
 	static $arrAsciiTranslit = null;
-	if ($arrAsciiTranslit === null)
+	if ($arrAsciiTranslit === null) {
 		$arrAsciiTranslit = ql_php_get_array_file_contents(
 			$_APP['core']['rodata_lpath'] . 'core/utf-8/asciitranslit.dat'
 		);
+	}
 	$s = strtr($s, $arrAsciiTranslit);
 	# Delete any remaining non-ASCII characters.
 	$s = preg_replace('/[\x80-\xff]+/', '', $s);
@@ -437,10 +460,11 @@ function utf8_strtolower($s) {
 #
 function utf8_strtoupper($s) {
 	static $arrToUpper = null;
-	if ($arrToUpper === null)
+	if ($arrToUpper === null) {
 		$arrToUpper = ql_php_get_array_file_contents(
 			$_APP['core']['rodata_lpath'] . 'core/utf-8/touppercase.dat'
 		);
+	}
 	return strtr($s, $arrToUpper);
 }
 
@@ -458,30 +482,36 @@ function utf8_strtoupper($s) {
 #
 function utf8_substr($s, $ichOffset, $cch = null) {
 	$ichOffset = (int)$ichOffset;
-	if ($cch !== null)
+	if ($cch !== null) {
 		$cch = (int)$cch;
-	if (($cch === 0) || ($ichOffset < 0 && $cch < 0 && $cch < $ichOffset))
+	}
+	if (($cch === 0) || ($ichOffset < 0 && $cch < 0 && $cch < $ichOffset)) {
 		return '';
+	}
 	if ($ichOffset < 0) {
 		$cchS = strlen(utf8_decode($s));
 		$ichOffset = $cchS + $ichOffset;
-		if ($ichOffset < 0)
+		if ($ichOffset < 0) {
 			$ichOffset = 0;
+		}
 	}
 	if ($ichOffset > 0) {
 		$iMult = $ichOffset >> 15;
 		$iMod = $ichOffset & 0x7fff;
 		$sOffsetPattern = '^(?:' . ($iMult ? '(?:.{32768}){' . $iMult . '}' : '') . '.{' . $iMod .
 			'})';
-	} else
+	} else {
 		$sOffsetPattern = '^';
-	if ($cch === null)
+	}
+	if ($cch === null) {
 		$sLengthPattern = '(.*)$';
-	else {
-		if (!isset($cchS))
+	} else {
+		if (!isset($cchS)) {
 			$cchS = strlen(utf8_decode($s));
-		if ($ichOffset > $cchS)
+		}
+		if ($ichOffset > $cchS) {
 			return '';
+		}
 		if ($cch > 0) {
 			$cch = min($cchS - $ichOffset, $cch);
 			$iMult = $cch >> 15;
@@ -489,14 +519,16 @@ function utf8_substr($s, $ichOffset, $cch = null) {
 			$sLengthPattern = '(' . ($iMult ? '(?:.{32768}){' . $iMult . '}' : '') . '.{' . $iMod .
 				'})';
 		} else if ($cch < 0) {
-			if ($cch < $ichOffset - $cchS)
+			if ($cch < $ichOffset - $cchS) {
 				return '';
+			}
 			$iMult = -$cch >> 15;
 			$iMod = -$cch & 0x7fff;
 			$sLengthPattern = '(.*)(?:' . ($iMult ? '(?:.{32768}){' . $iMult . '}' : '') . '.{' .
 				$iMod . '})$';
-		} else
+		} else {
 			$sLengthPattern = '';
+		}
 	}
 	return preg_match('/' . $sOffsetPattern . $sLengthPattern . '/us', $s, $arrMatch)
 		? $arrMatch[1]
@@ -525,10 +557,11 @@ function utf8_trim($s) {
 #
 function utf8_ucfirst($s) {
 	static $arrToTitle = null;
-	if ($arrToTitle === null)
+	if ($arrToTitle === null) {
 		$arrToTitle = ql_php_get_array_file_contents(
 			$_APP['core']['rodata_lpath'] . 'core/utf-8/totitlecase.dat'
 		);
+	}
 	return strtr($s{0}, $arrToTitle) . substr($s, 1);
 }
 
@@ -577,14 +610,17 @@ function utf8_validate($s) {
 #
 function utf16_charprev($s, &$ib, $bBigEndian) {
 	$cb = strlen($s);
-	if ($ib === null || $ib > $cb)
+	if ($ib === null || $ib > $cb) {
 		$ib = $cb;
-	if ($ib < 2)
+	}
+	if ($ib < 2) {
 		return false;
+	}
 	$b = ord($s{$ib - ($bBigEndian ? 2 : 1)});
 	if ($b >= 0xdc && $b <= 0xdf) {
-		if ($ib < 4)
+		if ($ib < 4) {
 			return false;
+		}
 		$ib -= 4;
 		return substr($s, $ib, 4);
 	}
@@ -606,15 +642,18 @@ function utf16_charprev($s, &$ib, $bBigEndian) {
 #    The UTF-16 characters preceding the specified index.
 #
 function utf16_charnext($s, &$ib, $bBigEndian) {
-	if ($ib === null || $ib < 0)
+	if ($ib === null || $ib < 0) {
 		$ib = 0;
+	}
 	$cb = strlen($s) - $ib;
-	if ($cb < 2)
+	if ($cb < 2) {
 		return false;
+	}
 	$b = ord($s{$bBigEndian ? $ib : $ib + 1});
 	if ($b >= 0xd8 && $b <= 0xdb) {
-		if ($cb < 4)
+		if ($cb < 4) {
 			return false;
+		}
 		$ch = substr($s, $ib, 4);
 		$ib += 4;
 	} else {
@@ -641,10 +680,13 @@ function utf16_strlen($s, $bBigEndian) {
 		$s,
 		$arrMatches,
 		PREG_OFFSET_CAPTURE
-	))
-		foreach ($arrMatches[0] as $arrMatch)
-			if (!($arrMatch[1] & 1))
+	)) {
+		foreach ($arrMatches[0] as $arrMatch) {
+			if (!($arrMatch[1] & 1)) {
 				--$cch;
+			}
+		}
+	}
 	return $cch;
 }
 
@@ -693,60 +735,67 @@ function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 		$sInEncoding = strtolower($sInEncoding);
 		switch ($sInEncoding = strtolower($sInEncoding)) {
 			case 'utf-8':
-				if (strncmp($s, "\xef\xbb\xbf", 3) == 0)
+				if (strncmp($s, "\xef\xbb\xbf", 3) == 0) {
 					$s = substr($s, 3);
+				}
 				break;
 
 			case 'ucs-2':
 			case 'utf-16':
-				if (strncmp($s, "\xff\xfe", 2) == 0)
+				if (strncmp($s, "\xff\xfe", 2) == 0) {
 					$sInEncoding .= 'le';
-				else if (strncmp($s, "\xfe\xff", 2) == 0)
+				} else if (strncmp($s, "\xfe\xff", 2) == 0) {
 					$sInEncoding .= 'be';
-				else
+				} else {
 					return false;
+				}
 				$s = substr($s, 2);
 				break;
 
 			case 'ucs-2le':
 			case 'utf-16le':
-				if (strncmp($s, "\xff\xfe", 2) == 0)
+				if (strncmp($s, "\xff\xfe", 2) == 0) {
 					$s = substr($s, 2);
+				}
 				break;
 
 			case 'ucs-2be':
 			case 'utf-16be':
-				if (strncmp($s, "\xfe\xff", 2) == 0)
+				if (strncmp($s, "\xfe\xff", 2) == 0) {
 					$s = substr($s, 2);
+				}
 				break;
 
 			case 'ucs-4':
 			case 'utf-32':
-				if (strncmp($s, "\xff\xfe\x00\x00", 4) == 0)
+				if (strncmp($s, "\xff\xfe\x00\x00", 4) == 0) {
 					$sInEncoding .= 'le';
-				else if (strncmp($s, "\x00\x00\xfe\xff", 4) == 0)
+				} else if (strncmp($s, "\x00\x00\xfe\xff", 4) == 0) {
 					$sInEncoding .= 'be';
-				else
+				} else {
 					return false;
+				}
 				$s = substr($s, 4);
 				break;
 
 			case 'ucs-4le':
 			case 'utf-32le':
-				if (strncmp($s, "\xff\xfe\x00\x00", 4) == 0)
+				if (strncmp($s, "\xff\xfe\x00\x00", 4) == 0) {
 					$s = substr($s, 4);
+				}
 				break;
 
 			case 'ucs-4be':
 			case 'utf-32be':
-				if (strncmp($s, "\x00\x00\xfe\xff", 4) == 0)
+				if (strncmp($s, "\x00\x00\xfe\xff", 4) == 0) {
 					$s = substr($s, 4);
+				}
 				break;
 		}
-	} else if (is_array($s))
+	} else if (is_array($s)) {
 		$sInEncoding = 'raw';
 	# Check for any encoding defined by a BOM.
-	else if (strncmp($s, "\xff\xfe\x00\x00", 4) == 0) {
+	} else if (strncmp($s, "\xff\xfe\x00\x00", 4) == 0) {
 		$s = substr($s, 4);
 		$sInEncoding = 'utf-32le';
 	} else if (strncmp($s, "\x00\x00\xfe\xff", 4) == 0) {
@@ -761,13 +810,15 @@ function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 	} else if (strncmp($s, "\xef\xbb\xbf", 3) == 0) {
 		$s = substr($s, 3);
 		$sInEncoding = 'utf-8';
-	} else
+	} else {
 		return false;
+	}
 
 	$sOutEncoding = strtolower($sOutEncoding);
-	if ($sInEncoding == $sOutEncoding)
+	if ($sInEncoding == $sOutEncoding) {
 		# No transcoding necessary.
 		return $s;
+	}
 	switch ($sInEncoding) {
 		case 'raw':
 			$arr = $s;
@@ -782,49 +833,51 @@ function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 			$arr = array();
 			$ib = 0;
 			$cb = strlen($s);
-			while ($ib < $cb)
-				if (($b = ord($s{$ib})) <= 0x7F) {
+			while ($ib < $cb) {
+				if (($b = ord($s{$ib})) <= 0x7f) {
 					# 0zzzzzzz -> 00000000 00000000 00000000 0zzzzzzz
 					$arr[] = $b;
 					++$ib;
-				} else if ($b <= 0xBF)
+				} else if ($b <= 0xbf) {
 					# 10xxxxxx
 					# Can only appear inside an UTF-8 sequence, so it’s not valid here.
 					;
-				else if ($b <= 0xDF) {
+				} else if ($b <= 0xdf) {
 					# 110yyyyy 10zzzzzz -> 00000000 00000000 00000yyy yyzzzzzz
-					$arr[] = ((        $b       & 0x1F) << 6) |
-								 (ord($s{$ib + 1}) & 0x3F);
+					$arr[] = ((        $b       & 0x1f) << 6) |
+								 (ord($s{$ib + 1}) & 0x3f);
 					$ib += 2;
-				} else if ($b <= 0xEF) {
+				} else if ($b <= 0xef) {
 					# 1110xxxx 10yyyyyy 10zzzzzz -> 00000000 00000000 xxxxyyyy yyzzzzzz
-					$arr[] = ((        $b       & 0x0F) << 12) |
-								((ord($s{$ib + 1}) & 0x3F) <<  6) |
-								 (ord($s{$ib + 2}) & 0x3F);
+					$arr[] = ((        $b       & 0x0f) << 12) |
+								((ord($s{$ib + 1}) & 0x3f) <<  6) |
+								 (ord($s{$ib + 2}) & 0x3f);
 					$ib += 3;
 				} else if ($b <= 0xF7) {
 					# 11110www 10xxxxxx 10yyyyyy 10zzzzzz -> 00000000 000wwwxx xxxxyyyy yyzzzzzz
 					$arr[] = ((        $b       & 0x07) << 18) |
-								((ord($s{$ib + 1}) & 0x3F) << 12) |
-								((ord($s{$ib + 2}) & 0x3F) <<  6) |
-								 (ord($s{$ib + 3}) & 0x3F);
+								((ord($s{$ib + 1}) & 0x3f) << 12) |
+								((ord($s{$ib + 2}) & 0x3f) <<  6) |
+								 (ord($s{$ib + 3}) & 0x3f);
 					$ib += 4;
-				} else if ($b <= 0xFB)
+				} else if ($b <= 0xfb) {
 					# 111110vv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 					# Valid sequence, but symbol outside defined Unicode range.
 					$ib += 5;
-				else if ($b <= 0xFD)
+				} else if ($b <= 0xfd) {
 					# 1111110u 10vvvvvv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 					# Valid sequence, but symbol outside defined Unicode range.
 					$ib += 6;
-				else if ($b <= 0xFE)
+				} else if ($b <= 0xfe) {
 					# 11111110 10uuuuuu 10vvvvvv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 					# Valid sequence, but symbol outside defined Unicode range.
 					$ib += 7;
-				else
+				} else {
 					# 11111111 10tttttt 10uuuuuu 10vvvvvv 10wwwwww 10xxxxxx 10yyyyyy 10zzzzzz
 					# Valid sequence, but symbol outside defined Unicode range.
 					$ib += 8;
+				}
+			}
 			break;
 
 		case 'ucs-2le':
@@ -839,7 +892,7 @@ function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 			$arr = array();
 			$ib = 0;
 			$cb = strlen($s) - 1;
-			while ($ib < $cb)
+			while ($ib < $cb) {
 				if ((($b = ord($s{$ib + 1})) & 0xd8) == 0xd8) {
 					$arr[] = ((        $b       & 0x03) << 18) |
 								( ord($s{$ib    })         << 10) |
@@ -851,13 +904,14 @@ function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 					$arr[] = ($b << 8) | ord($s{$ib});
 					$ib += 2;
 				}
+			}
 			break;
 
 		case 'utf-16be':
 			$arr = array();
 			$ib = 0;
 			$cb = strlen($s) - 1;
-			while ($ib < $cb)
+			while ($ib < $cb) {
 				if ((($b = ord($s{$ib})) & 0xd8) == 0xd8) {
 					$arr[] = ((        $b       & 0x03) << 18) |
 								( ord($s{$ib + 1})         << 10) |
@@ -869,6 +923,7 @@ function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 					$arr[] = ($b << 8) | ord($s{$ib + 1});
 					$ib += 2;
 				}
+			}
 			break;
 
 		case 'ucs-4le':
@@ -891,41 +946,46 @@ function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 			break;
 
 		case 'xml':
-			foreach ($arr as $ch)
+			foreach ($arr as $ch) {
 				$s .= '&#x' . dechex($ch) . ';';
+			}
 			break;
 
 		case 'ascii':
-			foreach ($arr as $ch)
-				if ($ch <= 0x0000007f)
+			foreach ($arr as $ch) {
+				if ($ch <= 0x0000007f) {
 					$s .= chr($ch);
+				}
+			}
 			break;
 
 		case 'iso-8859-1':
-			foreach ($arr as $ch)
-				if ($ch <= 0x000000ff)
+			foreach ($arr as $ch) {
+				if ($ch <= 0x000000ff) {
 					$s .= chr($ch);
+				}
+			}
 			break;
 
 		case 'utf-8+bom':
 			$s = "\xef\xbb\xbf";
 		case 'utf-8':
-			foreach ($arr as $ch)
-				if ($ch <= 0x0000007f)
+			foreach ($arr as $ch) {
+				if ($ch <= 0x0000007f) {
 					# 00000000 00000000 00000000 0zzzzzzz -> 0zzzzzzz
 					$s .= chr($ch);
-				else if ($ch <= 0x000007ff)
+				} else if ($ch <= 0x000007ff) {
 					# 00000000 00000000 00000yyy yyzzzzzz -> 110yyyyy 10zzzzzz
 					$s .= chr(0xc0 | (($ch & 0x000007c0) >> 6)) .
 							chr(0x80 |  ($ch & 0x0000003f)     );
-				else if ($ch <= 0x0000ffff)
+				} else if ($ch <= 0x0000ffff) {
 					# 00000000 00000000 xxxxyyyy yyzzzzzz -> 1110xxxx 10yyyyyy 10zzzzzz
 					$s .= pack('c3',
 								0xe0 | (($ch & 0x0000f000) >> 12),
 								0x80 | (($ch & 0x00000fc0) >>  6),
 								0x80 |  ($ch & 0x0000003f)
 							);
-				else if ($ch <= 0x0010ffff)
+				} else if ($ch <= 0x0010ffff) {
 					# 00000000 000wwwxx xxxxyyyy yyzzzzzz -> 11110www 10xxxxxx 10yyyyyy 10zzzzzz
 					$s .= pack('c4',
 								0xf0 | (($ch & 0x001c0000) >> 18),
@@ -933,6 +993,8 @@ function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 								0x80 | (($ch & 0x00000fc0) >>  6),
 								0x80 |  ($ch & 0x0000003f)
 							);
+				}
+			}
 			break;
 
 		case 'ucs-2le+bom':
@@ -952,11 +1014,11 @@ function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 		case 'utf-16le+bom':
 			$s = "\xff\xfe";
 		case 'utf-16le':
-			foreach ($arr as $ch)
-				if ($ch <= 0x0000ffff)
+			foreach ($arr as $ch) {
+				if ($ch <= 0x0000ffff) {
 					$s .= chr( $ch & 0x000000ff      ) .
 							chr(($ch & 0x0000ff00) >> 8);
-				else if ($ch <= 0x0010ffff) {
+				} else if ($ch <= 0x0010ffff) {
 					$ch -= 0x10000;
 					$s .= pack('c4',
 										  ($ch & 0x0003fc00) >> 10,
@@ -965,16 +1027,17 @@ function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 								0xdc | (($ch & 0x00000300) >>  8)
 							);
 				}
+			}
 			break;
 
 		case 'utf-16be+bom':
 			$s = "\xfe\xff";
 		case 'utf-16be':
-			foreach ($arr as $ch)
-				if ($ch <= 0x0000ffff)
+			foreach ($arr as $ch) {
+				if ($ch <= 0x0000ffff) {
 					$s .= chr(($ch & 0x0000ff00) >> 8) .
 							chr( $ch & 0x000000ff      );
-				else if ($ch <= 0x0010ffff) {
+				} else if ($ch <= 0x0010ffff) {
 					$ch -= 0x10000;
 					$s .= pack('c4',
 								0xd8 | (($ch & 0x000c0000) >> 18),
@@ -983,6 +1046,7 @@ function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 										  ($ch & 0x000000ff)
 							);
 				}
+			}
 			break;
 
 		case 'ucs-4le+bom':

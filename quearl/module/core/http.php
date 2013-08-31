@@ -231,12 +231,13 @@ function & ql_str_parsehttpresponse($s, $sNL = null) {
 	}
 
 	# Parse the response header and separate it from the message body.
-	if ($ichHeadersEnd > $ich)
+	if ($ichHeadersEnd > $ich) {
 		$arrResponse['headers'] =& ql_str_parse822header(
 			substr($s, $ich, $ichHeadersEnd - $ich), $sNL
 		);
-	else
+	} else {
 		$arrResponse['headers'] = array();
+	}
 	# This is probably incomplete, but the caller can continue reading data from the server and
 	# adding to this string.
 	$arrResponse['body'] = substr($s, $ichHeadersEnd + (strlen($sNL) << 1));
@@ -251,18 +252,19 @@ function & ql_str_parsehttpresponse($s, $sNL = null) {
 			$arrParts = explode(';', $sCookie);
 			if (strpos($arrParts[0], '=') !== false) {
 				list($sName, $sValue) = explode('=', trim(array_shift($arrParts)), 2);
-				if ($sName == '')
+				if ($sName == '') {
 					# Skip invalid attribute names.
 					continue;
+				}
 				# Build up the cookie as a map.
 				$arrCookie = array(
 					'value' => urldecode(trim($sValue)),
 				);
 				foreach ($arrParts as $sPart) {
 					$sPart = trim($sPart);
-					if (strtolower($sPart) == 'secure')
+					if (strtolower($sPart) == 'secure') {
 						$arrCookie['secure'] = true;
-					else {
+					} else {
 						$arrPart = explode('=', $sPart, 2);
 						if (count($arrPart) == 2) {
 							$arrPart[0] = strtolower($arrPart[0]);
@@ -351,12 +353,13 @@ function & ql_http_get(
 		# Cookies are handled separately, so remove them from the request headers.
 		$arrSetCookies =& $arrHeaders['Cookie'];
 		unset($arrHeaders['Cookie']);
-	} else
+	} else {
 		$arrSetCookies = array();
+	}
 	$arrCookies = $arrSetCookies;
 
 	$iStatus = QL__FH_CONNECT;
-	do
+	do {
 		switch ($iStatus) {
 			case QL__FH_CONNECT:
 				# Ensure that the URL includes scheme and port.
@@ -365,9 +368,9 @@ function & ql_http_get(
 					'port'   => 80,
 				);
 				$socket = @fsockopen($arrUrl['host'], $arrUrl['port'], $iSocketErr, $sSocketErr, 10);
-				if (is_resource($socket))
+				if (is_resource($socket)) {
 					$iStatus = QL__FH_SEND;
-				else {
+				} else {
 					$arrResponse = false;
 					$iStatus = QL__FH_END;
 				}
@@ -378,34 +381,40 @@ function & ql_http_get(
 				$sUrl = $arrUrl['scheme'] . '://';
 				if (isset($arrUrl['user'])) {
 					$sUrl .= $arrUrl['user'];
-					if (isset($arrUrl['pass']))
+					if (isset($arrUrl['pass'])) {
 						$sUrl .= ':' . $arrUrl['pass'];
+					}
 					$sUrl .= '@';
 				}
 				$sUrl .= $arrUrl['host'];
-				if ($arrUrl['port'] != 80)
+				if ($arrUrl['port'] != 80) {
 					$sUrl .= ':' . $arrUrl['port'];
+				}
 				$sUrl .= (isset($arrUrl['path']) ? $arrUrl['path'] : '/');
-				if (isset($arrUrl['query']))
+				if (isset($arrUrl['query'])) {
 					$sUrl .= '?' . $arrUrl['query'];
+				}
 
 				# Assemble the request header.
 				$sRequest = ($sPostData !== null ? 'POST ' : 'GET ') . $sUrl . " HTTP/1.1\r\n" .
 								'Host: ' . $arrUrl['host'] . ':' . $arrUrl['port'] . "\r\n";
-				foreach ($arrHeaders as $sName => $mValue)
+				foreach ($arrHeaders as $sName => $mValue) {
 					$sRequest .= $sName . ': ' . $mValue . "\r\n";
+				}
 				# Add the cookies, if any.
 				if ($arrCookies) {
 					$sCookies = '';
-					foreach ($arrCookies as $sName => $arrCookie)
+					foreach ($arrCookies as $sName => $arrCookie) {
 						$sCookies .= '; ' . $sName . '=' . $arrCookie['value'];
+					}
 					$sRequest .= 'Cookie: ' . substr($sCookies, 2) . "\r\n";
 				}
 				# Add the POST request payload, if any.
-				if ($sPostData !== null)
+				if ($sPostData !== null) {
 					$sRequest .= 'Content-Length: ' . strlen($sPostData) . "\r\n" .
 									 "\r\n" .
 									 $sPostData;
+				}
 				$sRequest .= "\r\n";
 
 				# Submit the request.
@@ -426,14 +435,16 @@ function & ql_http_get(
 					# A false return value means that the headers were not fully read, so continue on
 					# reading more.
 				} while (!$arrResponse && !feof($socket));
-				if ($ql_debug_http_fread)
+				if ($ql_debug_http_fread) {
 					ql_log(
 						'DEBUG',
 						'ql_http_get() - initial read',
 						'<pre>' . ql_lenc($s) . '</pre>'
 					);
-				if (!$arrResponse)
+				}
+				if (!$arrResponse) {
 					break;
+				}
 
 				# If the response should have a message body, go ahead and read it.
 				if ($arrResponse['code'] >= HTTP_STATUS_OK &&
@@ -448,15 +459,17 @@ function & ql_http_get(
 						isset($arrResponse['headers']['Transfer-Encoding']) &&
 						strtolower($arrResponse['headers']['Transfer-Encoding']) != 'identity'
 					) {
-						if ($ql_debug_http_fread)
+						if ($ql_debug_http_fread) {
 							ql_log('DEBUG', 'ql_http_get() - transfer: chunked');
+						}
 						$cbNL = strlen($arrResponse['newline']);
 						# The first read could have read more than one chunk, so we have to parse them to
 						# find out the total number of bytes we’re supposed to read.
 						$ibSizeEnd = strpos($s, ';');
 						$ibNL      = strpos($s, $arrResponse['newline']);
-						if ($ibSizeEnd === false || $ibSizeEnd > $ibNL)
+						if ($ibSizeEnd === false || $ibSizeEnd > $ibNL) {
 							$ibSizeEnd = $ibNL;
+						}
 						$cbChunks = $cbChunk = hexdec(substr($s, 0, $ibSizeEnd));
 						$s = substr($s, $ibNL + $cbNL);
 						$cbRead = strlen($s);
@@ -466,19 +479,22 @@ function & ql_http_get(
 								$ibNextChunk = $cbChunks + $cbNL;
 								$ibSizeEnd = strpos($s, ';',                     $ibNextChunk);
 								$ibNL      = strpos($s, $arrResponse['newline'], $ibNextChunk);
-								if ($ibNL === false)
+								if ($ibNL === false) {
 									# Couldn’t read a single chunk, need more data.
 									break;
-								if ($ibSizeEnd === false || $ibSizeEnd > $ibNL)
+								}
+								if ($ibSizeEnd === false || $ibSizeEnd > $ibNL) {
 									$ibSizeEnd = $ibNL;
+								}
 								$cbChunk = hexdec(substr($s, $ibNextChunk, $ibSizeEnd - $ibNextChunk));
 								if (!$cbChunk) {
-									if ($ql_debug_http_fread)
+									if ($ql_debug_http_fread) {
 										ql_log(
 											'DEBUG',
 											'ql_http_get() - end; ' .
 												$cbRead . ' read, ' . $cbChunks . 'total'
 										);
+									}
 									# 0 bytes mean END, even if there’s something else beyond the zero.
 									$s = substr($s, 0, $cbChunks);
 									$cbRead = $cbChunks;
@@ -489,12 +505,13 @@ function & ql_http_get(
 								$cbChunks += $cbChunk;
 								$cbRead = strlen($s);
 							}
-							if ($ql_debug_http_fread)
+							if ($ql_debug_http_fread) {
 								ql_log(
 									'DEBUG',
 									'ql_http_get() - before reading; ' .
 										$cbRead . ' read, ' . $cbChunks . ' total'
 								);
+							}
 							# Need at least one digit for the size of the next chunk, which is typically
 							# found after an empty line.
 							$cbToRead = $cbChunks + $cbNL + $cbNL + 1;
@@ -510,7 +527,7 @@ function & ql_http_get(
 								# statement.
 								break(2);
 							}
-							if ($ql_debug_http_fread)
+							if ($ql_debug_http_fread) {
 								ql_log(
 									'DEBUG',
 									'ql_http_get() - after reading; ' .
@@ -518,37 +535,43 @@ function & ql_http_get(
 										$cbChunks . ' total, ' .
 										rtrim(substr($s, $cbChunks + $cbNL, 5)) . ' following'
 								);
+							}
 						}
 					} else if (isset($arrResponse['headers']['Content-Length'])) {
-						if ($ql_debug_http_fread)
+						if ($ql_debug_http_fread) {
 							ql_log('DEBUG', 'ql_http_get() - transfer: Content-Length');
+						}
 						$cbBody = $arrResponse['headers']['Content-Length'];
 						$cbRead = strlen($s);
-						if ($ql_debug_http_fread)
+						if ($ql_debug_http_fread) {
 							ql_log(
 								'DEBUG',
 								'ql_http_get() - before reading; ' .
 									$cbRead . ' read, ' . $cbBody . ' total'
 							);
+						}
 						while ($cbBody > $cbRead && !feof($socket)) {
 							$s .= fread($socket, $cbBody - $cbRead);
 							$cbRead = strlen($s);
 						}
-						if ($ql_debug_http_fread)
+						if ($ql_debug_http_fread) {
 							ql_log(
 								'DEBUG',
 								'ql_http_get() - after reading; ' .
 									$cbRead . ' read, ' . $cbBody . 'total'
 							);
+						}
 					} else {
 						if ($ql_debug_http_fread) {
 							ql_log('DEBUG', 'ql_http_get() - transfer: until EOF');
 							ql_log('DEBUG', 'ql_http_get() - before reading; ' . strlen($s) . 'read');
 						}
-						while (!feof($socket))
+						while (!feof($socket)) {
 							$s .= fread($socket, 4096);
-						if ($ql_debug_http_fread)
+						}
+						if ($ql_debug_http_fread) {
 							ql_log('DEBUG', 'ql_http_get() - after reading; ' . strlen($s) . 'read');
+						}
 					}
 				}
 
@@ -559,19 +582,20 @@ function & ql_http_get(
 				}
 
 				# HTTP_STATUS_CONTINUE must not specify a redirect using Location.
-				if ($arrResponse['code'] == HTTP_STATUS_CONTINUE)
+				if ($arrResponse['code'] == HTTP_STATUS_CONTINUE) {
 					$iStatus = QL__FH_READ;
-				else if (
+				} else if (
 					isset($arrResponse['headers']['Location']) &&
 					($arrRedirectUrl = @parse_url($arrResponse['headers']['Location'])) !== false
 				) {
 					if (!($fiOptions & QL_HG_NOREDIRECT)) {
 						# Follow the redirection. If the new location is on a different server, don’t try
 						# to use the same login/password.
-						if (isset($arrRedirectUrl['host']))
+						if (isset($arrRedirectUrl['host'])) {
 							unset($arrUrl['user'], $arrUrl['pass']);
+						}
 						$arrUrl = $arrRedirectUrl + $arrUrl;
-						if ($ql_debug_http_fread)
+						if ($ql_debug_http_fread) {
 							ql_log(
 								'DEBUG', 'ql_http_get() - redirect',
 								'<tt>' . ql_lenc($arrResponse['headers']['Location']) . '</tt>' . NL .
@@ -580,26 +604,29 @@ function & ql_http_get(
 										'$arrUrl' => &$arrUrl
 									))
 							);
+						}
 						++$cRedirects;
 
-						if ($arrResponse['code'] == HTTP_STATUS_SEE_OTHER)
+						if ($arrResponse['code'] == HTTP_STATUS_SEE_OTHER) {
 							# Redirecting from a POST becomes a GET.
 							if ($sPostData !== null) {
 								$sPostData = null;
 								unset($arrHeaders['Content-Type']);
 							}
+						}
 
 						if (
 							isset($arrResponse['headers']['Connection']) &&
 							strtolower($arrResponse['headers']['Connection']) == 'keep-alive'
-						)
+						) {
 							$iStatus = QL__FH_SEND;
-						else
+						} else {
 							$iStatus = QL__FH_CONNECT;
+						}
 					}
 				} else {
 					# All good, decode the response.
-					if (isset($arrResponse['headers']['Content-Encoding']))
+					if (isset($arrResponse['headers']['Content-Encoding'])) {
 						switch (strtolower($arrResponse['headers']['Content-Encoding'])) {
 							case 'gzip':
 							case 'x-gzip':
@@ -607,6 +634,7 @@ function & ql_http_get(
 								$s = gzdecode($s);
 								break;
 						}
+					}
 
 					# Perform any necessary encoding conversions.
 					if (
@@ -617,7 +645,7 @@ function & ql_http_get(
 						$sCharset = null;
 						# Check for a “;charset=” charset specification at the end of the Content-Type
 						# header (easy).
-						foreach ($arrCT as $sCTParam)
+						foreach ($arrCT as $sCTParam) {
 							if (
 								preg_match('/^\s*([\-_0-9a-z]+)\s*=\s*(\S*)\s*$/', $sCTParam, $arrMatch) &&
 								strtolower($arrMatch[1]) == 'charset'
@@ -625,19 +653,22 @@ function & ql_http_get(
 								$sCharset = $arrMatch[2];
 								break;
 							}
-						if ($sCharset === null)
+						}
+						if ($sCharset === null) {
 							# Else, we have parsers for common response types.
 							switch ($sMimeType) {
 								default:
 									# Check for XML-based file types.
-									if (substr($sMimeType, -4) != '+xml')
+									if (substr($sMimeType, -4) != '+xml') {
 										break;
-									# Fall through.
+									}
+									# Fall through…
 								case 'text/xml':
 								case 'application/xml':
 									# The XML opening tag can have an “encoding=” attribute.
-									if (preg_match('/^\s*<\?xml\s[^>]*encoding="([^"]*)"/', $s, $arrMatch))
+									if (preg_match('/^\s*<\?xml\s[^>]*encoding="([^"]*)"/', $s, $arrMatch)) {
 										$sCharset = $arrMatch[1];
+									}
 									break;
 
 								case 'text/html':
@@ -649,7 +680,7 @@ function & ql_http_get(
 												'content\s*=\s*(?:"([^"]+)"|([^>\s]+))\s*\/?>/i',
 											$arrMatch[1], $arrMatches, PREG_SET_ORDER
 										);
-										foreach ($arrMatches as $arrMatch)
+										foreach ($arrMatches as $arrMatch) {
 											if (strtolower($arrMatch[1] . $arrMatch[2]) == 'content-type') {
 												# Found: parse it just like we did for the header field, above.
 												# TODO: reduce copy&paste.
@@ -658,7 +689,7 @@ function & ql_http_get(
 												);
 												if ($arrCT) {
 													array_shift($arrCT);
-													foreach ($arrCT as $sCTParam)
+													foreach ($arrCT as $sCTParam) {
 														if (preg_match(
 															'/^\s*([\-_0-9a-z]+)\s*=\s*(\S*)\s*$/',
 															$sCTParam, $arrMatch
@@ -666,19 +697,23 @@ function & ql_http_get(
 															$sCharset = $arrMatch[2];
 															break;
 														}
+													}
 												}
 												break;
 											}
+										}
 									}
 									break;
 							}
+						}
 						if ($sCharset !== null) {
 							# Now that we know what charset the response uses, convert it into UTF-8 for
 							# further processing.
 							$sCharset = strtolower($sCharset);
 							$sUtf8 = ql_unicode_conv($s, $sCharset);
-							if ($sUtf8 !== false)
+							if ($sUtf8 !== false) {
 								$s = $sUtf8;
+							}
 						}
 					}
 				}
@@ -689,7 +724,7 @@ function & ql_http_get(
 				$iStatus = QL__FH_END;
 				break;
 		}
-	while ($iStatus != QL__FH_END);
+	} while ($iStatus != QL__FH_END);
 	if ($arrResponse) {
 		# Provide some more information about the response.
 		$arrResponse['requrl'   ] = $sOrgUrl;
@@ -698,21 +733,25 @@ function & ql_http_get(
 #		$arrResponse['reqheaders'] =& $arrHeaders;
 
 		# Only return cookies the server did not revoke.
-		foreach ($arrCookies as $sName => $arrCookie)
-			if ($arrCookie['value'] != '')
+		foreach ($arrCookies as $sName => $arrCookie) {
+			if ($arrCookie['value'] != '') {
 				$arrSetCookies[$sName] = $arrCookie;
-			else if (isset($arrSetCookies[$sName]))
+			} else if (isset($arrSetCookies[$sName])) {
 				unset($arrSetCookies[$sName]);
-		if ($arrSetCookies)
+			}
+		}
+		if ($arrSetCookies) {
 			$arrResponse['headers']['Set-Cookie'] =& $arrSetCookies;
+		}
 	}
-	if (($fiOptions & QL_HG_RETURNBODY) && is_array($arrResponse))
+	if (($fiOptions & QL_HG_RETURNBODY) && is_array($arrResponse)) {
 		# If the caller only wants the response body and we did not encounter errors, return what the
 		# caller asked for.
 		return $arrResponse['body'];
-	else
+	} else {
 		# Else return everything, which is either the array or false.
 		return $arrResponse;
+	}
 }
 
 
@@ -730,18 +769,22 @@ function & ql_http_get(
 #    Body of the server’s (possibly cached) response, or false if any errors occurred.
 #
 function ql_http_get_cached($sUrl, $sCacheFileName, array $arrHeaders = array()) {
-	if (file_exists($sCacheFileName))
+	if (file_exists($sCacheFileName)) {
 		$arrHeaders['If-Modified-Since'] = ql_format_timestamp(
 			'%P', filemtime($sCacheFileName), 'UTC'
 		);
+	}
 	$arrResponse =& ql_http_get($sUrl, 0, $arrHeaders);
-	if ($arrResponse === false || $arrResponse['code'] < 200 || $arrResponse['code'] >= 400)
+	if ($arrResponse === false || $arrResponse['code'] < 200 || $arrResponse['code'] >= 400) {
 		return false;
-	if ($arrResponse['code'] == HTTP_STATUS_NOT_MODIFIED)
+	}
+	if ($arrResponse['code'] == HTTP_STATUS_NOT_MODIFIED) {
 		return file_get_contents($sCacheFileName);
+	}
 	file_put_contents($sCacheFileName, $arrResponse['body']);
-	if (isset($arrResponse['headers']['Last-Modified']))
+	if (isset($arrResponse['headers']['Last-Modified'])) {
 		touch($sCacheFileName, $arrResponse['headers']['Last-Modified']);
+	}
 	return $arrResponse['body'];
 }
 
@@ -760,7 +803,7 @@ function ql_http_get_multi(array $arrUrls, $fnCallback) {
 	$arrRemaining = array();
 	foreach ($arrUrls as $sUrl) {
 		$arrUrl = @parse_url($sUrl);
-		if ($arrUrl !== false && isset($arrUrl['host']) && isset($arrUrl['path']))
+		if ($arrUrl !== false && isset($arrUrl['host']) && isset($arrUrl['path'])) {
 			$arrRemaining[] = array(
 				'requrl' => $sUrl,
 				'scheme' => isset($arrUrl['scheme']) ? $arrUrl['scheme'] : 'http',
@@ -769,6 +812,7 @@ function ql_http_get_multi(array $arrUrls, $fnCallback) {
 				'path'   => $arrUrl['path'] . (isset($arrUrl['query']) ? '?' . $arrUrl['query'] : ''),
 				'buffer' => ''
 			);
+		}
 	}
 	unset($arrUrls);
 
@@ -855,23 +899,30 @@ function ql_http_get_multi(array $arrUrls, $fnCallback) {
 									$arrResponse['headers']['Location']
 								)) !== false
 							) {
-								if (isset($arrRedirectUrl['scheme']))
+								if (isset($arrRedirectUrl['scheme'])) {
 									$arrTarget['scheme'] = $arrRedirectUrl['scheme'];
-								if (isset($arrRedirectUrl['host']))
+								}
+								if (isset($arrRedirectUrl['host'])) {
 									$arrTarget['host'] = $arrRedirectUrl['host'];
-								if (isset($arrRedirectUrl['port']))
+								}
+								if (isset($arrRedirectUrl['port'])) {
 									$arrTarget['port'] = (int)$arrRedirectUrl['port'];
-								if (isset($arrRedirectUrl['path']))
+								}
+								if (isset($arrRedirectUrl['path'])) {
 									$arrTarget['path'] = $arrRedirectUrl['path'];
-								if (isset($arrRedirectUrl['query']))
+								}
+								if (isset($arrRedirectUrl['query'])) {
 									$arrTarget['path'] .= '?' . $arrRedirectUrl['query'];
+								}
 
-								if ($arrResponse['headers']['Connection'] == 'keep-alive')
+								if ($arrResponse['headers']['Connection'] == 'keep-alive') {
 									$iStatus = QL__FH_SEND;
-								else
+								} else {
 									$iStatus = QL__FH_CONNECT;
-							} else
+								}
+							} else {
 								$iStatus = QL__FH_SHUTDOWN;
+							}
 							break;
 
 						default:
