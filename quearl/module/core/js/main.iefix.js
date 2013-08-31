@@ -34,8 +34,9 @@ Ql._onError = (function() {
 	var fnOverridden = Ql._onError;
 
 	return function $Ql$_onError_IE55(sError, sFileName, iLine) {
-		if (sFileName == location.href)
+		if (sFileName == location.href) {
 			--iLine;
+		}
 		return fnOverridden.call(this, sError, sFileName, iLine);
 	};
 })();
@@ -49,7 +50,8 @@ window.onerror = Ql._onError;
 // Replica of the DOM-compliant initialization code, altered to work in IE5.5/IE6/IE7/IE8.
 
 
-if (Browser.version < 90000)
+if (Browser.version < 90000) {
+
 	(function() {
 
 		/// Receives a load event, and de-registers itself.
@@ -107,6 +109,8 @@ if (Browser.version < 90000)
 		onInit_doScroll_IE55();
 	})();
 
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,7 +151,8 @@ if (Browser.version < 90000) {
 // and some more to have a camelCased style (e.g. rowspan changed to rowSpan); either way, this
 // requires a mapping table, and the redefinition of all attribute-related methods/getters.
 //
-if (Browser.version < 80000)
+if (Browser.version < 80000) {
+
 	(function() {
 		// Translation table between attribute names and the (pretty arbitrary) names IE5.5/IE6/IE7
 		// give them.
@@ -187,14 +192,16 @@ if (Browser.version < 80000)
 		// IE5.5/IE6 have no support for DOM2-Core entirely, so they don’t have this at all.
 		//
 		function $Ql$DOM$_hasAttribute_IE55(elt, sName) {
-			if (sName in mapJsAttrNames)
+			if (sName in mapJsAttrNames) {
 				sName = mapJsAttrNames[sName];
+			}
 			// A “known” attribute always appears in the Element and in its attributes collection, but
 			// the attributes[…].specified property reveals whether it was actually specified.
-			if (sName in elt.attributes)
+			if (sName in elt.attributes) {
 				return elt.attributes[sName].specified;
-			else
+			} else {
 				return elt.getAttribute(sName) != null;
+			}
 		}
 		Ql.DOM._hasAttribute = $Ql$DOM$_hasAttribute_IE55;
 
@@ -211,6 +218,8 @@ if (Browser.version < 80000)
 		Ql.DOM._setAttribute = $Ql$DOM$_setAttribute_IE55;
 
 	})();
+
+}
 
 
 // Rationale: IE5.5 doesn’t understand getElementsByTagName("*"), but provides the “all collection”.
@@ -238,18 +247,13 @@ if (Browser.version < 60000) {
 	// <!-- … -->, hence making it look like an omit-closing ! element.
 	//
 	function $Ql$DOM$_getNodeType_IE55(nd) {
-		if ("nodeType" in nd)
-			if (nd.nodeName == "!")
-				return Node.COMMENT_NODE;
-			else
-				return nd.nodeType;
-		else if ("documentElement" in nd && "location" in nd && "URL" in nd)
-			if (nd.URL != "about:blank")
-				return Node.DOCUMENT_NODE;
-			else
-				return Node.DOCUMENT_FRAGMENT_NODE;
-		else
-			return undefined;
+		if ("nodeType" in nd) {
+			return nd.nodeName == "!" ? Node.COMMENT_NODE : nd.nodeType;
+		}
+		if ("documentElement" in nd && "location" in nd && "URL" in nd) {
+			return nd.URL == "about:blank" ? Node.DOCUMENT_FRAGMENT_NODE : Node.DOCUMENT_NODE;
+		}
+		return undefined;
 	}
 	Ql.DOM._getNodeType = $Ql$DOM$_getNodeType_IE55;
 
@@ -258,16 +262,18 @@ if (Browser.version < 60000) {
 	// unlinked.
 	//
 	function $Ql$DOM$_getOwnerDocument_IE55(nd) {
-		if (nd.document.URL != "about:blank")
+		if (nd.document.URL != "about:blank") {
 			// The document property is an actual document: use that.
 			return nd.document;
+		}
 		if ("_ql_data" in nd) {
 			var mapQlData = Ql._getData(nd);
-			if ("sOwnerDocId" in mapQlData)
+			if ("sOwnerDocId" in mapQlData) {
 				// The modified Ql.DOM.Document._createElement() created this node, so the real owner
 				// document is in the Quearl data. Assume/hope that the document wrapper hasn’t been
 				// destroyed since.
 				return this._m_mapDocWrappers[mapQlData.sOwnerDocId]._;
+			}
 		}
 		// The node is attached to a fragment instead of a document, and has no Quearl data to help:
 		// it must be a node from the original document, now unlinked.
@@ -281,15 +287,12 @@ if (Browser.version < 60000) {
 	// infinite loops because in IE5.5 a document is always owned by itself.
 	//
 	function $Ql$DOM$_getParentNode_IE55(nd) {
-		if ("nodeType" in nd)
-			// nd is an actual node, so return its parentNode (if non-root) or the document (if root).
-			if (nd !== nd.document.documentElement)
-				return nd.parentNode;
-			else
-				return nd.document;
-		else
-			// Document or document fragment.
-			return null;
+		if ("nodeType" in nd) {
+			// nd is an actual node, so return its document (if root) or parentNode (if non-root).
+			return nd === nd.document.documentElement ? nd.document : nd.parentNode;
+		}
+		// Document or document fragment.
+		return null;
 	}
 	Ql.DOM._getParentNode = $Ql$DOM$_getParentNode_IE55;
 
@@ -300,10 +303,11 @@ if (Browser.version < 60000) {
 	//
 	function $Ql$DOM$_isHtml_IE55(nd) {
 		var doc;
-		if (Ql.DOM._getNodeType(nd) == Node.DOCUMENT_NODE)
+		if (Ql.DOM._getNodeType(nd) == Node.DOCUMENT_NODE) {
 			doc = nd;
-		else
+		} else {
 			doc = Ql.DOM._getOwnerDocument(nd);
+		}
 		// From here on, same as the original Ql.DOM._isHtml().
 		var mapQlData = Ql._getData(doc);
 		if (!("bHtml" in mapQlData)) {
@@ -345,9 +349,10 @@ if (Browser.version < 90000) {
 		function $Ql$DOM$Node$appendChild_IE55(nd) {
 			Function.checkArgs($Ql$DOM$Node$appendChild_IE55, arguments, Ql.DOM.Node);
 			fnOverridden.call(this, nd);
-			if (nd instanceof Ql.DOM.IFrame)
+			if (nd instanceof Ql.DOM.IFrame) {
 				// Trigger the special Ql.DOM.IFrame.setAttribute().
 				nd.setAttribute("id", nd._.getAttribute("id"));
+			}
 			return nd;
 		}
 		Ql.DOM.Node.prototype.appendChild = $Ql$DOM$Node$appendChild_IE55;
@@ -362,9 +367,10 @@ if (Browser.version < 90000) {
 				$Ql$DOM$Node$insertBefore_IE55, arguments, Ql.DOM.Node, [null, Ql.DOM.Node]
 			);
 			fnOverridden.call(this, nd, ndNext);
-			if (nd instanceof Ql.DOM.IFrame)
+			if (nd instanceof Ql.DOM.IFrame) {
 				// Trigger the special Ql.DOM.IFrame.setAttribute().
 				nd.setAttribute("id", nd._.getAttribute("id"));
+			}
 			return nd;
 		}
 		Ql.DOM.Node.prototype.insertBefore = $Ql$DOM$Node$insertBefore_IE55;
@@ -374,8 +380,9 @@ if (Browser.version < 90000) {
 	function $Ql$DOM$IFrame$setAttribute_IE55(sName, sValue) {
 		Function.checkArgs($Ql$DOM$IFrame$setAttribute_IE55, arguments, String, String);
 		Ql.DOM.Element.prototype.setAttribute.call(this, sName, sValue);
-		if (sName == "id" && this._.parentNode)
+		if (sName == "id" && this._.parentNode) {
 			Ql.DOM._getOwnerDocument(this._).frames[sValue].name = sValue;
+		}
 	}
 	Ql.DOM.IFrame.prototype.setAttribute = $Ql$DOM$IFrame$setAttribute_IE55;
 
@@ -398,8 +405,9 @@ if (Browser.version < 90000) {
 	// Implementation of DOM2-Events.Event.
 	//
 	function $Event_IE55() {
-		if (arguments[0] === Function.prototyping)
+		if (arguments[0] === Function.PROTOTYPING) {
 			return;
+		}
 		Function.checkArgs($Event_IE55, arguments);
 	}
 	window.Event = $Event_IE55;
@@ -436,8 +444,9 @@ if (Browser.version < 90000) {
 	// Implementation of DOM2-Events.MutationEvent.
 	//
 	function $MutationEvent_IE55() {
-		if (arguments[0] === Function.prototyping)
+		if (arguments[0] === Function.PROTOTYPING) {
 			return;
+		}
 		Function.checkArgs($MutationEvent_IE55, arguments);
 	}
 	window.MutationEvent = $MutationEvent_IE55;
@@ -470,8 +479,9 @@ if (Browser.version < 90000) {
 	// Implementation of DOM2-Events.UIEvent.
 	//
 	function $UIEvent_IE55() {
-		if (arguments[0] === Function.prototyping)
+		if (arguments[0] === Function.PROTOTYPING) {
 			return;
+		}
 		Function.checkArgs($UIEvent_IE55, arguments);
 	}
 	window.UIEvent = $UIEvent_IE55;
@@ -492,8 +502,9 @@ if (Browser.version < 90000) {
 	// Implementation of DOM2-Events.MouseEvent.
 	//
 	function $MouseEvent() {
-		if (arguments[0] === Function.prototyping)
+		if (arguments[0] === Function.PROTOTYPING) {
 			return;
+		}
 		Function.checkArgs($MouseEvent, arguments);
 	}
 	window.MouseEvent = $MouseEvent;
@@ -527,8 +538,9 @@ if (Browser.version < 90000) {
 	// Implementation of DOM2-Events.HTMLEvent.
 	//
 	function $HTMLEvent_IE55() {
-		if (arguments[0] === Function.prototyping)
+		if (arguments[0] === Function.PROTOTYPING) {
 			return;
+		}
 		Function.checkArgs($HTMLEvent_IE55, arguments);
 	}
 	window.HTMLEvent = $HTMLEvent_IE55;
@@ -541,8 +553,9 @@ if (Browser.version < 90000) {
 	function $Ql$DOM$Document$createEvent_IE55(sEventGroup) {
 		Function.checkArgs($Ql$DOM$Document$createEvent_IE55, arguments, String);
 		var arrMatch = sEventGroup.match(/^((?:Mouse|UI|Mutation|HTML)?Event)s$/);
-		if (!arrMatch)
+		if (!arrMatch) {
 			throw new /*DOMException(NOT_SUPPORTED_ERR)*/Error("Unknown event group");
+		}
 		var e = this._.createEventObject();
 		Object.merge(e, window[arrMatch[1]].prototype);
 		// Object.merge() skipped this one, since e already had it.
@@ -568,8 +581,9 @@ if (Browser.version < 90000) {
 			// …attach our handler the DOM0 way, and remember we did so.
 			// Exclude these events, which are handled by permanent listeners attached to the (few)
 			// elements that can generate them.
-			if (sEventType != "submit" && sEventType != "reset")
+			if (sEventType != "submit" && sEventType != "reset") {
 				this._[sOnEvent] = Ql.EventTarget._eventHandler_IE55;
+			}
 			arrEvLs._bDOM0Handler = true;
 		}
 	}
@@ -579,7 +593,7 @@ if (Browser.version < 90000) {
 	function $Ql$EventTarget$_dispatchEvent_IE55(e) {
 		// Tell Ql.EventTarget._eventHandler_IE55() that this event object has already been sanitized.
 		e.target = this._;
-		if ("fireEvent" in this._)
+		if ("fireEvent" in this._) {
 			try {
 				return this._.fireEvent("on" + e.type, e);
 			} catch (x) {
@@ -588,6 +602,7 @@ if (Browser.version < 90000) {
 				// but this does not seem to work any more in IE7. No other exceptions should be thrown
 				// anyway, so blocking them all is no big deal.
 			}
+		}
 		// No luck, need to dispatch the event by hand.
 		return Ql.EventTarget._dispatchEventByHand_IE55.call(this, e, true, true, true);
 	}
@@ -600,8 +615,9 @@ if (Browser.version < 90000) {
 	//
 	function $Ql$EventTarget$_dispatchEventByHand_IE55(e, bCapturing, bAtTarget, bBubbling) {
 		var sProp, arrAncestors;
-		if ((bCapturing || bBubbling) && e.bubbles)
+		if ((bCapturing || bBubbling) && e.bubbles) {
 			arrAncestors = this.getAncestors();
+		}
 		if (bCapturing && e.bubbles) {
 			// Invoke handlers for the capturing phase.
 			sProp = "_m_arrEvLs_C_" + e.type;
@@ -611,8 +627,9 @@ if (Browser.version < 90000) {
 				if (sProp in eltAncestor) {
 					e.currentTarget = eltAncestor;
 					Ql.EventTarget._executeListeners(eltAncestor[sProp], eltAncestor, e);
-					if (e.cancelBubble)
+					if (e.cancelBubble) {
 						break;
+					}
 				}
 			}
 		}
@@ -622,8 +639,9 @@ if (Browser.version < 90000) {
 				// Invoke handlers for the target itself.
 				e.eventPhase = Event.AT_TARGET;
 				e.currentTarget = this;
-				if (sProp in this)
+				if (sProp in this) {
 					Ql.EventTarget._executeListeners(this[sProp], this, e);
+				}
 			}
 			if (bBubbling && e.bubbles && !e.cancelBubble) {
 				// Invoke handlers for the bubbling phase.
@@ -633,8 +651,9 @@ if (Browser.version < 90000) {
 					if (sProp in eltAncestor) {
 						e.currentTarget = eltAncestor;
 						Ql.EventTarget._executeListeners(eltAncestor[sProp], eltAncestor, e);
-						if (e.cancelBubble)
+						if (e.cancelBubble) {
 							break;
+						}
 					}
 				}
 			}
@@ -648,8 +667,9 @@ if (Browser.version < 90000) {
 	// bubbling.
 	//
 	function $Ql$EventTarget$_dispatchingEventHandler_IE55(e) {
-		if (!e)
+		if (!e) {
 			e = window.event;
+		}
 		// e hasn’t been sanitized by Ql.EventTarget._dispatchEvent().
 		var eltThis = Ql.EventTarget._sanitizeEventObject_IE55.call(this, e);
 		// Dispatch the event like, and even better than, IE should.
@@ -673,8 +693,9 @@ if (Browser.version < 90000) {
 	// Ql.EventTarget._eventListener().
 	//
 	function $Ql$EventTarget$_eventHandler_IE55(e) {
-		if (!e)
+		if (!e) {
 			e = window.event;
+		}
 		// e hasn’t been sanitized by Ql.EventTarget._dispatchEvent().
 		var eltThis = Ql.EventTarget._sanitizeEventObject_IE55.call(this, e);
 		// Finish sanitization.
@@ -690,10 +711,11 @@ if (Browser.version < 90000) {
 	//
 	function $Ql$EventTarget$_removeLastEvL_IE55(arrEvLs, sEventType, bCapture) {
 		var sOnEvent = "on" + sEventType;
-		if (arrEvLs._bDOM0Handler)
+		if (arrEvLs._bDOM0Handler) {
 			this._[sOnEvent] = null;
-		else
+		} else {
 			this._.detachEvent(sOnEvent, Ql.EventTarget._eventHandler_IE55);
+		}
 	}
 	Ql.EventTarget._removeLastEvL = $Ql$EventTarget$_removeLastEvL_IE55;
 
@@ -707,10 +729,11 @@ if (Browser.version < 90000) {
 		if (!("target" in e)) {
 			// The event is straight from IE, so it needs treatment.
 			e.target = (e.srcElement || window.document);
-			if (e.type == "mouseover")
+			if (e.type == "mouseover") {
 				e.relatedTarget = e.fromElement;
-			else if (e.type == "mouseout")
+			} else if (e.type == "mouseout") {
 				e.relatedTarget = e.toElement;
+			}
 			e.preventDefault = Event.prototype.preventDefault;
 			e.stopPropagation = Event.prototype.stopPropagation;
 		}
@@ -749,8 +772,9 @@ if (Browser.version < 90000) {
 				// Copy children.
 				for (var ndChild = nd.firstChild; ndChild; ndChild = ndChild.nextSibling) {
 					var ndImpChild = this._importNode(ndChild, bAllChildren);
-					if (ndImpChild)
+					if (ndImpChild) {
 						ndImp.appendChild(ndImpChild);
+					}
 				}
 				return ndImp;
 
@@ -759,16 +783,17 @@ if (Browser.version < 90000) {
 				return this._.createTextNode(nd.nodeValue);
 
 			case Node.ATTRIBUTE_NODE:
-				if (Browser.version < 60000)
+				if (Browser.version < 60000) {
 					return null;
-				else
-					;// TODO
+				}
+				return null; // TODO: do something!
+
 			case Node.COMMENT_NODE:
-				if (Browser.version < 60000)
+				if (Browser.version < 60000) {
 					// Yes, this is what IE5.5 thinks a comment is.
 					return this._createElement("!");
-				else
-					return this._.createComment(nd.nodeValue);
+				}
+				return this._.createComment(nd.nodeValue);
 		}
 	}
 	Ql.DOM.Document.prototype._importNode = $Ql$DOM$Document$_importNode_IE55;
@@ -811,8 +836,9 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 			if (map.fixed) {
 				this.getParentNode().insertBefore(eltTemp, this);
 				elt = eltTemp;
-			} else
+			} else {
 				elt = this;
+			}
 			while (
 				(elt = elt._.offsetParent) &&
 				((elt = Ql.DOM.wrap(elt)).isDescendantOf(eltRelTo) || map.fixed)
@@ -880,8 +906,9 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 			 csssdDst = this._.style;
 		for (var i = 0, c = arrStyles.length; i < c; ++i) {
 			var sName = fixCssPropName(arrStyles[i]), sVal = csssdSrc[sName];
-			if (bForce || sVal)
+			if (bForce || sVal) {
 				csssdDst[sName] = sVal;
+			}
 		}
 	}
 	Ql.DOM.Element.prototype.copyStylesFrom = $Ql$DOM$Element$copyStylesFrom_IE55;
@@ -901,10 +928,11 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 			// Convert a #rrggbb color to rgb() notation.
 			var iValue;
 			sValue = sValue.substr(1);
-			if (sValue.length == 3)
+			if (sValue.length == 3) {
 				sValue = sValue.charAt(0) + sValue.charAt(0) +
 							sValue.charAt(1) + sValue.charAt(1) +
 							sValue.charAt(2) + sValue.charAt(2);
+			}
 			var iValue = parseInt(sValue, 16);
 			sValue = "rgb(" + ( iValue        & 0xff) + ", " +
 									((iValue >>  8) & 0xff) + ", " +
@@ -935,10 +963,11 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 		function $Ql$DOM$Element$removeStyle_IE55(sName) {
 			Function.checkArgs($Ql$DOM$Element$removeStyle_IE55, arguments, String);
 			var csssd = this._.style, sVal = this.getStyle(sName);
-			if (sName == "opacity")
+			if (sName == "opacity") {
 				csssd.filter = csssd.filter.replace(/\balpha\(opacity=\d+\)/, "").trim();
-			else
+			} else {
 				csssd[fixCssPropName(sName)] = "";
+			}
 			return sVal;
 		}
 		Ql.DOM.Element.prototype.removeStyle = $Ql$DOM$Element$removeStyle_IE55;
@@ -952,13 +981,13 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 			for (; elt != body; elt = elt.parentNode) {
 				var sSize = elt.currentStyle.fontSize;
 				if (sSize) {
-					if (sSize.substr(-2) == "em")
+					if (sSize.substr(-2) == "em") {
 						fScale *= parseFloat(sSize);
-					else if (sSize.substr(-1) == "%")
+					} else if (sSize.substr(-1) == "%") {
 						fScale *= parseFloat(sSize) / 100;
-					else if (sSize.substr(-2) == "ex")
+					} else if (sSize.substr(-2) == "ex") {
 						fScale *= parseFloat(sSize) / 2;
-					else {
+					} else {
 						temp.style.fontSize = sSize;
 						return 1;
 					}
@@ -967,13 +996,16 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 			return fScale;
 		}
 		function getPixelValue(elt, sValue) {
-			if (sValue.substr(-2) == "px")
+			if (sValue.substr(-2) == "px") {
 				return parseInt(sValue) || 0;
+			}
 			var bNegative = (sValue.charAt(0) == "-");
-			if (bNegative)
+			if (bNegative) {
 				sValue = sValue.substr(1);
-			if (!RegExp.DIGIT.test(sValue.substr(-1)))
+			}
+			if (!RegExp.DIGIT.test(sValue.substr(-1))) {
 				fScale = getFontScale(elt);
+			}
 			temp.style.width = sValue;
 			body.appendChild(temp);
 			var iPx = Math.round((bNegative && -fScale || fScale) * temp.offsetWidth);
@@ -989,14 +1021,15 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 			var csssd = this._.style;
 			if (sName == "opacity") {
 				var iValue = Math.round(parseFloat(sValue) * 100);
-				if (iValue == 100)
+				if (iValue == 100) {
 					this.removeStyle(sName);
-				else if (/\balpha\(opacity=\d+\)/.test(csssd.filter))
+				} else if (/\balpha\(opacity=\d+\)/.test(csssd.filter)) {
 					csssd.filter = csssd.filter.replace(
 						/\balpha\(opacity=\d+\)/, "alpha(opacity=" + iValue + ")"
 					);
-				else
+				} else {
 					csssd.filter = "alpha(opacity=" + iValue + ") " + csssd.filter;
+				}
 			} else {
 				// TODO: FIXME
 				if (false && Browser.version < 60000) {
@@ -1252,10 +1285,11 @@ if (false && Browser.version < 70000 && navigator.platform == "Win32") {
 		for (var i = 0; i < arrImgs.length; ++i) {
 			var img = arrImgs[i];
 			img.addEventListener("load", img._pngFix_IE55, false);
-			if (img.readyState == "complete")
+			if (img.readyState == "complete") {
 				// The <img> has been loaded already, so no onload event will be triggered: apply the
 				// fix now.
 				img._pngFix_IE55();
+			}
 		};
 	}, false);
 

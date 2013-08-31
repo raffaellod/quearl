@@ -49,18 +49,21 @@ function $Function$checkArgs_debug(fn, vArgs/*, …*/) {
 			cTypes = 1;
 			vType = vTypes;
 		}
-		do
-			if (vType === Object.ANYTYPEOPT)
+		do {
+			if (vType === Object.ANYTYPEOPT) {
 				bValid = true;
-			else if (vType === undefined || vType === null) {
-				if (vArg === vType)
+			} else if (vType === undefined || vType === null) {
+				if (vArg === vType) {
 					bValid = true;
-			} else if (vArg !== undefined && vArg !== null)
-				if (vType === Object.ANYTYPE)
+				}
+			} else if (vArg !== undefined && vArg !== null) {
+				if (vType === Object.ANYTYPE) {
 					bValid = true;
-				else if (vArg instanceof vType || vArg.constructor === vType)
+				} else if (vArg instanceof vType || vArg.constructor === vType) {
 					bValid = true;
-		while (!bValid && iType < cTypes && (vType = vTypes[iType++], true));
+				}
+			}
+		} while (!bValid && iType < cTypes && (vType = vTypes[iType++], true));
 		if (!bValid) {
 			// Grab the list of arguments from the function declaration.
 			var s;
@@ -72,35 +75,39 @@ function $Function$checkArgs_debug(fn, vArgs/*, …*/) {
 			if (s != null) {
 				var arrArgsDecl = s[1].split(/,[\t ]*/);
 				s = "Invalid value for argument “" + arrArgsDecl[iFnArg] + "” in ";
-			} else
+			} else {
 				s = "Invalid value for argument #" + iFnArg + " in ";
+			}
 			s += Function.getName(fn) + "\nExpected:";
-			if (vTypes instanceof Array)
+			if (vTypes instanceof Array) {
 				for (iType = 0; iType < cTypes; ++iType) {
 					vType = vTypes[iType];
-					if (vType === undefined)
+					if (vType === undefined) {
 						s += "\n  undefined";
-					else if (vType === null)
+					} else if (vType === null) {
 						s += "\n  null";
-					else if (vType === Object.ANYTYPEOPT)
+					} else if (vType === Object.ANYTYPEOPT) {
 						s += "\n  undefined\n  null\n  var";
-					else if (vType === Object.ANYTYPE)
+					} else if (vType === Object.ANYTYPE) {
 						s += "\n  var";
-					else
+					} else {
 						s += "\n  " + Function.getName(vType);
+					}
 				}
-			else
+			} else {
 				s += "\n  " + Function.getName(vTypes);
+			}
 			s += "\nReceived:\n   ";
 //			s += Object.toJSONString(vArg);
-			if (vArg === undefined)
+			if (vArg === undefined) {
 				s += "undefined";
-			else if (vArg === null)
+			} else if (vArg === null) {
 				s += "null";
-			else if (vArg.constructor)
+			} else if (vArg.constructor) {
 				s += Function.getName(vArg.constructor);
-			else
+			} else {
 				s += vArg.toString();
+			}
 //			alert(s);
 			throw new TypeError(s);
 		}
@@ -149,8 +156,9 @@ Object.ANYTYPEOPT.toString = Function.createToStringMethod("Object.ANYTYPEOPT");
 if ([, ].length == 2) {
 	// IE5.5 bug, IE6 bug, IE7 bug, IE8 bug: a trailing sparse element is not ignored.
 	function $Array$s_fixLast() {
-		if (!((this.length - 1) in this))
+		if (!((this.length - 1) in this)) {
 			--this.length;
+		}
 		return this;
 	}
 	Array.prototype.s = $Array$s_fixLast;
@@ -160,9 +168,11 @@ if ([, ].length == 2) {
 	// Note: this makes it impossible to declare an array with items of value explicitly set to
 	// undefined.
 	function $Array$s_fixSparse() {
-		for (var i = 0, c = this.length; i < c; ++i)
-			if (this[i] === undefined)
+		for (var i = 0, c = this.length; i < c; ++i) {
+			if (this[i] === undefined) {
 				delete this[i];
+			}
+		}
 		return this;
 	}
 	Array.prototype.s = $Array$s_fixSparse;
@@ -185,12 +195,14 @@ if ([, ].length == 2) {
 //
 function $Array$applyOnEach(sProp, arrArgs) {
 	Function.checkArgs($Array$applyOnEach, arguments, String, Array);
-	for (var i = 0, c = this.length; i < c; ++i)
+	for (var i = 0, c = this.length; i < c; ++i) {
 		if (i in this) {
 			var v = this[i];
-			if (sProp in v)
+			if (sProp in v) {
 				v[sProp].apply(v, arrArgs);
+			}
 		}
+	}
 	return this;
 }
 Array.prototype.applyOnEach = $Array$applyOnEach;
@@ -208,8 +220,9 @@ Array.prototype.applyOnEach = $Array$applyOnEach;
 function $Array$callOnEach(sProp/*, …*/) {
 	// Make an array of the arguments past sProp.
 	var arrArgs = [];
-	for (var i = 1, c = arguments.length; i < c; ++i)
+	for (var i = 1, c = arguments.length; i < c; ++i) {
 		arrArgs.push(arguments[i]);
+	}
 	return this.applyOnEach(sProp, arrArgs);
 }
 Array.prototype.callOnEach = $Array$callOnEach;
@@ -246,9 +259,11 @@ if (0 in [].concat([, ].s())) {
 function $Array$combine(arrValues) {
 	Function.checkArgs($Array$combine, arguments, Array);
 	var map = {};
-	for (var i = 0, c = Math.min(this.length, arrValues.length); i < c; ++i)
-		if (i in this)
+	for (var i = 0, c = Math.min(this.length, arrValues.length); i < c; ++i) {
+		if (i in this) {
 			map[this[i]] = arrValues[i];
+		}
+	}
 	return map;
 }
 Array.prototype.combine = $Array$combine;
@@ -265,11 +280,14 @@ if (!Array.prototype.every) {
 if (!Array.every) {
 	function $Array$every(arr, fnCallback, oContext /*= undefined*/) {
 		Function.checkArgs($Array$every, arguments, Object, Function, [undefined, Object]);
-		if (!oContext)
+		if (!oContext) {
 			oContext = window;
-		for (var i = 0, c = arr.length; i < c; ++i)
-			if (i in arr && !fnCallback.call(oContext, arr[i], i, arr))
+		}
+		for (var i = 0, c = arr.length; i < c; ++i) {
+			if (i in arr && !fnCallback.call(oContext, arr[i], i, arr)) {
 				return false;
+			}
+		}
 		return true;
 	}
 	Array.every = $Array$every;
@@ -292,13 +310,17 @@ function $Array$fill(c, vFiller /*= undefined*/) {
 	Function.checkArgs($Array$fill, arguments, Number, Object.ANYTYPEOPT);
 	var arr = [];
 	arr.length = c;
-	if (vFiller !== undefined)
-		if (vFiller instanceof Function)
-			for (var i = 0; i < c; ++i)
+	if (vFiller !== undefined) {
+		if (vFiller instanceof Function) {
+			for (var i = 0; i < c; ++i) {
 				arr[i] = vFiller(i, c);
-		else
-			for (var i = 0; i < c; ++i)
+			}
+		} else {
+			for (var i = 0; i < c; ++i) {
 				arr[i] = vFiller;
+			}
+		}
+	}
 	return arr;
 }
 Array.fill = $Array$fill;
@@ -326,14 +348,16 @@ function $Array$fillAnimSteps(sAnim, c) {
 	switch (sAnim) {
 		case "linear":
 			var fScale = 1 / c;
-			for (var i = 0; i < c; ++i)
+			for (var i = 0; i < c; ++i) {
 				arr[i] = i * fScale;
+			}
 			break;
 
 		case "accelerated":
 			var fScale = 1 / (c * c);
-			for (var i = 0; i < c; ++i)
+			for (var i = 0; i < c; ++i) {
 				arr[i] = (i * i) * fScale;
+			}
 			break;
 
 		case "braked":
@@ -341,8 +365,9 @@ function $Array$fillAnimSteps(sAnim, c) {
 			// array filling that is reversed.
 			var fScale = 1 / (c * c),
 				 iU = c - 1;
-			for (var i = 0; i < c; ++i)
+			for (var i = 0; i < c; ++i) {
 				arr[iU - i] = 1 - (i * i) * fScale;
+			}
 			break;
 
 		case "smoothscroll":
@@ -373,12 +398,15 @@ if (!Array.prototype.filter) {
 if (!Array.filter) {
 	function $Array$filter(arrSrc, fnFilter, oContext /*= undefined*/) {
 		Function.checkArgs($Array$filter, arguments, Object, Function, [undefined, Object]);
-		if (!oContext)
+		if (!oContext) {
 			oContext = window;
+		}
 		var arrDst = [];
-		for (var i = 0, c = arrSrc.length; i < c; ++i)
-			if (i in arrSrc && fnFilter.call(oContext, arrSrc[i], i, arrSrc))
+		for (var i = 0, c = arrSrc.length; i < c; ++i) {
+			if (i in arrSrc && fnFilter.call(oContext, arrSrc[i], i, arrSrc)) {
 				arrDst.push(arrSrc[i]);
+			}
+		}
 		return arrDst;
 	}
 	Array.filter = $Array$filter;
@@ -394,17 +422,20 @@ if (!Array.filter) {
 function $Array$prototype$flip() {
 	Function.checkArgs($Array$prototype$flip, arguments);
 	var map = {};
-	for (var i = 0, c = this.length; i < c; ++i)
-		if (i in this)
+	for (var i = 0, c = this.length; i < c; ++i) {
+		if (i in this) {
 			map[this[i]] = i;
+		}
+	}
 	return map;
 }
 Array.prototype.flip = $Array$prototype$flip;
 function $Array$flip(map) {
 	Function.checkArgs($Array$flip, arguments, Object);
 	var mapFlipped = {};
-	for (var sProp in map)
+	for (var sProp in map) {
 		mapFlipped[map[sProp]] = sProp;
+	}
 	return mapFlipped;
 }
 Array.flip = $Array$flip;
@@ -421,11 +452,14 @@ if (!Array.prototype.forEach) {
 if (!Array.forEach) {
 	function $Array$forEach(arr, fnCallback, oContext /*= undefined*/) {
 		Function.checkArgs($Array$forEach, arguments, Object, Function, [undefined, Object]);
-		if (!oContext)
+		if (!oContext) {
 			oContext = window;
-		for (var i = 0, c = arr.length; i < c; ++i)
-			if (i in arr)
+		}
+		for (var i = 0, c = arr.length; i < c; ++i) {
+			if (i in arr) {
 				fnCallback.call(oContext, arr[i], i, arr);
+			}
+		}
 	}
 	Array.forEach = $Array$forEach;
 }
@@ -443,9 +477,11 @@ function $Array$from(o) {
 	Function.checkArgs($Array$from, arguments, Object);
 	var arr = [];
 	arr.length = o.length;
-	for (var i = 0, c = o.length; i < c; ++i)
-		if (i in o)
+	for (var i = 0, c = o.length; i < c; ++i) {
+		if (i in o) {
 			arr[i] = o[i];
+		}
+	}
 	return arr;
 }
 Array.from = $Array$from;
@@ -462,13 +498,16 @@ if (!Array.prototype.indexOf) {
 if (!Array.indexOf) {
 	function $Array$indexOf(arr, v, iStart /*= 0*/) {
 		Function.checkArgs($Array$indexOf, arguments, Object, Object.ANYTYPEOPT, [undefined, Number]);
-		if (iStart === undefined)
+		if (iStart === undefined) {
 			iStart = 0;
-		else if (iStart < 0)
+		} else if (iStart < 0) {
 			iStart = arr.length + iStart;
-		for (var i = iStart, c = arr.length; i < c; ++i)
-			if (i in arr && arr[i] === v)
+		}
+		for (var i = iStart, c = arr.length; i < c; ++i) {
+			if (i in arr && arr[i] === v) {
 				return i;
+			}
+		}
 		return -1;
 	}
 	Array.indexOf = $Array$indexOf;
@@ -495,13 +534,16 @@ function $Array$indexOfByProp(arr, vProp, v, iStart /*= 0*/) {
 		$Array$indexOfByProp, arguments,
 		Object, [String, Number], Object.ANYTYPEOPT, [undefined, Number]
 	);
-	if (iStart === undefined)
+	if (iStart === undefined) {
 		iStart = 0;
-	else if (iStart < 0)
+	} else if (iStart < 0) {
 		iStart = arr.length + iStart;
-	for (var i = iStart, c = arr.length; i < c; ++i)
-		if (i in arr && arr[i][vProp] === v)
+	}
+	for (var i = iStart, c = arr.length; i < c; ++i) {
+		if (i in arr && arr[i][vProp] === v) {
 			return i;
+		}
+	}
 	return -1;
 }
 Array.indexOfByProp = $Array$indexOfByProp;
@@ -536,30 +578,33 @@ Array.prototype.insertAt = $Array$insertAt;
 //
 function $Array$insertSorted(v, fnCompare /*= undefined*/) {
 	Function.checkArgs($Array$insertSorted, arguments, Object.ANYTYPEOPT, [undefined, Function]);
-	if (!fnCompare)
+	if (!fnCompare) {
 		fnCompare = Sorting.defaultCompare;
+	}
 	var iL = 0,
 		 iU = this.length,
 		 i = null;
 	while (iL < iU) {
 		var iH = (iL + iU) >> 1,
 			 iRes;
-		if (iH in this)
+		if (iH in this) {
 			iRes = fnCompare(v, this[iH]);
-		else
+		} else {
 			// Anything < undefined.
 			iRes = -1;
-		if (iRes > 0)
+		}
+		if (iRes > 0) {
 			iL = iH + 1;
-		else if (iRes < 0)
+		} else if (iRes < 0) {
 			iU = iH;
-		else {
+		} else {
 			i = iH;
 			break;
 		}
 	}
-	if (i === null)
+	if (i === null) {
 		i = iL;
+	}
 	this.insertAt(i, v);
 	return i;
 }
@@ -579,13 +624,16 @@ if (!Array.lastIndexOf) {
 		Function.checkArgs(
 			$Array$lastIndexOf, arguments, Object, Object.ANYTYPEOPT, [undefined, Number]
 		);
-		if (iStart === undefined)
+		if (iStart === undefined) {
 			iStart = arr.length - 1;
-		else if (iStart < 0)
+		} else if (iStart < 0) {
 			iStart = arr.length + iStart;
-		for (var i = iStart; i >= 0; --i)
-			if (i in arr && arr[i] === v)
+		}
+		for (var i = iStart; i >= 0; --i) {
+			if (i in arr && arr[i] === v) {
 				return i;
+			}
+		}
 		return -1;
 	}
 	Array.lastIndexOf = $Array$lastIndexOf;
@@ -603,12 +651,15 @@ if (!Array.prototype.map) {
 if (!Array.map) {
 	function $Array$map(arrSrc, fnMap, oContext /*= undefined*/) {
 		Function.checkArgs($Array$map, arguments, Object, Function, Object.ANYTYPEOPT);
-		if (!oContext)
+		if (!oContext) {
 			oContext = window;
+		}
 		var arrDst = [];
-		for (var i = 0, c = arrSrc.length; i < c; ++i)
-			if (i in arrSrc)
+		for (var i = 0, c = arrSrc.length; i < c; ++i) {
+			if (i in arrSrc) {
 				arrDst[i] = fnMap.call(oContext, arrSrc[i], i, arrSrc);
+			}
+		}
 		arrDst.length = arrSrc.length;
 		return arrDst;
 	}
@@ -628,17 +679,21 @@ if (!Array.reduce) {
 	function $Array$reduce(arr, fnCallback, vInitialValue /*= undefined*/) {
 		Function.checkArgs($Array$reduce, arguments, Object, Function, Object.ANYTYPEOPT);
 		var i = 0, c = arr.length, v;
-		if (vInitialValue !== undefined)
+		if (vInitialValue !== undefined) {
 			v = vInitialValue;
-		else
-			for (; i < c; ++i)
+		} else {
+			for (; i < c; ++i) {
 				if (i in arr) {
 					v = arr[i++];
 					break;
 				}
-		for (; i < c; ++i)
-			if (i in arr)
+			}
+		}
+		for (; i < c; ++i) {
+			if (i in arr) {
 				v = fnCallback.call(window, v, arr[i], i, arr);
+			}
+		}
 		return v;
 	}
 	Array.reduce = $Array$reduce;
@@ -655,8 +710,9 @@ if (!Array.reduce) {
 function $Array$remove(v) {
 	Function.checkArgs($Array$remove, arguments, Object.ANYTYPEOPT);
 	var i = this.indexOf(v);
-	if (i == -1)
+	if (i == -1) {
 		return undefined;
+	}
 	return this.removeAt(i);
 }
 Array.prototype.remove = $Array$remove;
@@ -706,7 +762,7 @@ function $Array$shuffle() {
 	Function.checkArgs($Array$shuffle, arguments);
 	for (var c = this.length, i, vTemp; c; ) {
 		i = Math.floor(Math.random() * c--);
-		if (i in this)
+		if (i in this) {
 			if (c in this) {
 				vTemp = this[c];
 				this[c] = this[i];
@@ -715,12 +771,13 @@ function $Array$shuffle() {
 				this[c] = this[i];
 				delete this[i];
 			}
-		else
+		} else {
 			if (c in this) {
 				vTemp = this[c];
 				delete this[c];
 				this[i] = vTemp;
 			}
+		}
 	}
 	return this;
 }
@@ -738,11 +795,14 @@ if (!Array.prototype.some) {
 if (!Array.some) {
 	function $Array$some(arr, fnCallback, oContext /*= undefined*/) {
 		Function.checkArgs($Array$some, arguments, Object, Function, Object.ANYTYPEOPT);
-		if (!oContext)
+		if (!oContext) {
 			oContext = window;
-		for (var i = 0, c = arr.length; i < c; ++i)
-			if (i in arr && fnCallback.call(oContext, arr[i], i, arr))
+		}
+		for (var i = 0, c = arr.length; i < c; ++i) {
+			if (i in arr && fnCallback.call(oContext, arr[i], i, arr)) {
 				return true;
+			}
+		}
 		return false;
 	}
 	Array.some = $Array$some;
@@ -754,22 +814,26 @@ if (!Array.some) {
 function $Array$toJSONString(oParserStatus /*= undefined*/) {
 	Function.checkArgs($Array$toJSONString, arguments, [undefined, Object]);
 	if (oParserStatus) {
-		if (oParserStatus.arrParents.indexOf(this) != -1)
+		if (oParserStatus.arrParents.indexOf(this) != -1) {
 			return "{\"_jsonErr\":\"recursion detected\"}";
+		}
 		oParserStatus.arrParents.push(this);
-	} else
+	} else {
 		oParserStatus = {
 			arrParents: [this]
 		};
+	}
 	var arr = [];
-	for (var i = 0, c = this.length; i < c; ++i)
-		if (i in this)
+	for (var i = 0, c = this.length; i < c; ++i) {
+		if (i in this) {
 			arr[i] = Object.toJSONString(this[i], oParserStatus);
-		else
+		} else {
 			arr[i] = "";
+		}
 	// An array with a sparse last element needs one more delimiter.
-	if (!((this.length - 1) in this))
+	if (!((this.length - 1) in this)) {
 		arr.push("");
+	}
 	oParserStatus.arrParents.pop();
 	return "[" + arr.join(", ") + "]";
 }
@@ -812,24 +876,28 @@ Browser.isIE/*:bool*/ =
 /// Version of the browser, as MMmmrr. Non-null only if a specific browser was detected above (i.e.
 // if any is* attribute is true).
 Browser.version/*:int*/ = (function() {
-	if (Browser.isIE)
-		if (!document.implementation)
+	if (Browser.isIE) {
+		if (!document.implementation) {
 			// It could also be 5.0, but 5.0 will fail to even parse any Quearl scripts due to lambdas
 			// and exception handlers (ES3/JS1.5).
 			return 50500;
-		else if (!window.XMLHttpRequest)
+		}
+		if (!window.XMLHttpRequest) {
 			return 60000;
-		else if (!window.Element)
+		}
+		if (!window.Element) {
 			return 70000;
-		else if (!document.addEventListener)
+		}
+		if (!document.addEventListener) {
 			return 80000;
-		else
-			return 90000;
-	else if (Browser.isOpera) {
+		}
+		return 90000;
+	}
+	if (Browser.isOpera) {
 		var s = window.opera.version(), ich = s.indexOf(".");
 		return parseInt(s.substr(0, ich)) * 10000 + parseInt(s.substr(ich + 1)) * 100;
-	} else
-		return null;
+	}
+	return null;
 })();
 
 
@@ -842,10 +910,12 @@ Browser.version/*:int*/ = (function() {
 //
 function $Browser$log(s) {
 	Function.checkArgs($Browser$log, arguments, String);
-	if (window.console && window.console.log)
+	if (window.console && window.console.log) {
 		window.console.log(s);
-	if (window.opera)
+	}
+	if (window.opera) {
 		window.opera.postError(s);
+	}
 	return s;
 }
 Browser.log = $Browser$log;
@@ -946,8 +1016,9 @@ function $Date$formatDuration(iTD) {
 	for (var sUnit in Date.formatDuration._arrSteps) {
 		var arrStep = Date.formatDuration._arrSteps[sUnit],
 			 i = Math.floor(iTD % arrStep[0]);
-		if (i)
+		if (i) {
 			s = i + " " + L10n["CORE_TIMELEN_" + sUnit + (i == 1 && "_S" || "S_S")] + " " + s;
+		}
 		iTD = Math.floor(iTD / arrStep[0]);
 	}
 	return s.substr(0, s.length - 1);
@@ -1000,9 +1071,11 @@ function $Function$augmentWith(vParent) {
 	Function.checkArgs($Function$augmentWith, arguments, [Function, Object]);
 	var oProto = this.prototype,
 		 oParentProto = (vParent instanceof Function && vParent.prototype || vParent);
-	for (var sProp in oParentProto)
-		if (!(sProp in oProto))
+	for (var sProp in oParentProto) {
+		if (!(sProp in oProto)) {
 			oProto[sProp] = oParentProto[sProp];
+		}
+	}
 	return this;
 }
 Function.prototype.augmentWith = $Function$augmentWith;
@@ -1022,29 +1095,32 @@ if (!Function.prototype.bind) {
 	function $Function$bind(o/*, …*/) {
 		Function.checkArgs($Function$bind, arguments, Object.ANYTYPE);
 		var fn = this;
-		if (arguments.length == 1)
+		if (arguments.length == 1) {
 			// This is why the first argument is actually named: since it would be the this argument,
 			// the bound call can be greatly simplified to this.
 			return function(/*…*/) {
 				return fn.apply(o, arguments);
 			};
+		}
 		var arrArgs = [];
-		for (var i = 1; i < arguments.length; ++i)
+		for (var i = 1; i < arguments.length; ++i) {
 			arrArgs.push(arguments[i]);
+		}
 		return function(/*…*/) {
 			var cArguments = arguments.length;
-			if (!cArguments)
+			if (!cArguments) {
 				// Other simplification: no additional arguments, so we can just reuse the bound
 				// arguments.
 				return fn.apply(o, arrArgs);
-			else {
-				var arr = [];
-				for (var i = 0, c = arrArgs.length; i < c; ++i)
-					arr.push(arrArgs[i]);
-				for (var i = 0; i < cArguments; ++i)
-					arr.push(arguments[i]);
-				return fn.apply(o, arr);
 			}
+			var arr = [];
+			for (var i = 0, c = arrArgs.length; i < c; ++i) {
+				arr.push(arrArgs[i]);
+			}
+			for (var i = 0; i < cArguments; ++i) {
+				arr.push(arguments[i]);
+			}
+			return fn.apply(o, arr);
 		};
 	}
 	Function.prototype.bind = $Function$bind;
@@ -1075,8 +1151,9 @@ if (!Function.prototype.bind) {
 		Function.checkArgs($Function$bindNonFunction, arguments, Function, Object.ANYTYPE);
 		// Make an array of the arguments past o.
 		var arrArgs = [];
-		for (var i = 2; i < arguments.length; ++i)
+		for (var i = 2; i < arguments.length; ++i) {
 			arrArgs.push(arguments[i]);
+		}
 		// Must have an actual object, so get a wrapper for integral types.
 		switch (typeof(o)) {
 			case "string":  o = new String(o); break;
@@ -1088,20 +1165,24 @@ if (!Function.prototype.bind) {
 			var arr, mRet, cArguments = arguments.length;
 			if (cArguments) {
 				arr = [];
-				for (var i = 0; i < arrArgs.length; ++i)
+				for (var i = 0; i < arrArgs.length; ++i) {
 					arr.push(arrArgs[i]);
-				for (var i = 0; i < cArguments; ++i)
+				}
+				for (var i = 0; i < cArguments; ++i) {
 					arr.push(arguments[i]);
-			} else
+				}
+			} else {
 				arr = arrArgs;
+			}
 			// Get a pseudo-unique property name for this invocation, assign the original function as
 			// this property, and invoke it.
 			var sProp = "_ql_bNF_apply_" + iProp;
 			// Increment or wrap the non-random counter.
-			if (iProp < Number.INT_MAX)
+			if (iProp < Number.INT_MAX) {
 				++iProp;
-			else
+			} else {
 				iProp = 1;
+			}
 			o[sProp] = fn;
 			// Try to avoid using eval().
 			switch (arr.length) {
@@ -1114,8 +1195,9 @@ if (!Function.prototype.bind) {
 				default:
 					// This is really ugly and slow.
 					var sArgs = "arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]";
-					for (var i = 6, c = arr.length; i < c; ++i)
+					for (var i = 6, c = arr.length; i < c; ++i) {
 						sArgs += ", arr[" + i + "]";
+					}
 					mRet = eval("o[sProp](" + sArgs + ")");
 			}
 			try {
@@ -1179,10 +1261,11 @@ Function.Identity = $Function$Identity;
 function $Function$inheritFrom(vParent) {
 	Function.checkArgs($Function$inheritFrom, arguments, [Function, Object]);
 	var oParent;
-	if (vParent instanceof Function)
+	if (vParent instanceof Function) {
 		oParent = new vParent(Function.PROTOTYPING);
-	else
+	} else {
 		oParent = vParent;
+	}
 	this.prototype = oParent;
 	oParent.constructor = this;
 	return this;
@@ -1296,8 +1379,9 @@ Number.INT_SIGN_MASK/*:int*/ = 0x80000000;
 
 	function $Number$format(v, cDecs /*= 0*/) {
 		Function.checkArgs($Number$format, arguments, [Number, String], [undefined, Number]);
-		if (typeof(v) != "number")
+		if (typeof(v) != "number") {
 			v = parseFloat(v);
+		}
 		var s;
 		// Round the number to the closest position.
 		if (cDecs > 0) {
@@ -1307,15 +1391,16 @@ Number.INT_SIGN_MASK/*:int*/ = 0x80000000;
 			v = Math.round(v);
 			s = v.toString();
 		}
-		for (var i = s.length - 3; i > 0; i -= 3)
+		for (var i = s.length - 3; i > 0; i -= 3) {
 			s = s.substr(0, i) + L10n.CORE_NUM_THOUSEP + s.substr(i);
+		}
 		if (cDecs > 0) {
 			// Cache the RegExp; this should hint the browser to keep the compiled version around,
 			// granting a free speed-up.
 			var reDecs;
-			if (cDecs in mapDecsRegExpCache)
+			if (cDecs in mapDecsRegExpCache) {
 				reDecs = mapDecsRegExpCache[cDecs];
-			else {
+			} else {
 				reDecs = new RegExp("\\.(\\d{0," + cDecs + "})");
 				mapDecsRegExpCache[cDecs] = cDecs;
 			}
@@ -1337,18 +1422,24 @@ Number.INT_SIGN_MASK/*:int*/ = 0x80000000;
 //    Formatted size.
 //
 function $Number$formatByteSize(i, iMaxMultiple /*= undefined*/) {
-	if (iMaxMultiple === undefined)
+	if (iMaxMultiple === undefined) {
 		iMaxMultiple = 10;
-	if (i < 1024 || iMaxMultiple <= 0)
+	}
+	if (i < 1024 || iMaxMultiple <= 0) {
 		return i + " B";
-	if (i < 1048576 || iMaxMultiple <= 1)
+	}
+	if (i < 1048576 || iMaxMultiple <= 1) {
 		return Number.format(i / 1024, 2) + " KiB";
-	if (i < 1073741824 || iMaxMultiple <= 2)
+	}
+	if (i < 1073741824 || iMaxMultiple <= 2) {
 		return Number.format(i / 1048576, 2) + " MiB";
-	if (i < 1099511627776 || iMaxMultiple <= 3)
+	}
+	if (i < 1099511627776 || iMaxMultiple <= 3) {
 		return Number.format(i / 1073741824, 2) + " GiB";
-	if (i < 1125899906842624 || iMaxMultiple <= 4)
+	}
+	if (i < 1125899906842624 || iMaxMultiple <= 4) {
 		return Number.format(i / 1099511627776, 2) + " TiB";
+	}
 	return Number.format(i / 1125899906842624, 2) + " PiB";
 }
 Number.formatByteSize = $Number$formatByteSize;
@@ -1449,8 +1540,9 @@ Number.prototype.uAdd = $Number$uAdd;
 function $Object$clone(oSrc) {
 	Function.checkArgs($Object$clone, arguments, Object);
 	var oDst = {};
-	for (var sKey in oSrc)
+	for (var sKey in oSrc) {
 		oDst[sKey] = oSrc[sKey];
+	}
 	return oDst;
 }
 Object.clone = $Object$clone;
@@ -1467,8 +1559,9 @@ if (!Object.getPrototypeOf)
 			Function.checkArgs($Object$getPrototypeOf___proto__, arguments, Object.ANYTYPE);
 			// FX1.5 bug, FX2 bug: the __proto__ of a native Function seems to be the function itself
 			// (.toString() match), but it’s not.
-			if (o instanceof Function)
+			if (o instanceof Function) {
 				return Function.prototype;
+			}
 			return o.__proto__;
 		}
 		Object.getPrototypeOf = $Object$getPrototypeOf___proto__;
@@ -1495,8 +1588,9 @@ if (!Object.getPrototypeOf)
 //
 function $Object$merge(oDst, oSrc) {
 	Function.checkArgs($Object$merge, arguments, Object.ANYTYPE, Object.ANYTYPE);
-	for (var sKey in oSrc)
+	for (var sKey in oSrc) {
 		oDst[sKey] = oSrc[sKey];
+	}
 	return oDst;
 }
 Object.merge = $Object$merge;
@@ -1515,51 +1609,61 @@ function $Object$toJSONString(v, oParserStatus /*= undefined*/) {
 	Function.checkArgs($Object$toJSONString, arguments, Object.ANYTYPEOPT, [undefined, Object]);
 	// NOT 100% COMPATIBLE! Only use to diagnose special-case doubts.
 //	if (v.toSource) return v.toSource();
-	if (v === undefined)
+	if (v === undefined) {
 		return "undefined";
-	if (v === null)
+	}
+	if (v === null) {
 		return "null";
-	if (v === window)
+	}
+	if (v === window) {
 		return "{\"_jsonErr\":\"window object\"}";
+	}
 
 	// Prepare for recursion or forwarding.
-	if (!oParserStatus)
+	if (!oParserStatus) {
 		oParserStatus = {};
-	if (!oParserStatus.arrParents)
+	}
+	if (!oParserStatus.arrParents) {
 		oParserStatus.arrParents = [];
+	}
 
-	if (v.toJSONString)
+	if (v.toJSONString) {
 		return v.toJSONString(oParserStatus);
+	}
 	// Recurse and iterate.
-	if (oParserStatus.arrParents.indexOf(v) != -1)
+	if (oParserStatus.arrParents.indexOf(v) != -1) {
 		return "{\"_jsonErr\":\"cycle detected\"}";
+	}
 	oParserStatus.arrParents.push(v);
 	var arr = [], arrFunctions = [];
 	for (var sKey in v) {
-		if (sKey == "constructor")
+		if (sKey == "constructor") {
 			continue;
+		}
 		var vValue;
 		try {
 			vValue = v[sKey];
-			if (vValue === undefined)
+			if (vValue === undefined) {
 				vValue = "undefined";
-			else if (vValue === null)
+			} else if (vValue === null) {
 				vValue = "null";
-			else if (typeof(vValue) == "function") {
+			} else if (typeof(vValue) == "function") {
 				arrFunctions.push(sKey);
 				continue;
-			} else if (vValue.nodeType !== undefined)
+			} else if (vValue.nodeType !== undefined) {
 				// DOM elements have far too many attributes.
 				vValue = "{\"_jsonErr\":\"XML node\"}";
-			else
+			} else {
 				vValue = Object.toJSONString(vValue, oParserStatus);
+			}
 		} catch (x) {
 			vValue = "{\"_jsonErr\":\"" + x.message + "\"}";
 		}
 		arr.push(sKey.toJSONString() + ":" + vValue);
 	}
-	if (arrFunctions.length)
+	if (arrFunctions.length) {
 		arr.push("\"_jsonOmittedMethods\":" + arrFunctions.toJSONString());
+	}
 	oParserStatus.arrParents.pop();
 	return "{" + arr.join(", ") + "}";
 }
@@ -1621,8 +1725,9 @@ RegExp.escapeWithWildcards = $RegExp$escapeWithWildcards;
 //
 function $RegExp$isSimple() {
 	Function.checkArgs($RegExp$isSimple, arguments);
-	if (this.ignoreCase)
+	if (this.ignoreCase) {
 		return false;
+	}
 	var s = this.source.replace(/\\\\/g, "").replace(/\\[$()*+.\/?[\]^{|}]/g, "");
 	return /^\^?[^$()*+.\/?[\\\]^{|}]+\$?$/.test(s);
 }
@@ -1704,19 +1809,21 @@ function $Sorting$insertionIndex(
 	Function.checkArgs(
 		$Sorting$insertionIndex, arguments, Object.ANYTYPEOPT, Number, Function, [undefined, Function]
 	);
-	if (!fnCompare)
+	if (!fnCompare) {
 		fnCompare = Sorting.defaultCompare;
+	}
 	// Since the items are sorted, a binary search will quickly find the proper index.
 	var iL = 0, iU = cItems;
 	while (iL < iU) {
 		var iM = (iL + iU) >> 1,
 			 iRes = fnCompare(vValue, fnGetItem(iM));
-		if (iRes > 0)
+		if (iRes > 0) {
 			iL = iM + 1;
-		else if (iRes < 0)
+		} else if (iRes < 0) {
 			iU = iM;
-		else
+		} else {
 			return iM;
+		}
 	}
 	return iL;
 }
@@ -1763,8 +1870,9 @@ function $Sorting$stableSort(cItems, fnGetItem, fnSetItem, fnCompare /*= Sorting
 	Function.checkArgs(
 		$Sorting$stableSort, arguments, Number, Function, Function, [undefined, Function]
 	);
-	if (!fnCompare)
+	if (!fnCompare) {
 		fnCompare = Sorting.defaultCompare;
+	}
 	// Yes, this is a merge sort.
 	var fnMerge = function(arr, cItems) {
 		if (cItems > 2) {
@@ -1773,18 +1881,22 @@ function $Sorting$stableSort(cItems, fnGetItem, fnSetItem, fnCompare /*= Sorting
 			fnMerge(arrL, cItemsL);
 			fnMerge(arrU, cItemsU);
 			var i = 0, iL = 0, iU = 0;
-			while (iL < cItemsL && iU < cItemsU)
+			while (iL < cItemsL && iU < cItemsU) {
 				arr[i++] = (fnCompare(arrL[iL], arrU[iU]) <= 0 ? arrL[iL++] : arrU[iU++]);
-			while (iL < cItemsL)
+			}
+			while (iL < cItemsL) {
 				arr[i++] = arrL[iL++];
-			while (iU < cItemsU)
+			}
+			while (iU < cItemsU) {
 				arr[i++] = arrU[iU++];
-		} else if (cItems == 2)
+			}
+		} else if (cItems == 2) {
 			if (fnCompare(arr[0], arr[1]) > 0) {
 				var vTemp = arr[0];
 				arr[0] = arr[1];
 				arr[1] = vTemp;
 			}
+		}
 	};
 
 	var cItemsL = cItems >> 1,      arrL = [],
@@ -1795,18 +1907,22 @@ function $Sorting$stableSort(cItems, fnGetItem, fnSetItem, fnCompare /*= Sorting
 		arrL[i] = fnGetItem(i);
 		arrU[i] = fnGetItem(cItemsL + i);
 	}
-	if (cItemsU > cItemsL)
+	if (cItemsU > cItemsL) {
 		arrU[cItemsL /*== cItemsU - 1*/] = fnGetItem(cItems - 1);
+	}
 	fnMerge(arrL, cItemsL);
 	fnMerge(arrU, cItemsU);
 	// Redistribute the items back to the original collection.
 	var i = 0, iL = 0, iU = 0;
-	while (iL < cItemsL && iU < cItemsU)
+	while (iL < cItemsL && iU < cItemsU) {
 		fnSetItem(fnCompare(arrL[iL], arrU[iU]) <= 0 ? arrL[iL++] : arrU[iU++], i++);
-	while (iL < cItemsL)
+	}
+	while (iL < cItemsL) {
 		fnSetItem(arrL[iL++], i++);
-	while (iU < cItemsU)
+	}
+	while (iU < cItemsU) {
 		fnSetItem(arrU[iU++], i++);
+	}
 }
 Sorting.stableSort = $Sorting$stableSort;
 
@@ -1838,11 +1954,13 @@ Perf.toString = Function.createToStringMethod("Perf");
 		var iDuration, cRuns, iRunCount = 0;
 		do {
 			cRuns = arrRunCounts[iRunCount];
-			if (iRunCount < arrRunCounts.length - 1)
+			if (iRunCount < arrRunCounts.length - 1) {
 				++iRunCount;
+			}
 			var tsStart = (new Date()).getTime();
-			for (var iRun = 0; iRun < cRuns; ++iRun)
+			for (var iRun = 0; iRun < cRuns; ++iRun) {
 				fn.apply(oThis, arrArgs);
+			}
 			// Discard the previous duration; this one is more precise.
 			iDuration = (new Date()).getTime() - tsStart;
 		// The test should take at least 150 ms (pretty arbitrary).
@@ -1876,13 +1994,15 @@ function $String$asFormat(/*…*/) {
 	var arrArgs = arguments,
 		 cUsedArgs = 0;
 	return this.replace(/%(?:%|(?:(\d+)\$)?([difs]))/g, function($0, $1, $2, ich, s) {
-		if ($0 == "%%")
+		if ($0 == "%%") {
 			return "%";
+		}
 		var mArg;
-		if ($1)
+		if ($1) {
 			mArg = arrArgs[$1 - 1];
-		else
+		} else {
 			mArg = arrArgs[cUsedArgs++];
+		}
 		switch ($2) {
 			case "d":
 			case "i":
@@ -1943,8 +2063,9 @@ String.prototype.ellipsis = $String$ellipsis;
 //
 function $String$jsonDecode() {
 	Function.checkArgs($String$jsonDecode, arguments);
-	if (!this)
+	if (!this) {
 		return undefined;
+	}
 	try {
 		return eval("(" + this + ")");
 	} catch (x) {
@@ -1991,17 +2112,21 @@ function $String$languageTagCompare(s2) {
 	for (;;) {
 		var ch1 = s1.charCodeAt(ich),
 			 ch2 = s2.charCodeAt(ich++);
-		if (!ch1 && !ch2)
+		if (!ch1 && !ch2) {
 			// The strings are equal.
 			return cComponents + 1;
-		if ((!ch1 && ch2 == 0x002d /*‘-’*/) || (!ch2 && ch1 == 0x002d /*‘-’*/))
+		}
+		if ((!ch1 && ch2 == 0x002d /*‘-’*/) || (!ch2 && ch1 == 0x002d /*‘-’*/)) {
 			// One string is a less specific version of the other.
 			return cComponents + 1;
-		if (ch1 != ch2)
+		}
+		if (ch1 != ch2) {
 			// One component is different, and so are the strings.
 			return 0;
-		if (ch1 == 0x002d /*‘-’*/)
+		}
+		if (ch1 == 0x002d /*‘-’*/) {
 			++cComponents;
+		}
 	}
 }
 String.prototype.languageTagCompare = $String$languageTagCompare;
@@ -2075,15 +2200,15 @@ String.prototype.localeCompareNoCase = $String$localeCompareNoCase;
 			// Convert the chunk into 16 integers.
 			for (var ib = 0; ib < 16; ) {
 				// If ch has been used up entirely, get a new character.
-				if (!cbCh)
+				if (!cbCh) {
 					if (ich < cch) {
 						// The string is not over: get another character from it, converting it from
 						// UTF-16 into an UTF-8 representation, with the bytes in a reversed order.
 						ch = s.charCodeAt(ich++);
-						if (ch <= 0x007f)
+						if (ch <= 0x007f) {
 							// 00000000 0zzzzzzz -> 0zzzzzzz
 							cbCh = 1;
-						else if (ch <= 0x07ff) {
+						} else if (ch <= 0x07ff) {
 							// 00000yyy yyzzzzzz -> 10zzzzzz 110yyyyy
 							ch = ((ch >> 6) & 0x0000001f) |
 								  ((ch << 8) & 0x00003f00) |
@@ -2120,8 +2245,9 @@ String.prototype.localeCompareNoCase = $String$localeCompareNoCase;
 							// 0s so that cb % 64 == 56. Also add a little-endian 64-bit bit length of the
 							// original string (we’ll assume the high 32 bits to be 0).
 							var cbPadding = 56 - (cb & 0x3f);
-							if (cbPadding < 1)
+							if (cbPadding < 1) {
 								cbPadding += 64;
+							}
 							s += c_sPadding.substr(0, cbPadding) + String.fromCharCode(
 								(cb <<  3) & 0xff,
 								(cb >>  5) & 0xff,
@@ -2135,6 +2261,7 @@ String.prototype.localeCompareNoCase = $String$localeCompareNoCase;
 						ch = s.charCodeAt(ich++);
 						cbCh = 1;
 					}
+				}
 				iAccum |= (ch & 0xff) << cbitAccum;
 				ch >>= 8;
 				--cbCh;
@@ -2147,14 +2274,15 @@ String.prototype.localeCompareNoCase = $String$localeCompareNoCase;
 			}
 			// Process the chunk.
 			for (var i = 0; i < 64; ++i) {
-				if (i < 16)
+				if (i < 16) {
 					f = (i1 & i2) | (~i1 & i3);
-				else if (i < 32)
+				} else if (i < 32) {
 					f = (i3 & i1) | (~i3 & i2);
-				else if (i < 48)
+				} else if (i < 48) {
 					f = i1 ^ i2 ^ i3;
-				else
+				} else {
 					f = i2 ^ (i1 | ~i3);
+				}
 				var iTemp = i3;
 				i3 = i2;
 				i2 = i1;
@@ -2246,8 +2374,9 @@ function $String$natCompare(s2, bNoCase /*= false*/) {
 			--iBias;
 			ch2 = s2.charAt(ich2++);
 		}
-		if (iWsBias == 0)
+		if (iWsBias == 0) {
 			iWsBias = iBias;
+		}
 		// Compare two characters or digit runs.
 		if (ch1 && ch2) {
 			if (RegExp.DIGIT.test(ch1) && RegExp.DIGIT.test(ch2)) {
@@ -2265,38 +2394,45 @@ function $String$natCompare(s2, bNoCase /*= false*/) {
 				for (;;) {
 					var bDigit1 = (ch1 && RegExp.DIGIT.test(ch1)),
 						 bDigit2 = (ch2 && RegExp.DIGIT.test(ch2));
-					if (!bDigit1 || !bDigit2)
+					if (!bDigit1 || !bDigit2) {
 						break;
-					if (iBias == 0)
+					}
+					if (iBias == 0) {
 						// Compare the most significant different digit.
 						iBias = ch1[sCompareMethod](ch2);
+					}
 					ch1 = s1.charAt(ich1++);
 					ch2 = s2.charAt(ich2++);
 				}
 				// Leading zeroes were stripped, so longer = bigger.
-				if (bDigit1)
+				if (bDigit1) {
 					iCmp = +1;
-				else if (bDigit2)
+				} else if (bDigit2) {
 					iCmp = -1;
-				else
+				} else {
 					// The value of the numbers is the same, so try breaking the tie with some bias.
 					iCmp = iBias || iWsBias || iZeroBias;
-			} else
+				}
+			} else {
 				// Regular comparison.
 				iCmp = ch1[sCompareMethod](ch2);
+			}
 			// The two chars/numbers are different, so quit now.
-			if (iCmp != 0)
+			if (iCmp != 0) {
 				return iCmp;
+			}
 		}
-		if (!ch1 || !ch2)
+		if (!ch1 || !ch2) {
 			// End of comparison, and the strings are equal so far; the longest goes last, otherwise
 			// some bias is needed.
-			if (!ch1)
+			if (!ch1) {
 				return -1;
-			else if (!ch2)
+			}
+			if (!ch2) {
 				return +1;
-			else
-				return iWsBias;
+			}
+			return iWsBias;
+		}
 	}
 }
 String.prototype.natCompare = $String$natCompare;
@@ -2338,20 +2474,21 @@ String.prototype.natCompareNoCase = $String$natCompareNoCase;
 function $String$pad(cchPad, sPadder, iDir) {
 	Function.checkArgs($String$pad, arguments, Number, String, Number);
 	var s;
-	if (this.length >= cchPad)
+	if (this.length >= cchPad) {
 		s = this.clone();
-	else if (iDir == 0)
+	} else if (iDir == 0) {
 		s = this.pad(
 			this.length + ((cchPad - this.length) >> 1), sPadder, -1
 		).pad(cchPad, sPadder, 1);
-	else {
+	} else {
 		var sPad = (
 			sPadder && sPadder.repeat(Math.ceil((cchPad - this.length) / sPadder.length)) || ""
 		);
-		if (iDir < 0)
+		if (iDir < 0) {
 			s = sPad.substr(sPad.length - (cchPad - this.length)) + this;
-		else
+		} else {
 			s = this + sPad.substr(0, cchPad - this.length);
+		}
 	}
 	return s;
 }
@@ -2368,8 +2505,9 @@ String.prototype.pad = $String$pad;
 function $String$repeat(iMult) {
 	Function.checkArgs($String$repeat, arguments, Number);
 	var s = "";
-	while (iMult-- > 0)
+	while (iMult-- > 0) {
 		s += this;
+	}
 	return s;
 }
 String.prototype.repeat = $String$repeat;
@@ -2383,8 +2521,9 @@ String.prototype.repeat = $String$repeat;
 function $String$reverse() {
 	Function.checkArgs($String$reverse, arguments);
 	var s = "";
-	for (var i = this.length; i--; )
+	for (var i = this.length; i--; ) {
 		s += this.charAt(i);
+	}
 	return s;
 }
 String.prototype.reverse = $String$reverse;
@@ -2402,12 +2541,14 @@ String.prototype.reverse = $String$reverse;
 function $String$replacePairs(map) {
 	Function.checkArgs($String$replacePairs, arguments, Object);
 	var s = this.clone();
-	for (var sSearch in map)
-		if (map[sSearch] instanceof Array)
+	for (var sSearch in map) {
+		if (map[sSearch] instanceof Array) {
 			// The value is a pair: ignore the key, use the two values.
 			s = s.replace(map[sSearch][0], map[sSearch][1]);
-		else
+		} else {
 			s = s.replace(new RegExp(RegExp.escape(sSearch), "g"), map[sSearch]);
+		}
+	}
 	return s;
 }
 String.prototype.replacePairs = $String$replacePairs;
@@ -2421,13 +2562,15 @@ if ("ab".substr(-1) != "b")
 
 		function $String$substr_fixNegStart(ichStart, cch /*= undefined*/) {
 			Function.checkArgs($String$substr_fixNegStart, arguments, Number, [undefined, Number]);
-			if (ichStart < 0)
+			if (ichStart < 0) {
 				ichStart = this.length + ichStart;
+			}
 			// Additional IE5.5 bug: the native substr() treats undefined for cch like 0, so substr(x)
 			// will always return ""; to fix this, tell it to return the maximum number of characters
 			// instead.
-			if (cch === undefined)
+			if (cch === undefined) {
 				cch = this.length;
+			}
 			return fnOverridden.call(this, ichStart, cch);
 		}
 		String.prototype.substr = $String$substr_fixNegStart;
@@ -2485,8 +2628,9 @@ String.prototype.substrCount = $String$substrCount;
 	//
 	function ctlToEscapeSeq($0, ich, s) {
 		var s = "";
-		for (var ich = 0, cch = $0.length; ich < cch; ++ich)
+		for (var ich = 0, cch = $0.length; ich < cch; ++ich) {
 			s += "\\u" + ("000" + $0.charCodeAt(ich).toString(16)).substr(-4);
+		}
 		return s;
 	}
 
@@ -2504,8 +2648,8 @@ String.prototype.substrCount = $String$substrCount;
 /// Defined in ECMAScript 5 and JavaScript 1.8.1. Versions here are optimized for longer strings
 // with fewer trimmable spaces.
 //
-if (!String.prototype.trim)
-	if (Browser.isIE)
+if (!String.prototype.trim) {
+	if (Browser.isIE) {
 		// This seems to exploit some optimizations in IE5.5/IE6/IE7/IE8’s RegExp compiler.
 		(function() {
 			var reTrimmer = new RegExp(
@@ -2519,30 +2663,34 @@ if (!String.prototype.trim)
 			}
 			String.prototype.trim = $String$trim_IE;
 		})();
-	else {
+	} else {
 		// Generic non-RegExp version which works quite well on browsers such as FX and OP.
 		function $String$trim_noRegExp() {
 			Function.checkArgs($String$trim_noRegExp, arguments);
 			var ichStart = -1, ichEnd = this.length - 1;
-			while (++ichStart <= ichEnd)
-				if (String.WHITESPACE.indexOf(this.charAt(ichStart)) === -1)
+			while (++ichStart <= ichEnd) {
+				if (String.WHITESPACE.indexOf(this.charAt(ichStart)) === -1) {
 					break;
+				}
+			}
 			while (ichStart <= ichEnd) {
-				if (String.WHITESPACE.indexOf(this.charAt(ichEnd)) === -1)
+				if (String.WHITESPACE.indexOf(this.charAt(ichEnd)) === -1) {
 					break;
+				}
 				--ichEnd;
 			}
 			return this.substr(ichStart, ichEnd - ichStart + 1);
 		}
 		String.prototype.trim = $String$trim_noRegExp;
 	}
+}
 
 
 /// Defined in JavaScript 1.8.1. Versions here are optimized for longer strings with fewer trimmable
 // spaces.
 //
-if (!String.prototype.trimLeft)
-	if (Browser.isIE || (Browser.isOpera && Browser.version >= 105000))
+if (!String.prototype.trimLeft) {
+	if (Browser.isIE || (Browser.isOpera && Browser.version >= 105000)) {
 		// This works best with interpreters featuring a better RegExp engine.
 		(function() {
 			var reTrimmer = new RegExp("^[" + RegExp.WHITESPACE_s + "][" + RegExp.WHITESPACE_s + "]*");
@@ -2553,25 +2701,28 @@ if (!String.prototype.trimLeft)
 			}
 			String.prototype.trimLeft = $String$trimLeft_useRegExp;
 		})();
-	else {
+	} else {
 		// Generic non-RegExp version which works quite well on browsers such as FX and older OP.
 		function $String$trimLeft_noRegExp() {
 			Function.checkArgs($String$trimLeft_noRegExp, arguments);
 			var ichStart = -1, cch = this.length;
-			while (++ichStart < cch)
-				if (String.WHITESPACE.indexOf(this.charAt(ichStart)) === -1)
+			while (++ichStart < cch) {
+				if (String.WHITESPACE.indexOf(this.charAt(ichStart)) === -1) {
 					break;
+				}
+			}
 			return this.substr(ichStart, cch - ichStart);
 		}
 		String.prototype.trimLeft = $String$trimLeft_noRegExp;
 	}
+}
 
 
 /// Defined in JavaScript 1.8.1. Versions here are optimized for longer strings with fewer trimmable
 // spaces.
 //
-if (!String.prototype.trimRight)
-	if (Browser.isOpera && Browser.version >= 105000)
+if (!String.prototype.trimRight) {
+	if (Browser.isOpera && Browser.version >= 105000) {
 		// This works best with interpreters sporting a more optimized RegExp engine.
 		(function() {
 			var reTrimmer = new RegExp("[" + RegExp.WHITESPACE_s + "][" + RegExp.WHITESPACE_s + "]*$");
@@ -2582,18 +2733,21 @@ if (!String.prototype.trimRight)
 			}
 			String.prototype.trimRight = $String$trimRight_useRegExp;
 		})();
-	else {
+	} else {
 		// Generic non-RegExp version which works quite well on browsers such as IE, FX and older OP.
 		function $String$trimRight_noRegExp() {
 			Function.checkArgs($String$trimRight_noRegExp, arguments);
 			var ichEnd = this.length;
-			while (--ichEnd >= 0)
-				if (String.WHITESPACE.indexOf(this.charAt(ichEnd)) === -1)
+			while (--ichEnd >= 0) {
+				if (String.WHITESPACE.indexOf(this.charAt(ichEnd)) === -1) {
 					break;
+				}
+			}
 			return this.substr(0, ichEnd + 1);
 		}
 		String.prototype.trimRight = $String$trimRight_noRegExp;
 	}
+}
 
 
 
@@ -2607,13 +2761,15 @@ if (!String.prototype.trimRight)
 //    String used to initialize the URL components.
 //
 function $Url(s /*= undefined*/) {
-	if (arguments[0] === Function.PROTOTYPING)
+	if (arguments[0] === Function.PROTOTYPING) {
 		return;
+	}
 	Function.checkArgs($Url, arguments, [undefined, String]);
-	if (s)
+	if (s) {
 		this.fromString(s);
-	else
+	} else {
 		this.query = {};
+	}
 }
 var Url = $Url;
 
@@ -2663,25 +2819,29 @@ function $Url$fromString(s) {
 		if (ich != -1) {
 			sFragment = s.substr(ich + 1);
 			s = s.substr(0, ich);
-		} else
+		} else {
 			sFragment = null;
+		}
 		// Query.
 		ich = s.indexOf("?");
 		if (ich != -1) {
-			if (ich + 1 < s.length)
+			if (ich + 1 < s.length) {
 				arrMatch = s.substr(ich + 1).split("&");
-			else
+			} else {
 				arrMatch = null;
+			}
 			s = s.substr(0, ich);
-			if (arrMatch)
+			if (arrMatch) {
 				for (var i = 0, c = arrMatch.length; i < c; ++i) {
 					var sQA = arrMatch[i];
 					ich = sQA.indexOf("=");
-					if (ich != -1)
+					if (ich != -1) {
 						mapQuery[sQA.substr(0, ich)] = sQA.substr(ich + 1);
-					else
+					} else {
 						mapQuery[sQA] = null;
+					}
 				}
+			}
 		}
 		// User and password.
 		arrMatch = s.match(/([^:@]*)(?::([^@]*))?@/);
@@ -2756,8 +2916,9 @@ Url.encodeComponent = $Url$encodeComponent;
 function $Url$encodeQuery(mapArgs) {
 	Function.checkArgs($Url$encodeQuery, arguments, Object);
 	var s = "";
-	for (var sName in mapArgs)
+	for (var sName in mapArgs) {
 		s += encodeURIComponent(sName) + "=" + encodeURIComponent(mapArgs[sName]) + "&";
+	}
 	return s.substr(0, s.length - 1);
 }
 Url.encodeQuery = $Url$encodeQuery;
@@ -2803,19 +2964,23 @@ function $Url$toString() {
 	var s = this.scheme + "://";
 	if (this.user != null) {
 		s += this.user;
-		if (this.pass)
+		if (this.pass) {
 			s += ":" + this.pass;
+		}
 		s += "@";
 	}
 	s += this.host;
-	if (this.port)
+	if (this.port) {
 		s += ":" + this.port;
+	}
 	s += this.path;
 	var sQuery = Url.encodeQuery(this.query);
-	if (sQuery)
+	if (sQuery) {
 		s += "?" + sQuery;
-	if (this.fragment)
+	}
+	if (this.fragment) {
 		s += "#" + this.fragment;
+	}
 	return s;
 }
 Url.prototype.toString = $Url$toString;
