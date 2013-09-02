@@ -56,6 +56,8 @@ class QlApplication {
 	public function __construct() {
 		# Create a default $_APP array loading only bootstrap.conf, which is necessary to successfully
 		# call read().
+		# Notice that this doesn’t set $_APP['core']['__ql_mtime'], so when QlCoreModule will load its
+		# own module.conf, this stub section will always be overwritten.
 		self::load_section_nolock('core', $_SERVER['LROOTDIR'] . 'config/core/bootstrap.conf');
 
 		# Now we can go ahead with constructing $this.
@@ -94,7 +96,7 @@ class QlApplication {
 	# in the $_APP section to be deleted. Keys not present in $arrNewSection will remain unaffected.
 	#
 	# The caller can check the return value to perform any adjustments to the section. in case it was
-	# actually loaded.
+	# actually loaded; after that, the QlApplication instance must be unlocked.
 	#
 	# string $sSection
 	#    $_APP section to be loaded.
@@ -103,8 +105,9 @@ class QlApplication {
 	# [bool $bForce]
 	#    If true, the section will be reloaded even if it hasn’t changed since the last loading.
 	# bool return
-	#    true if the section was loaded as a result of this call, or false if loading was not
-	#    necessary.
+	#    false if loading the section was not necessary, or true if the section was really loaded
+	#    from the configuration file. In the latter case, the QlApplication instance will need to be
+	#    manually unlocked after any adjustments are made to the section.
 	#
 	public function load_section($sSection, $sFileName = null, $bForce = false) {
 		if ($sFileName === null) {
@@ -112,14 +115,14 @@ class QlApplication {
 			$sFileName = $_SERVER['LROOTDIR'] . 'config/' . $sSection . '/module.conf';
 		}
 		global $_APP;
-		$bLoad = $bForce || (int)@$_APP[$sSection]['__ql_mtime'] < filemtime($sFileName);
-		if ($bLoad) {
-			$this->lock();
-			self::load_section_nolock($sSection, $sFileName);
-			$_APP[$sSection]['__ql_mtime'] = filemtime($sFileName);
-			$this->unlock();
+		if (!$bForce && (int)@$_APP[$sSection]['__ql_mtime'] >= filemtime($sFileName)) {
+			# No need to load this section.
+			return false;
 		}
-		return $bLoad;
+		$this->lock();
+		self::load_section_nolock($sSection, $sFileName);
+		$_APP[$sSection]['__ql_mtime'] = filemtime($sFileName);
+		return true;
 	}
 
 
@@ -213,10 +216,10 @@ class QlApplication {
 	## Leaves the serialized context started with QlApplication::lock().
 	#
 	public function unlock() {
-		global $_APP;
 		if ($this->m_cLocks == 1) {
 			# Recalculate size and CRC of the serialized $_APP; if different, we’ll need to update the
 			# persistent storage.
+			global $_APP;
 			$s = serialize($_APP);
 			$cb = strlen($s);
 			$iCRC = crc32($s);
