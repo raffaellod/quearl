@@ -56,7 +56,7 @@ class QlApplication {
 	public function __construct() {
 		# Create a default $_APP array loading only bootstrap.conf, which is necessary to successfully
 		# call read().
-		self::_load_section_nolock('core', $_SERVER['LROOTDIR'] . 'config/core/bootstrap.conf');
+		self::load_section_nolock('core', $_SERVER['LROOTDIR'] . 'config/core/bootstrap.conf');
 
 		# Now we can go ahead with constructing $this.
 		global $_APP;
@@ -87,8 +87,14 @@ class QlApplication {
 	}
 
 
-	## Loads a $_APP section from a config file. See QlApplication::_load_section_nolock() for
-	# details on how the section’s contents are processed.
+	## Loads a $_APP section from a config file.
+	#
+	# If the section has been loaded before, this will overwrite any values with those specified in
+	# the file for each given key; keys assigned to null in the file will cause the corresponding key
+	# in the $_APP section to be deleted. Keys not present in $arrNewSection will remain unaffected.
+	#
+	# The caller can check the return value to perform any adjustments to the section. in case it was
+	# actually loaded.
 	#
 	# string $sSection
 	#    $_APP section to be loaded.
@@ -100,12 +106,16 @@ class QlApplication {
 	#    true if the section was loaded as a result of this call, or false if loading was not
 	#    necessary.
 	#
-	public function load_section($sSection, $sFileName, $bForce = false) {
+	public function load_section($sSection, $sFileName = null, $bForce = false) {
+		if ($sFileName === null) {
+			# Default the file name for this section.
+			$sFileName = $_SERVER['LROOTDIR'] . 'config/' . $sSection . '/module.conf';
+		}
 		global $_APP;
 		$bLoad = $bForce || (int)@$_APP[$sSection]['__ql_mtime'] < filemtime($sFileName);
 		if ($bLoad) {
 			$this->lock();
-			self::_load_section_nolock($sSection, $sFileName);
+			self::load_section_nolock($sSection, $sFileName);
 			$_APP[$sSection]['__ql_mtime'] = filemtime($sFileName);
 			$this->unlock();
 		}
@@ -113,17 +123,14 @@ class QlApplication {
 	}
 
 
-	## Merges a $_APP section. If the section has been loaded before, this will overwrite any values
-	# with those specified in the file for each given key; keys assigned to null in the file will
-	# cause the corresponding key in the $_APP section to be deleted. Keys not present in
-	# $arrNewSection will remain unaffected.
+	## Non-locking implementation of QlApplication::load_section().
 	#
 	# string $sSection
 	#    $_APP section to be loaded.
 	# string $sFileName
 	#    Path of the file to load.
 	#
-	protected static function _load_section_nolock($sSection, $sFileName) {
+	private static function load_section_nolock($sSection, $sFileName) {
 		$sContents = file_get_contents($sFileName);
 		# Delete comments, since ql_str_parse822header() doesn’t discard them.
 		$sContents = preg_replace('/^#.*$/m', '', $sContents);
