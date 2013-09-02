@@ -217,13 +217,13 @@ class QlSession {
 				strtolower($_SERVER['HTTP_ACCEPT_LANGUAGE'])
 			) as $sLang => $fQ) {
 				# Check if this language/locale is installed.
-				if (isset($arrInstalledLocales[$sLang]))
+				if (array_search($sLang, $arrInstalledLocales, true))
 					return $sLang;
 				# Break the language in a language/locale pair, and see if we have at least a default
 				# locale for the language.
 				$arrMatch = explode('-', $sLang, 2);
 				$sLang = $arrMatch[0] . '-' . @$arrDefaultLanguageLocales[$arrMatch[0]];
-				if (isset($arrInstalledLocales[$sLang]))
+				if (array_search($sLang, $arrInstalledLocales, true))
 					return $sLang;
 			}
 		}
