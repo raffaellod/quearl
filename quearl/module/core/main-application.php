@@ -130,19 +130,22 @@ class QlApplication {
 		# Parse and process the section.
 		$arrNewSection =& ql_str_parse822header($sContents);
 		global $_APP;
-		if (!isset($_APP[$sSection]))
+		if (!isset($_APP[$sSection])) {
 			$_APP[$sSection] = array();
+		}
 		$arrSection =& $_APP[$sSection];
 		# Overwrite keys in $arrSection in case they also exist in $arrNewSection.
 		$arrSection = $arrNewSection + $arrSection;
 		# Notice that this loops iterates over $arrNewSection, but updates $arrSection instead.
-		foreach ($arrNewSection as $sEntry => $sValue)
-			if ($sValue === null)
+		foreach ($arrNewSection as $sEntry => $sValue) {
+			if ($sValue === null) {
 				# Values set to null are removed from the section.
 				unset($arrSection[$sEntry]);
-			else if (substr($sEntry, -6) == '_lpath')
+			} else if (substr($sEntry, -6) == '_lpath') {
 				# Make entries ending in “_lpath” absolute paths.
 				$arrSection[$sEntry] = $_SERVER['LROOTDIR'] . $sValue;
+			}
+		}
 	}
 
 
@@ -151,12 +154,13 @@ class QlApplication {
 	public function lock() {
 		if ($this->m_cLocks == 0) {
 			$cRetries = 15;
-			do
+			do {
 				$this->m_fileLock = fopen($this->m_sLockFileName, 'ab');
-			while (!$this->m_fileLock && --$cRetries && (sleep(1) || true));
-			if (!$cRetries)
+			} while (!$this->m_fileLock && --$cRetries && (sleep(1) || true));
+			if (!$cRetries) {
 				# Number of attempts exhausted.
 				trigger_error('Unable to acquire application lock', E_USER_ERROR);
+			}
 			flock($this->m_fileLock, LOCK_EX);
 			# Make sure that $_APP is up to date.
 			$this->reload();
