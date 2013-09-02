@@ -38,7 +38,7 @@ domain with other software:
 
 •  Modify the URL rewriting rule in the web server root, so that it only engages
    Quearl for requests into that subdirectory;
-•  Change the “remote_root_dir” entry in quearl/config/core/module.conf to
+•  Change the “remote_root_dir” entry in quearl/config/core/bootstrap.conf to
    include the subdirectory name. (Note that the quearl subdirectory may be
    renamed, so use the name it was changed to if that’s the case.)
 
