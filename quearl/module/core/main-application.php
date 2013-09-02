@@ -49,28 +49,26 @@ class QlApplication {
 	public /*int*/ $m_cb;
 	## CRC of $_APP’s persistent storage.
 	public /*int*/ $m_iCRC;
-	## Style sections.
-	public /*array*/ $m_arrStyleSections = array();
 
 
 	## Constructor.
 	#
 	public function __construct() {
-		# Create a default $_APP array loading only core.conf, which is necessary to successfully call
-		# read().
-		$this->merge_section(
-			'core', ql_php_get_array_file_contents($_SERVER['LROOTDIR'] . 'config/core/module.conf')
-		);
+		# Create a default $_APP array loading only bootstrap.conf, which is necessary to successfully
+		# call read().
+		self::_load_section_nolock('core', $_SERVER['LROOTDIR'] . 'config/core/bootstrap.conf');
 
+		# Now we can go ahead with constructing $this.
 		global $_APP;
 		$this->m_sFileName = $_APP['core']['rwdata_lpath'] . 'core/app.dat';
 		$this->m_sLockFileName = $_APP['core']['lock_lpath'] . 'app.dat.lock';
+		unset($_APP);
 		$this->m_cLocks = 0;
 		# Set size and CRC to provide a never-matching reference for QlApplicaion::unlock().
 		$this->m_cb = 0;
 		$this->m_iCRC = 0;
 
-		# Try and load from persistent storage.
+		# Try to reload the whole $_APP from persistent storage.
 		$this->reload();
 
 		$GLOBALS['ql_app'] = $this;
@@ -89,18 +87,8 @@ class QlApplication {
 	}
 
 
-	## Returns an array with all the style sections loaded thus far.
-	#
-	# array<string => array<string => string>> return
-	#    Array of style sections.
-	#
-	public function & get_style_sections() {
-		return $this->m_arrStyleSections;
-	}
-
-
-	## Loads a $_APP section from a config file. See QlApplication::merge_section() for details on
-	# how the section’s contents are processed.
+	## Loads a $_APP section from a config file. See QlApplication::_load_section_nolock() for
+	# details on how the section’s contents are processed.
 	#
 	# string $sSection
 	#    $_APP section to be loaded.
@@ -117,11 +105,44 @@ class QlApplication {
 		$bLoad = $bForce || (int)@$_APP[$sSection]['__ql_mtime'] < filemtime($sFileName);
 		if ($bLoad) {
 			$this->lock();
-			$this->merge_section($sSection, ql_php_get_array_file_contents($sFileName));
+			self::_load_section_nolock($sSection, $sFileName);
 			$_APP[$sSection]['__ql_mtime'] = filemtime($sFileName);
 			$this->unlock();
 		}
 		return $bLoad;
+	}
+
+
+	## Merges a $_APP section. If the section has been loaded before, this will overwrite any values
+	# with those specified in the file for each given key; keys assigned to null in the file will
+	# cause the corresponding key in the $_APP section to be deleted. Keys not present in
+	# $arrNewSection will remain unaffected.
+	#
+	# string $sSection
+	#    $_APP section to be loaded.
+	# string $sFileName
+	#    Path of the file to load.
+	#
+	protected static function _load_section_nolock($sSection, $sFileName) {
+		$sContents = file_get_contents($sFileName);
+		# Delete comments, since ql_str_parse822header() doesn’t discard them.
+		$sContents = preg_replace('/^#.*$/m', '', $sContents);
+		# Parse and process the section.
+		$arrNewSection =& ql_str_parse822header($sContents);
+		global $_APP;
+		if (!isset($_APP[$sSection]))
+			$_APP[$sSection] = array();
+		$arrSection =& $_APP[$sSection];
+		# Overwrite keys in $arrSection in case they also exist in $arrNewSection.
+		$arrSection = $arrNewSection + $arrSection;
+		# Notice that this loops iterates over $arrNewSection, but updates $arrSection instead.
+		foreach ($arrNewSection as $sEntry => $sValue)
+			if ($sValue === null)
+				# Values set to null are removed from the section.
+				unset($arrSection[$sEntry]);
+			else if (substr($sEntry, -6) == '_lpath')
+				# Make entries ending in “_lpath” absolute paths.
+				$arrSection[$sEntry] = $_SERVER['LROOTDIR'] . $sValue;
 	}
 
 
@@ -141,43 +162,6 @@ class QlApplication {
 			$this->reload();
 		}
 		++$this->m_cLocks;
-	}
-
-
-	## Merges a $_APP section. If the section has been loaded before, this will overwrite any values
-	# with those specified in the file for each given key; keys assigned to null in the file will
-	# cause the corresponding key in the $_APP section to be deleted. Keys not present in $arrNew
-	# will remain unaffected.
-	#
-	# If the section name ends in “-style”, the section will also be stored to a separate array of
-	# style sections, obtainable by calling QlApplication::get_style_sections().
-	#
-	# string $sSection
-	#    Name of the $_APP section to be loaded.
-	# array<string => mixed> $arrNew
-	#    New section contents.
-	#
-	protected function merge_section($sSection, array $arrNew) {
-		global $_APP;
-		$bIsCss = (substr($sSection, -6) == '-style');
-		if (!isset($_APP[$sSection]))
-			$_APP[$sSection] = array();
-		$arrSection =& $_APP[$sSection];
-		$arrSection = $arrNew + $arrSection;
-		foreach ($arrNew as $sVar => $sValue)
-			if ($sValue === null)
-				# This value must be removed.
-				unset($arrSection[$sVar]);
-			else if (substr($sVar, -6) == '_lpath')
-				# Make local paths absolute.
-				$arrSection[$sVar] = $_SERVER['LROOTDIR'] . $sValue;
-			else if ($bIsCss && strncmp($sVar, 'XHTML', 5) == 0)
-				# Style XHTML fragments in this style section.
-				$arrSection[$sVar] = preg_replace(
-					'/(\r?\n|\r)\t*/', ' ', QlModule::template_subst($sValue, $this->m_arrStyleSections)
-				);
-		if ($bIsCss)
-			$this->m_arrStyleSections[$sSection] =& $arrSection;
 	}
 
 
