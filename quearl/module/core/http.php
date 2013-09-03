@@ -53,23 +53,6 @@ define('QL__FH_READ',     3);
 define('QL__FH_SHUTDOWN', 4);
 
 
-# HTTP response statuses.
-
-define('HTTP_STATUS_CONTINUE',            100);
-define('HTTP_STATUS_SWITCHING_PROTOCOLS', 101);
-define('HTTP_STATUS_OK',                  200);
-define('HTTP_STATUS_CREATED',             201);
-define('HTTP_STATUS_ACCEPTED',            202);
-define('HTTP_STATUS_NO_CONTENT',          204);
-define('HTTP_STATUS_MULTIPLE_CHOICES',    300);
-define('HTTP_STATUS_MOVED_PERMANENTLY',   301);
-define('HTTP_STATUS_FOUND',               302);
-define('HTTP_STATUS_SEE_OTHER',           303);
-define('HTTP_STATUS_NOT_MODIFIED',        304);
-define('HTTP_STATUS_USE_PROXY',           305);
-define('HTTP_STATUS_TEMPORARY_REDIRECT',  307);
-
-
 
 ####################################################################################################
 # Functions
