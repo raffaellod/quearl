@@ -38,17 +38,19 @@ require_once 'main.php';
 class QlApplication {
 
 	## Persistent storage file name.
-	public /*string*/ $m_sFileName;
+	private /*string*/ $m_sFileName;
 	## Name of the locking file.
-	public /*string*/ $m_sLockFileName;
+	private /*string*/ $m_sLockFileName;
 	## Handle to the locking file (if open).
-	public /*resource*/ $m_fileLock;
+	private /*resource*/ $m_fileLock;
 	## Number of locks held by this instance.
-	public /*int*/ $m_cLocks;
+	private /*int*/ $m_cLocks;
 	## Size of $_APP’s persistent storage.
-	public /*int*/ $m_cb;
+	private /*int*/ $m_cb;
 	## CRC of $_APP’s persistent storage.
-	public /*int*/ $m_iCRC;
+	private /*int*/ $m_iCRC;
+	## true if reloading $_APP from persistent storage didn’t succeed.
+	private /*int*/ $m_bDefaulted;
 
 
 	## Constructor.
@@ -58,19 +60,25 @@ class QlApplication {
 		# call read().
 		# Notice that this doesn’t set $_APP['core']['__ql_mtime'], so when QlCoreModule will load its
 		# own module.conf, this stub section will always be overwritten.
-		self::load_section_nolock('core', $_SERVER['LROOTDIR'] . 'config/core/bootstrap.conf');
+		global $_APP;
+		$_APP = array();
+		$arrSection =& $this->load_section_nolock(
+			'core', $_SERVER['LROOTDIR'] . 'config/core/bootstrap.conf'
+		);
+		$this->merge_section_nounlock('core', $arrSection);
+		unset($arrSection);
 
 		# Now we can go ahead with constructing $this.
-		global $_APP;
 		$this->m_sFileName = $_APP['core']['rwdata_lpath'] . 'core/app.dat';
 		$this->m_sLockFileName = $_APP['core']['lock_lpath'] . 'app.dat.lock';
-		unset($_APP);
 		$this->m_cLocks = 0;
 		# Set size and CRC to provide a never-matching reference for QlApplicaion::unlock().
 		$this->m_cb = 0;
 		$this->m_iCRC = 0;
+		$this->m_bDefaulted = false;
 
 		# Try to reload the whole $_APP from persistent storage.
+		unset($_APP);
 		$this->reload();
 
 		$GLOBALS['ql_app'] = $this;
@@ -81,6 +89,10 @@ class QlApplication {
 	#
 	public function __destruct() {
 		if ($this->m_cLocks > 0) {
+			ql_log(
+				'E_USER_WARNING',
+				'QlApplication still has ' . $this->m_cLocks . ' locks upon destruction!'
+			);
 			# Cheat on the number of locks to force writing to persistent storage.
 			$this->m_cLocks = 1;
 			$this->unlock();
@@ -91,10 +103,6 @@ class QlApplication {
 
 	## Loads a $_APP section from a config file.
 	#
-	# If the section has been loaded before, this will overwrite any values with those specified in
-	# the file for each given key; keys assigned to null in the file will cause the corresponding key
-	# in the $_APP section to be deleted. Keys not present in $arrNewSection will remain unaffected.
-	#
 	# The caller can check the return value to perform any adjustments to the section. in case it was
 	# actually loaded; after that, the QlApplication instance must be unlocked.
 	#
@@ -104,25 +112,30 @@ class QlApplication {
 	#    Path of the file to load.
 	# [bool $bForce]
 	#    If true, the section will be reloaded even if it hasn’t changed since the last loading.
-	# bool return
-	#    false if loading the section was not necessary, or true if the section was really loaded
-	#    from the configuration file. In the latter case, the QlApplication instance will need to be
-	#    manually unlocked after any adjustments are made to the section.
+	# mixed return
+	#    false if loading the section was not necessary, or the section’s contents if it was really
+	#    loaded from the configuration file. In the latter case, the caller will need to merge the
+	#    new section passing it to QlApplication::merge_section() after making any necessary
+	#    adjustments to the section’s contents.
 	#
-	public function load_section($sSection, $sFileName = null, $bForce = false) {
+	public function & load_section($sSection, $sFileName = null, $bForce = false) {
 		if ($sFileName === null) {
 			# Default the file name for this section.
 			$sFileName = $_SERVER['LROOTDIR'] . 'config/' . $sSection . '/module.conf';
 		}
+		# Assume we won’t need to load this section.
+		$arrSection = false;
 		global $_APP;
-		if (!$bForce && (int)@$_APP[$sSection]['__ql_mtime'] >= filemtime($sFileName)) {
-			# No need to load this section.
-			return false;
+		if ($bForce || (int)@$_APP[$sSection]['__ql_mtime'] < filemtime($sFileName)) {
+			ql_log('INFO', 'Loading $_APP[\'' . $sSection . '\']');
+			$this->lock();
+			$arrSection =& $this->load_section_nolock($sSection, $sFileName);
+			# Don’t move this line to load_section_nolock(), or it will affect __construct() as well.
+			# We don’t want to skip loading the “core” section (later) due to bootstrap.conf being
+			# loaded first with the same name.
+			$arrSection['__ql_mtime'] = filemtime($sFileName);
 		}
-		$this->lock();
-		self::load_section_nolock($sSection, $sFileName);
-		$_APP[$sSection]['__ql_mtime'] = filemtime($sFileName);
-		return true;
+		return $arrSection;
 	}
 
 
@@ -132,30 +145,22 @@ class QlApplication {
 	#    $_APP section to be loaded.
 	# string $sFileName
 	#    Path of the file to load.
+	# array<string => string> return
+	#    Contents of the newly-loaded section.
 	#
-	private static function load_section_nolock($sSection, $sFileName) {
+	private function & load_section_nolock($sSection, $sFileName) {
 		$sContents = file_get_contents($sFileName);
 		# Delete comments, since ql_str_parse822header() doesn’t discard them.
 		$sContents = preg_replace('/^#.*$/m', '', $sContents);
 		# Parse and process the section.
-		$arrNewSection =& ql_str_parse822header($sContents);
-		global $_APP;
-		if (!isset($_APP[$sSection])) {
-			$_APP[$sSection] = array();
-		}
-		$arrSection =& $_APP[$sSection];
-		# Overwrite keys in $arrSection in case they also exist in $arrNewSection.
-		$arrSection = $arrNewSection + $arrSection;
-		# Notice that this loops iterates over $arrNewSection, but updates $arrSection instead.
-		foreach ($arrNewSection as $sEntry => $sValue) {
-			if ($sValue === null) {
-				# Values set to null are removed from the section.
-				unset($arrSection[$sEntry]);
-			} else if (substr($sEntry, -6) == '_lpath') {
+		$arrSection =& ql_str_parse822header($sContents);
+		foreach ($arrSection as $sEntry => $sValue) {
+			if (substr($sEntry, -6) == '_lpath') {
 				# Make entries ending in “_lpath” absolute paths.
 				$arrSection[$sEntry] = $_SERVER['LROOTDIR'] . $sValue;
 			}
 		}
+		return $arrSection;
 	}
 
 
@@ -179,6 +184,50 @@ class QlApplication {
 	}
 
 
+	## Merges a section loaded by QlApplication::load_section() into $_APP, then unlocks $_APP.
+	#
+	# If the section has been loaded before, this will overwrite any values with those specified in
+	# the file for each given key; keys assigned to null in the file will cause the corresponding key
+	# in the $_APP section to be deleted. Keys not present in $arrNewSection will remain unaffected.
+	#
+	# string $sSection
+	#    Name of the $_APP section.
+	# array<string => mixed>& $arrNewSection
+	#    Contents of the newly-loaded section.
+	#
+	public function merge_section($sSection, &$arrNewSection) {
+		$this->merge_section_nounlock($sSection, $arrNewSection);
+		$this->unlock();
+	}
+
+
+	## Non-(un)locking implementation of QlApplication::merge_section().
+	#
+	# string $sSection
+	#    Name of the $_APP section.
+	# array<string => mixed>& $arrNewSection
+	#    Contents of the newly-loaded section.
+	#
+	private function merge_section_nounlock($sSection, &$arrNewSection) {
+		global $_APP;
+		if (!isset($_APP[$sSection])) {
+			$_APP[$sSection] = array();
+		}
+		$arrCurrSection =& $_APP[$sSection];
+		# Merge $arrNewSection into $arrCurrSection. Note that this loops iterates over the former,
+		# but updates the latter.
+		foreach ($arrNewSection as $sEntry => $sValue) {
+			if ($sValue === null) {
+				# Values set to null are removed from the section.
+				unset($arrCurrSection[$sEntry]);
+			} else {
+				# Keys in $arrNewSection override keys already in $arrCurrSection.
+				$arrCurrSection[$sEntry] = $sValue;
+			}
+		}
+	}
+
+
 	## Reads $_APP from persistent storage. Other than being invoked when $ql_app is constructed, it
 	# can be called at any time to reload $_APP, which can be useful for scripts that need to make
 	# sure they’re using the latest $_APP after running for an extended amount of time.
@@ -189,26 +238,29 @@ class QlApplication {
 	#
 	private function reload() {
 		# Try and read from persistent storage.
-		$s = @file_get_contents($this->m_sFileName);
-		if ($s) {
+		$sApp = @file_get_contents($this->m_sFileName);
+		if ($sApp) {
 			# Keep a backup of the current $_APP, so we can restore it in case something goes wrong.
-			$arrApp = @unserialize($s);
+			$arrApp = @unserialize($sApp);
 			if ($arrApp !== false) {
 				# A valid array was loaded; overwrite $_APP with that.
 				$GLOBALS['_APP'] =& $arrApp;
 				# Recalculate size and CRC for later.
-				$this->m_cb = strlen($s);
-				$this->m_iCRC = crc32($s);
+				$this->m_cb = strlen($sApp);
+				$this->m_iCRC = crc32($sApp);
 				return true;
 			}
 		}
-		# Something went wrong.
-		# TODO: also e-mail an administrator?
-		ql_log(
-			'E_USER_WARNING',
-			'Application data ' . ($s === false ? 'missing' : 'corrupt') . ', defaults loaded!',
-			'<pre>' . ql_lenc($s) . '</pre>'
-		);
+		# Something went wrong. Check if we already detected this, so we don’t pollute the log.
+		if (!$this->m_bDefaulted) {
+			# TODO: also e-mail an administrator?
+			ql_log(
+				'E_USER_WARNING',
+				'Application data ' . ($sApp === false ? 'missing' : 'corrupt') . ', defaults loaded!',
+				'<pre>' . ql_lenc($sApp) . '</pre>'
+			);
+			$this->m_bDefaulted = true;
+		}
 		return false;
 	}
 
@@ -231,7 +283,11 @@ class QlApplication {
 			fclose($this->m_fileLock);
 			$this->m_fileLock = null;
 		}
-		--$this->m_cLocks;
+		if ($this->m_cLocks > 0) {
+			--$this->m_cLocks;
+		} else {
+			ql_log('E_USER_WARNING', 'Incorrect number of calls to QlApplication::unlock()!');
+		}
 	}
 }
 
