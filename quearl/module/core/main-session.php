@@ -101,9 +101,9 @@ class QlSession {
 		}
 
 		# Determine the session ID (SID) if provided by the user agent, and store it in $this->m_sID.
-		if ($this->m_iClientType == QL_CLIENTTYPE_CRAWLER)
+		if ($this->m_iClientType == QL_CLIENTTYPE_CRAWLER) {
 			$bLoaded = false;
-		else {
+		} else {
 			$bLoaded = $this->load();
 			# If no session was loaded, create a new one.
 			if (!$bLoaded) {
@@ -112,25 +112,27 @@ class QlSession {
 					$this->m_sID = ql_str_uid(32, $ql_fScriptStart, $_SERVER['REMOTE_REAL_ADDR']);
 					$ql_db->query('
 						INSERT INTO sessions(id, locked, firsthit, lasthit)
-						VALUES (\'' . $this->m_sID . '\', 1, ' . $iTS . ', ' . $iTS . ')
+						VALUES (\'' . $this->m_sID . '\', 1, ' . $iTS . ', ' . $iTS . ');
 					');
 				} while ($ql_db->get_last_affected_rows() != 1);
-				if ($ql_debug_session_SID)
+				if ($ql_debug_session_SID) {
 					ql_log('DEBUG', 'QlSession::__construct(): new session: “' . $this->m_sID . '”');
+				}
 				$this->m_bLocked = true;
 				setcookie('s', $this->m_sID, null, $_SERVER['RROOTDIR']);
 			}
 		}
 
 		# If this is true, we need to create a new $_SESSION.
-		if (!$bLoaded)
+		if (!$bLoaded) {
 			$this->start();
+		}
 
 		# Define the SID constant.
-		if (isset($_COOKIE['s']) || !$bLoaded)
+		if (isset($_COOKIE['s']) || !$bLoaded) {
 			# Using cookies, or there’s just no SID to propagate.
 			define('SID', '');
-		else {
+		} else {
 			# No cookie was used, so stick to using the URL Rewriter.
 			define('SID', 's=' . $this->m_sID);
 			output_add_rewrite_var('s', $this->m_sID);
@@ -148,9 +150,9 @@ class QlSession {
 			$ql_db->query('
 				INSERT INTO stats_hits_bydayhour(ymdh, c)
 				VALUES (' . $sTS . ', 1)
-				ON DUPLICATE KEY UPDATE c = c + 1
+				ON DUPLICATE KEY UPDATE c = c + 1;
 			');
-			if ($_SERVER['HTTP_USER_AGENT'] != '')
+			if ($_SERVER['HTTP_USER_AGENT'] != '') {
 				$ql_db->query('
 					INSERT INTO stats_useragents(ua, ym, c)
 					VALUES (
@@ -158,8 +160,9 @@ class QlSession {
 						' . substr($sTS, 0, 6) . ',
 						1
 					)
-					ON DUPLICATE KEY UPDATE c = c + 1
+					ON DUPLICATE KEY UPDATE c = c + 1;
 				');
+			}
 		}
 
 		$GLOBALS['ql_session'] = $this;
@@ -192,9 +195,11 @@ class QlSession {
 	#    true if the user is privileged enough, false otherwise.
 	#
 	public function check_priv_tokens(/*…*/) {
-		foreach (func_get_args() as $sPrivToken)
-			if (strpos($_SESSION['ql_user_privtokens'], ' ' . $sPrivToken . ' ') === false)
+		foreach (func_get_args() as $sPrivToken) {
+			if (strpos($_SESSION['ql_user_privtokens'], ' ' . $sPrivToken . ' ') === false) {
 				return false;
+			}
+		}
 		return true;
 	}
 
@@ -217,14 +222,16 @@ class QlSession {
 				strtolower($_SERVER['HTTP_ACCEPT_LANGUAGE'])
 			) as $sLang => $fQ) {
 				# Check if this language/locale is installed.
-				if (array_search($sLang, $arrInstalledLocales, true))
+				if (array_search($sLang, $arrInstalledLocales, true)) {
 					return $sLang;
+				}
 				# Break the language in a language/locale pair, and see if we have at least a default
 				# locale for the language.
 				$arrMatch = explode('-', $sLang, 2);
 				$sLang = $arrMatch[0] . '-' . @$arrDefaultLanguageLocales[$arrMatch[0]];
-				if (array_search($sLang, $arrInstalledLocales, true))
+				if (array_search($sLang, $arrInstalledLocales, true)) {
 					return $sLang;
+				}
 			}
 		}
 		# Still no locale? Use the site-defined default.
@@ -250,39 +257,45 @@ class QlSession {
 
 		$iTS = (int)$ql_fScriptStart;
 		# Make sure we have an array containing all subsessions.
-		if (!isset($_SESSION['subs']))
+		if (!isset($_SESSION['subs'])) {
 			$_SESSION['subs'] = array();
+		}
 		# Get the ss parameter from $_POST or $_GET.
 		$sSSID = @$_POST['ss'];
-		if ($sSSID === null)
+		if ($sSSID === null) {
 			$sSSID = @$_GET['ss'];
+		}
 		# Check that we got a valid subsession ID.
 		if (
 			$sSSID !== null &&
 			(!preg_match('/^[0-9A-Za-z\-_]{8}$/AD', $sSSID) || !isset($_SESSION['subs'][$sSSID]))
-		)
+		) {
 			$sSSID = null;
+		}
 
-		if ($sSSID !== null && $bKeepId)
+		if ($sSSID !== null && $bKeepId) {
 			# We have a valid subsession ID that we want to keep.
 			$this->m_sSubID = $sSSID;
-		else {
+		} else {
 			# We don’t have a valid subsession ID, or we don’t wa to keep it: create a new ID.
 			$sNewSSID = ql_str_uid(8, $ql_fScriptStart);
 			if ($sSSID !== null) {
 				# If we already have a subsession, replace its ID now, but keep its contents…
 				$_SESSION['subs'][$sNewSSID] =& $_SESSION['subs'][$sSSID];
 				unset($_SESSION['subs'][$sSSID]);
-			} else
+			} else {
 				# …else, start a new subsession.
 				$_SESSION['subs'][$sNewSSID] = array();
+			}
 			# Either way, update the last-used timestamp…
 			$_SESSION['subs'][$sNewSSID]['__ql_mtime'] = $iTS;
 
 			# …which we’ll use to detect abandoned subsessions and discard them after a while.
-			foreach ($_SESSION['subs'] as $sSSID => $arrSS)
-				if ($arrSS['__ql_mtime'] < $iTS - $_APP['core']['session_gc_max_idle'])
+			foreach ($_SESSION['subs'] as $sSSID => $arrSS) {
+				if ($arrSS['__ql_mtime'] < $iTS - $_APP['core']['session_gc_max_idle']) {
 					unset($_SESSION['subs'][$sSSID]);
+				}
+			}
 
 			# This is the subsession ID we’ll use.
 			$this->m_sSubID = $sNewSSID;
@@ -302,7 +315,7 @@ class QlSession {
 		global $_APP, $ql_db, $ql_fScriptStart;
 		$ql_db->query('
 			DELETE FROM sessions
-			WHERE lasthit < ' . ((int)$ql_fScriptStart - $_APP['core']['session_gc_max_idle']) . '
+			WHERE lasthit < ' . ((int)$ql_fScriptStart - $_APP['core']['session_gc_max_idle']) . ';
 		');
 		# TODO: make self-adapting.
 		ql_log('DEBUG', 'Deleted ' . $ql_db->get_last_affected_rows() . ' expired sessions',
@@ -362,12 +375,15 @@ class QlSession {
 		$iAccessLevel = QL_ACCLVL_ANON;
 		$arrPrivTokens = array();
 		# Build a list of all known privileges, to speed up scanning.
-		foreach (QlModule::get_loaded_modules() as $module)
+		foreach (QlModule::get_loaded_modules() as $module) {
 			$arrPrivTokens += $module->get_privilege_tokens();
+		}
 		# Scan the granted privileges, to find the highest level.
-		foreach (explode(' ', $sPrivTokens) as $sPrivToken)
-			if ($iAccessLevel < (int)@$arrPrivTokens[$sPrivToken][0])
+		foreach (explode(' ', $sPrivTokens) as $sPrivToken) {
+			if ($iAccessLevel < (int)@$arrPrivTokens[$sPrivToken][0]) {
 				$iAccessLevel = $arrPrivTokens[$sPrivToken][0];
+			}
+		}
 		return $iAccessLevel;
 	}
 
@@ -401,16 +417,19 @@ class QlSession {
 		# Get the SID in just about any possible way.
 		foreach (array('_COOKIE', '_POST', '_GET') as $sMapName) {
 			$sSID = @$GLOBALS[$sMapName]['s'];
-			if ($sSID !== null)
+			if ($sSID !== null) {
 				break;
+			}
 		}
-		if ($sSID === null)
+		if ($sSID === null) {
 			return false;
+		}
 
 		# Ensure we were passed a valid SID.
 		if (!preg_match('/^[-_0-9A-Za-z]{32}$/AD', $sSID)) {
-			if ($ql_debug_session_SID)
+			if ($ql_debug_session_SID) {
 				ql_log('DEBUG', 'QlSession::load(): invalid SID passed: “' . $sSID . '”');
+			}
 			return false;
 		}
 
@@ -419,36 +438,38 @@ class QlSession {
 		$ql_db->query('
 			UPDATE sessions
 			SET lasthit = ' . (int)$ql_fScriptStart . ',
-			WHERE id = \'' . $sSID . '\'
+			WHERE id = \'' . $sSID . '\';
 		');
 		if ($ql_db->get_last_affected_rows() != 1) {
 			# The update failed: the session does not exist. If it used to, we need the user to re-log-
 			# in.
 			# TODO: let the user know.
-			if ($ql_debug_session_SID)
+			if ($ql_debug_session_SID) {
 				ql_log('DEBUG', 'QlSession::load(): passed SID not found in table: “' . $sSID . '”');
+			}
 			return false;
 		}
 
 		# Lock this valid session. Since it might already be locked, proceed with a compare-and-swap.
 		$cRetries = 15;
-		do
+		do {
 			$ql_db->query('
 				UPDATE sessions
 				SET locked = 1
 				WHERE id = \'' . $sSID . '\'
-					AND locked = 0
+					AND locked = 0;
 			');
-		while ($ql_db->get_last_affected_rows() != 1 && --$cRetries && (sleep(1) || true));
-		if (!$cRetries)
+		} while ($ql_db->get_last_affected_rows() != 1 && --$cRetries && (sleep(1) || true));
+		if (!$cRetries) {
 			# TODO: warn the user and change this to ql_log(), don’t just drop the bomb.
 			trigger_error('Unable to acquire session lock', E_USER_ERROR);
+		}
 
 		# Load the section data.
 		$sData = $ql_db->query_value('
 			SELECT data
 			FROM sessions
-			WHERE id = \'' . $sSID . '\'
+			WHERE id = \'' . $sSID . '\';
 		');
 		$arrData = @unserialize($sData);
 		if (!$arrData) {
@@ -460,7 +481,7 @@ class QlSession {
 			);
 			$ql_db->query('
 				DELETE FROM sessions
-				WHERE id = \'' . $sSID . '\'
+				WHERE id = \'' . $sSID . '\';
 			');
 			return false;
 		}
@@ -479,7 +500,7 @@ class QlSession {
 				UPDATE sessions
 				SET locked = 0
 				WHERE id = \'' . $sSID . '\'
-					AND locked = 1
+					AND locked = 1;
 			');
 			return false;
 		}
@@ -520,17 +541,18 @@ class QlSession {
 					ON ug.id = u.idusergroup
 			WHERE u.name = \'' . $ql_db->escape($sUserName) . '\'
 				AND u.pwhash = \'' . md5($sPassword) . '\'
-				AND u.active != 0
+				AND u.active != 0;
 		');
-		if (!$_SESSION)
+		if (!$_SESSION) {
 			return false;
+		}
 
 		# Update the last login time.
 		$iTS = (int)$ql_fScriptStart;
 		$ql_db->query('
 			UPDATE users
 			SET lastlogints = ' . $iTS . '
-			WHERE id = ' . $_SESSION['ql_user_id'] . '
+			WHERE id = ' . $_SESSION['ql_user_id'] . ';
 		');
 
 		# Prepare the retrieved data.
@@ -539,20 +561,22 @@ class QlSession {
 		settype($_SESSION['ql_user_idgroup'], 'int');
 		$_SESSION['ql_user_logintime'] = $iTS;
 		$_SESSION['ql_user_privtokens'] = ' ' . $_SESSION['ql_user_privtokens'] . ' ';
-		if ((int)$_SESSION['lastlogints'] == 0)
+		if ((int)$_SESSION['lastlogints'] == 0) {
 			# Only set this for the first login, so we don’t waste space on a variable that’s going to
 			# be false for nearly every login.
 			$_SESSION['ql_firstlogin'] = true;
+		}
 		unset($_SESSION['lastlogints']);
 
 		# Save user name and password, if requested.
-		if ($bSetCookie)
+		if ($bSetCookie) {
 			setcookie(
 				'al',
 				$_SESSION['ql_user_name'] . ':' . $sPassword,
 				$iTS + $_APP['core']['session_autologin_lifetime'] * 86400 /*(24 * 60 * 60)*/,
 				$_SERVER['RROOTDIR']
 			);
+		}
 
 		return true;
 	}
@@ -584,8 +608,9 @@ class QlSession {
 	#    If true, this call will override any previous calls to this same method.
 	#
 	public function onload_focus($sID, $bForce = true) {
-		if (!isset($_SESSION['ql_onload_focus']) || $bForce)
+		if (!isset($_SESSION['ql_onload_focus']) || $bForce) {
 			$_SESSION['ql_onload_focus'] = $sID;
+		}
 	}
 
 
@@ -613,7 +638,7 @@ class QlSession {
 	public function require_priv_tokens(/*…*/) {
 		global $ql_sAction;
 		$arrTokens = func_get_args();
-		if (!call_user_func_array(array($this, 'check_priv_tokens'), $arrTokens))
+		if (!call_user_func_array(array($this, 'check_priv_tokens'), $arrTokens)) {
 			if (strncmp($ql_sAction, 'ar_', 3) == 0) {
 				# Make sure ql_async_response() is defined.
 				require_once 'async.php';
@@ -632,6 +657,7 @@ class QlSession {
 				$this->onload_msg(L10N_CORE_ERR_RESTRICTEDPAGE);
 				ql_redirect($_SERVER['RROOTDIR'] . ql_loc_url(''));
 			}
+		}
 	}
 
 
@@ -645,13 +671,15 @@ class QlSession {
 		if (isset($_COOKIE['al'])) {
 			# The user agent sent an auto-login cookie: verify its validity.
 			$arrALCookie = explode(':', $_COOKIE['al'], 2);
-			if (count($arrALCookie) != 2)
+			if (count($arrALCookie) != 2) {
 				# Discard this invalid auto-login cookie and go anonymous.
 				setcookie('al', '', null, $_SERVER['RROOTDIR']);
+			}
 		}
 		# If we have no auto-login cookie, or the login with that fails, go anonymous.
-		if (!$arrALCookie || !$this->login($arrALCookie[0], $arrALCookie[1], true))
+		if (!$arrALCookie || !$this->login($arrALCookie[0], $arrALCookie[1], true)) {
 			$this->init_anonymous_user();
+		}
 		unset($arrALCookie);
 
 		# Add connection-specific information.
@@ -663,16 +691,19 @@ class QlSession {
 		if (!empty($_SERVER['HTTP_REFERER'])) {
 			# TODO: don’t assume “http”.
 			$sProtHost = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['RROOTDIR'];
-			if (strncmp($_SERVER['HTTP_REFERER'], $sProtHost, strlen($sProtHost)) != 0)
+			if (strncmp($_SERVER['HTTP_REFERER'], $sProtHost, strlen($sProtHost)) != 0) {
 				$_SESSION['ql_referrer'] = $_SERVER['HTTP_REFERER'];
+			}
 		}
 
 		# If the login did not select a timezone, best-guess it - except for bots, who won’t care.
-		if (empty($_SESSION['ql_timezone']))
-			if ($this->m_iClientType == QL_CLIENTTYPE_USER)
+		if (empty($_SESSION['ql_timezone'])) {
+			if ($this->m_iClientType == QL_CLIENTTYPE_USER) {
 				$_SESSION['ql_timezone'] = ql_timezone_from_ip($_SERVER['REMOTE_ADDR']);
-			else
+			} else {
 				$_SESSION['ql_timezone'] = $_APP['core']['default_timezone'];
+			}
+		}
 	}
 
 
@@ -703,9 +734,9 @@ class QlSession {
 	#
 	public static function user_hash($sName, $sPwHash = null, $sEmail = null, $iID = null) {
 		global $ql_db;
-		if (is_string($sPwHash) && is_string($sEmail) && is_numeric($iID))
+		if (is_string($sPwHash) && is_string($sEmail) && is_numeric($iID)) {
 			$arrUser = func_get_args();
-		else {
+		} else {
 			$arrUser = $ql_db->query_row('
 				SELECT
 					name,
@@ -713,20 +744,24 @@ class QlSession {
 					email,
 					id
 				FROM users
-				WHERE name = \'' . $ql_db->escape($sName) . '\'
+				WHERE name = \'' . $ql_db->escape($sName) . '\';
 			');
-			if (!$arrUser)
+			if (!$arrUser) {
 				return null;
+			}
 		}
 		$arrRet = array(
 			'hash' => md5(implode('', $arrUser)),
 		);
-		if ($sPwHash === true)
+		if ($sPwHash === true) {
 			$arrRet['pwhash'] =& $arrUser[1];
-		if ($sEmail === true)
+		}
+		if ($sEmail === true) {
 			$arrRet['email'] =& $arrUser[2];
-		if ($iID === true)
+		}
+		if ($iID === true) {
 			$arrRet['id'] = (int)$arrUser[3];
+		}
 		return $arrRet;
 	}
 
@@ -735,12 +770,14 @@ class QlSession {
 	#
 	public function write_and_close() {
 		global $_APP, $ql_db, $ql_fScriptStart;
-		if (!$this->m_bLocked)
+		if (!$this->m_bLocked) {
 			return;
+		}
 
 		# “sub” is merely a reference to an item in “subs”, so it shouldn’t be saved.
-		if ($this->m_sSubID != '')
+		if ($this->m_sSubID != '') {
 			unset($_SESSION['sub']);
+		}
 		# Update and unlock the session record.
 		$ql_db->query('
 			UPDATE sessions
@@ -750,21 +787,24 @@ class QlSession {
 				lasthit = ' . (int)$ql_fScriptStart . ',
 				data = \'' . $ql_db->escape(serialize($_SESSION)) . '\'
 			WHERE id = \'' . $this->m_sID . '\'
-				AND locked = 1
+				AND locked = 1;
 		');
 		# Restore “sub”.
-		if ($this->m_sSubID != '')
+		if ($this->m_sSubID != '') {
 			$_SESSION['sub'] =& $_SESSION['subs'][$this->m_sSubID];
+		}
 		# Ensure the update really worked.
-		if ($ql_db->get_last_affected_rows() != 1)
+		if ($ql_db->get_last_affected_rows() != 1) {
 			return;
+		}
 		$this->m_bLocked = false;
 
 		# Clean up, once in a while.
 		if (
 			mt_rand(1, $_APP['core']['session_gc_divisor']) <= $_APP['core']['session_gc_probability']
-		)
+		) {
 			$this->gc();
+		}
 	}
 }
 
