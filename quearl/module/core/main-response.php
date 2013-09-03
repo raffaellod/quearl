@@ -33,19 +33,56 @@ require_once 'main.php';
 
 # HTTP response statuses.
 
-define('HTTP_STATUS_CONTINUE',            100);
-define('HTTP_STATUS_SWITCHING_PROTOCOLS', 101);
-define('HTTP_STATUS_OK',                  200);
-define('HTTP_STATUS_CREATED',             201);
-define('HTTP_STATUS_ACCEPTED',            202);
-define('HTTP_STATUS_NO_CONTENT',          204);
-define('HTTP_STATUS_MULTIPLE_CHOICES',    300);
-define('HTTP_STATUS_MOVED_PERMANENTLY',   301);
-define('HTTP_STATUS_FOUND',               302);
-define('HTTP_STATUS_SEE_OTHER',           303);
-define('HTTP_STATUS_NOT_MODIFIED',        304);
-define('HTTP_STATUS_USE_PROXY',           305);
-define('HTTP_STATUS_TEMPORARY_REDIRECT',  307);
+define('HTTP_STATUS_CONTINUE',                        100);
+define('HTTP_STATUS_SWITCHING_PROTOCOLS',             101);
+define('HTTP_STATUS_OK',                              200);
+define('HTTP_STATUS_CREATED',                         201);
+define('HTTP_STATUS_ACCEPTED',                        202);
+define('HTTP_STATUS_NON_AUTHORITATIVE_INFORMATION',   203);
+define('HTTP_STATUS_NO_CONTENT',                      204);
+define('HTTP_STATUS_RESET_CONTENT',                   205);
+define('HTTP_STATUS_PARTIAL_CONTENT',                 206);
+define('HTTP_STATUS_MULTIPLE_CHOICES',                300);
+define('HTTP_STATUS_MOVED_PERMANENTLY',               301);
+define('HTTP_STATUS_FOUND',                           302);
+define('HTTP_STATUS_SEE_OTHER',                       303);
+define('HTTP_STATUS_NOT_MODIFIED',                    304);
+define('HTTP_STATUS_USE_PROXY',                       305);
+define('HTTP_STATUS_TEMPORARY_REDIRECT',              307);
+define('HTTP_STATUS_BAD_REQUEST',                     400);
+define('HTTP_STATUS_UNAUTHORIZED',                    401);
+define('HTTP_STATUS_PAYMENT_REQUIRED',                402);
+define('HTTP_STATUS_FORBIDDEN',                       403);
+define('HTTP_STATUS_NOT_FOUND',                       404);
+define('HTTP_STATUS_METHOD_NOT_ALLOWED',              405);
+define('HTTP_STATUS_NOT_ACCEPTABLE',                  406);
+define('HTTP_STATUS_PROXY_AUTHENTICATION_REQUIRED',   407);
+define('HTTP_STATUS_REQUEST_TIMEOUT',                 408);
+define('HTTP_STATUS_CONFLICT',                        409);
+define('HTTP_STATUS_GONE',                            410);
+define('HTTP_STATUS_LENGTH_REQUIRED',                 411);
+define('HTTP_STATUS_PRECONDITION_FAILED',             412);
+define('HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE',        413);
+define('HTTP_STATUS_REQUEST_URI_TOO_LONG',            414);
+define('HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE',          415);
+define('HTTP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE', 416);
+define('HTTP_STATUS_EXPECTATION_FAILED',              417);
+define('HTTP_STATUS_IM_A_TEAPOT',                     418); # RFC 2324 (April’s fool).
+define('HTTP_STATUS_AUTHENTICATION_TIMEOUT',          419); # Not part of RFC 2616.
+define('HTTP_STATUS_UPGRADE_REQUIRED',                426); # RFC 2817.
+define('HTTP_STATUS_PRECONDITION_REQUIRED',           428); # RFC 6585.
+define('HTTP_STATUS_TOO_MANY_REQUESTS',               429); # RFC 6585.
+define('HTTP_STATUS_REQUEST_HEADER_FIELDS_TOO_LARGE', 431); # RFC 6585.
+define('HTTP_STATUS_UNAVAILABLE_FOR_LEGAL_REASONS',   451); # Draft.
+define('HTTP_STATUS_INTERNAL_SERVER_ERROR',           500);
+define('HTTP_STATUS_NOT_IMPLEMENTED',                 501);
+define('HTTP_STATUS_BAD_GATEWAY',                     502);
+define('HTTP_STATUS_SERVICE_UNAVAILABLE',             503);
+define('HTTP_STATUS_GATEWAY_TIMEOUT',                 504);
+define('HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED',      505);
+define('HTTP_STATUS_VARIANT_ALSO_NEGOTIATES',         506); # RFC 2295.
+define('HTTP_STATUS_NOT_EXTENDED',                    510); # RFC 2774.
+define('HTTP_STATUS_NETWORK_AUTHENTICATION_REQUIRED', 511); # RFC 6585.
 
 
 
@@ -53,29 +90,36 @@ define('HTTP_STATUS_TEMPORARY_REDIRECT',  307);
 # Classes
 
 
-## TODO: comment.
+## HTTP response.
 #
 class QlResponse {
 
-	## HTTP response code (HTTP_STATUS_* or newer codes).
+	## HTTP response code (HTTP_STATUS_*).
 	private /*int*/ $m_iCode;
 	## Description for m_iCode.
 	private /*string*/ $m_sCodeDescription;
 	## Map of header names => values.
 	private /*array<string => mixed>*/ $m_arrHeaders;
 	## true if the headers have been sent.
-	private /*array<string => mixed>*/ $m_bHeadersSent;
+	private /*bool*/ $m_bHeadersSent;
 
 
 	## Constructor.
 	#
 	public function __construct() {
-		$this->set_http_response(HTTP_STATUS_OK);
-		# Setup a default headers.
-		$this->m_arrHeaders = array(
-			'Content-Type' => 'text/plain; charset=utf-8',
-		);
+		$this->set_http_status(HTTP_STATUS_OK);
+		$this->m_arrHeaders = array();
 		$this->m_bHeadersSent = false;
+	}
+
+
+	## Returns true if the HTTP headers have already been sent to the remote client.
+	#
+	# bool return
+	#    true if the HTTP headers have been sent, or false otherwise.
+	#
+	public function headers_sent() {
+		return $this->m_bHeadersSent;
 	}
 
 
@@ -83,19 +127,29 @@ class QlResponse {
 	#
 	public function send_chunk($s) {
 		# Make sure we sent the headers.
-		if (!$this->m_bHeadersSent)
+		if (!$this->m_bHeadersSent) {
 			$this->send_headers();
+		}
 		echo $s;
+		# Send the data to the remote client right now; this enables browsers who render XHTML
+		# incrementally to start downloading, or at least queueing up, any scripts and style sheets
+		# declared thus far.
+		$cBuffers = ob_get_level();
+		while ($cBuffers--) {
+			ob_flush();
+		}
+		flush();
 	}
 
 
-	## TODO: comment.
+	## Sends to the remote client any HTTP headers accumulated to this point.
 	#
 	public function send_headers() {
 		header($_SERVER['SERVER_PROTOCOL'] . ' ' . $this->m_iCode . ' ' . $this->m_sCodeDescription);
 		foreach ($this->m_arrHeaders as $sName => &$mValue) {
-			if (is_string($mValue) || is_int($mValue) || is_float($mValue))
+			if (is_string($mValue) || is_int($mValue) || is_float($mValue)) {
 				header($sName . ': ' . $mValue);
+			}
 			# TODO: convert arrays and warn about strange types.
 		}
 		$this->m_bHeadersSent = true;
@@ -106,13 +160,12 @@ class QlResponse {
 	#
 	public function send_last($s) {
 		# Check if we need to send out the headers.
-		if (!$this->m_bHeadersSent)
+		if (!$this->m_bHeadersSent) {
 			# This is the first and last data chunk to be sent, so set a Content-Length header since we
 			# know exactly how many bytes we’re sending.
 			$this->set_header('Content-Length', strlen($s));
-			$this->send_headers();
 		}
-		echo $s;
+		$this->send_chunk($s);
 	}
 
 
@@ -125,28 +178,306 @@ class QlResponse {
 
 	## TODO: comment.
 	#
-	public function set_http_response($iCode, $sCodeDescription = null) {
+	public function set_http_status($iCode, $sCodeDescription = null) {
 		# If a description has not been provided, use the standard for the specified code.
-		if ($sCodeDescription === null)
-			switch ($iCode) {
-				case HTTP_STATUS_CONTINUE:            $sCodeDescription = 'Continue';            break;
-				case HTTP_STATUS_SWITCHING_PROTOCOLS: $sCodeDescription = 'Switching Protocols'; break;
-				case HTTP_STATUS_OK:                  $sCodeDescription = 'OK';                  break;
-				case HTTP_STATUS_CREATED:             $sCodeDescription = 'Created';             break;
-				case HTTP_STATUS_ACCEPTED:            $sCodeDescription = 'Accepted';            break;
-				case HTTP_STATUS_NO_CONTENT:          $sCodeDescription = 'No Content';          break;
-				case HTTP_STATUS_MULTIPLE_CHOICES:    $sCodeDescription = 'Multiple Choices';    break;
-				case HTTP_STATUS_MOVED_PERMANENTLY:   $sCodeDescription = 'Moved Permanently';   break;
-				case HTTP_STATUS_FOUND:               $sCodeDescription = 'Found';               break;
-				case HTTP_STATUS_SEE_OTHER:           $sCodeDescription = 'See Other';           break;
-				case HTTP_STATUS_NOT_MODIFIED:        $sCodeDescription = 'Not Modified';        break;
-				case HTTP_STATUS_USE_PROXY:           $sCodeDescription = 'Use Proxy';           break;
-				case HTTP_STATUS_TEMPORARY_REDIRECT:  $sCodeDescription = 'Temporary Redirect';  break;
-				# TODO: warn about not knowing what the code is.
-				default:                              $sCodeDescription = 'UNKNOWN';             break;
-			}
+		if ($sCodeDescription === null) {
+			static $arrCodeDescriptions = array(
+				# 1xx
+				HTTP_STATUS_CONTINUE                        => 'Continue',
+				HTTP_STATUS_SWITCHING_PROTOCOLS             => 'Switching Protocols',
+				# 2xx
+				HTTP_STATUS_OK                              => 'OK',
+				HTTP_STATUS_CREATED                         => 'Created',
+				HTTP_STATUS_ACCEPTED                        => 'Accepted',
+				HTTP_STATUS_NON_AUTHORITATIVE_INFORMATION   => 'Non-Authoritative Information',
+				HTTP_STATUS_NO_CONTENT                      => 'No Content',
+				HTTP_STATUS_RESET_CONTENT                   => 'Reset Content',
+				HTTP_STATUS_PARTIAL_CONTENT                 => 'Partial Content',
+				# 3xx
+				HTTP_STATUS_MULTIPLE_CHOICES                => 'Multiple Choices',
+				HTTP_STATUS_MOVED_PERMANENTLY               => 'Moved Permanently',
+				HTTP_STATUS_FOUND                           => 'Found',
+				HTTP_STATUS_SEE_OTHER                       => 'See Other',
+				HTTP_STATUS_NOT_MODIFIED                    => 'Not Modified',
+				HTTP_STATUS_USE_PROXY                       => 'Use Proxy',
+				HTTP_STATUS_TEMPORARY_REDIRECT              => 'Temporary Redirect',
+				# 4xx
+				HTTP_STATUS_BAD_REQUEST                     => 'Bad Request',
+				HTTP_STATUS_UNAUTHORIZED                    => 'Unauthorized',
+				HTTP_STATUS_PAYMENT_REQUIRED                => 'Payment Required',
+				HTTP_STATUS_FORBIDDEN                       => 'Forbidden',
+				HTTP_STATUS_NOT_FOUND                       => 'Not Found',
+				HTTP_STATUS_METHOD_NOT_ALLOWED              => 'Method Not Allowed',
+				HTTP_STATUS_NOT_ACCEPTABLE                  => 'Not Acceptable',
+				HTTP_STATUS_PROXY_AUTHENTICATION_REQUIRED   => 'Proxy Authentication Required',
+				HTTP_STATUS_REQUEST_TIMEOUT                 => 'Request Timeout',
+				HTTP_STATUS_CONFLICT                        => 'Conflict',
+				HTTP_STATUS_GONE                            => 'Gone',
+				HTTP_STATUS_LENGTH_REQUIRED                 => 'Length Required',
+				HTTP_STATUS_PRECONDITION_FAILED             => 'Precondition Failed',
+				HTTP_STATUS_REQUEST_ENTITY_TOO_LARGE        => 'Request Entity Too Large',
+				HTTP_STATUS_REQUEST_URI_TOO_LONG            => 'Request-URI Too Long',
+				HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE          => 'Unsupported Media Type',
+				HTTP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE => 'Requested Range Not Satisfiable',
+				HTTP_STATUS_EXPECTATION_FAILED              => 'Expectation Failed',
+				HTTP_STATUS_IM_A_TEAPOT                     => 'I\'m a teapot',
+				HTTP_STATUS_AUTHENTICATION_TIMEOUT          => 'Authentication Timeout',
+				HTTP_STATUS_UPGRADE_REQUIRED                => 'Upgrade Required',
+				HTTP_STATUS_PRECONDITION_REQUIRED           => 'Precondition Required',
+				HTTP_STATUS_TOO_MANY_REQUESTS               => 'Too Many Requests',
+				HTTP_STATUS_REQUEST_HEADER_FIELDS_TOO_LARGE => 'Request Header Fields Too Large',
+				HTTP_STATUS_UNAVAILABLE_FOR_LEGAL_REASONS   => 'Unavailable For Legal Reasons',
+				# 5xx
+				HTTP_STATUS_INTERNAL_SERVER_ERROR           => 'Internal Server Error',
+				HTTP_STATUS_NOT_IMPLEMENTED                 => 'Not Implemented',
+				HTTP_STATUS_BAD_GATEWAY                     => 'Bad Gateway',
+				HTTP_STATUS_SERVICE_UNAVAILABLE             => 'Service Unavailable',
+				HTTP_STATUS_GATEWAY_TIMEOUT                 => 'Gateway Timeout',
+				HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED      => 'HTTP Version Not Supported',
+				HTTP_STATUS_VARIANT_ALSO_NEGOTIATES         => 'Variant Also Negotiates',
+				HTTP_STATUS_NOT_EXTENDED                    => 'Not Extended',
+				HTTP_STATUS_NETWORK_AUTHENTICATION_REQUIRED => 'Network Authentication Required',
+			);
+			$sCodeDescription = $arrCodeDescriptions[$iCode];
+		}
 		$this->m_iCode = $iCode;
 		$this->m_sCodeDescription = $sCodeDescription;
+	}
+}
+
+
+## Holds the response body, allowing modules to add data to it during their processing of
+# QlModule::augment_response().
+#
+abstract class QlResponseEntity {
+
+	## Response this entity is part of.
+	protected $m_response;
+
+
+	## Constructor.
+	#
+	# QlResponse $response
+	#    Response this entity is part of.
+	#
+	public function __construct(QlResponse $response) {
+		$this->m_response = $response;
+	}
+
+
+	## Sends any unsent response data.
+	#
+	public abstract function send_close();
+};
+
+
+## Minimal XHTML response document.
+#
+class QlXhtmlMinResponseDocument extends QlResponseEntity {
+
+	## Document locale.
+	protected /*string*/ $m_sLocale;
+	## true if the <head> has been sent.
+	private /*bool*/ $m_bHeadSent;
+	## Document title (XHTML).
+	protected /*string*/ $m_sTitle;
+	## Document subtitle (XHTML).
+	protected /*string*/ $m_sSubtitle;
+	## Content of the <head> section.
+	protected /*string*/ $m_sHead;
+	## Content of the <body> section.
+	protected /*string*/ $m_sBody;
+
+
+	## Constructor.
+	#
+	# QlResponse $response
+	#    Response this entity is part of.
+	# [string $sLocale]
+	#    Locale that the document will claim to be for; defaults to $_SESSION['locale'].
+	#
+	public function __construct(QlResponse $response, $sLocale = null) {
+		parent::__construct($response);
+
+		# If this class is being instantiated, this request will get a visible page (as opposed to
+		# this being e.g. an asynchrnous request), so keep track of it.
+		$_SESSION['ql_lastpage'] = rawurldecode($_SERVER['RFULLPATH']);
+
+		$this->m_sLocale = ($sLocale !== null ? $sLocale : $_SESSION['ql_locale']);
+		$this->m_bHeadSent = false;
+		global $_APP;
+		$this->m_sTitle = $_APP['core']['site_short_name'];
+		$this->m_sSubtitle = null;
+
+		# IE5.5 bug, IE6 bug, IE7 bug, IE8 bug: always want text/html, even for XHTML. Generalize this
+		# to a check on the Accept field.
+		$bAcceptXhtml = false;
+		if (isset($_SERVER['HTTP_ACCEPT'])) {
+			$arrAccept =& ql_str_parse_rfc2616_accept_field($_SERVER['HTTP_ACCEPT']);
+			if (isset($arrAccept['application/xhtml+xml'])) {
+				$bAcceptXhtml = true;
+			}
+		}
+
+		# Prepare the headers.
+		$res = $this->m_response;
+		$res->set_header(
+			'Content-Type', ($bAcceptXhtml ? 'application/xhtml+xml' : 'text/html') . '; charset=utf-8'
+		);
+		$res->set_header('Vary', 'Accept');
+		$res->set_header('Content-Language', $this->m_sLocale);
+		$res->set_header('Cache-Control', 'private, pre-check=0, post-check=0, max-age=0');
+		$res->set_header('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT');
+		$res->set_header('Pragma', 'no-cache');
+		unset($res);
+
+		# Initialize the <head> contents.
+		$s  = '<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8"/>' .
+					NL .
+				'<meta http-equiv="Content-Script-Type" content="text/javascript"/>' . NL .
+				'<meta http-equiv="Content-Language" content="' . $this->m_sLocale . '"/>' . NL .
+				'<meta http-equiv="X-UA-Compatible" content="IE=8"/>' . NL .
+				'<meta name="Generator" content="' . QUEARL_VERSION . '/' . QUEARL_REV . '"/>' . NL .
+				'<script type="text/javascript">/*<![CDATA[*/' . NL .
+				'	location.SID = "' . (defined('SID') ? SID : '') . '";' . NL .
+				'	location.SSID = "' . (defined('SSID') ? SSID : '') . '";' . NL .
+				# TODO: don’t assume “http”.
+				'	location.RROOTDIR = "http://' .
+						$_SERVER['HTTP_HOST'] . $_SERVER['RROOTDIR'] . '";' . NL .
+				'	var Ql = {};' . NL .
+				'	Ql._mapXhtmlTemplates = {};' . NL .
+				'	var L10n = {};' . NL .
+				'/*]]>*/</script>' . NL;
+		$this->m_sHead = $s;
+
+		# Initialize the <body> contents.
+		$this->m_sBody = '';
+	}
+
+
+	## Adds content to the document’s <body> element.
+	#
+	public function add_body($s) {
+		$this->m_sBody .= $s;
+	}
+
+
+	## Adds content to the document’s <head> element.
+	#
+	public function add_head($s) {
+		$this->m_sHead .= $s;
+	}
+
+
+	## Links a JavaScript file from the document.
+	# TODO: finish implementation.
+	#
+	# string $sFileName
+	#    Script file name.
+	# [bool $bIEOnly]
+	#    If true, the script will only be loaded in Internet Explorer. Use this when the amount of
+	#    IE-only fixes in a JS file justifies splitting it in “all browsers” and “IE fixes”.
+	#
+	public function include_script($sFileName, $bIEOnly = false) {
+#		$s  = '<script type="text/javascript" charset="utf-8" src="' .
+#					ql_url_add_root_and_ts($sFileName) . '"></script>' . NL;
+#		if ($bIEOnly) {
+#			$s = '<!--[if IE]>' . $s . '<![endif]-->' . NL;
+#		}
+#		$this->m_sHead .= "\t" . $s . NL;
+	}
+
+
+	## Links a precompiled style sheet to the document.
+	# TODO: finish implementation.
+	#
+	# string $sFileName
+	#    Style sheet file name.
+	# [bool $bIEOnly]
+	#    If true, the style sheet will only be loaded in Internet Explorer. Use this when the amount
+	#    of IE-only fixes in a CSS file justifies splitting it in “all browsers” and “IE fixes”.
+	#
+	public function include_stylesheet($sFileName, $bIEOnly = false) {
+#		$s  = '<link rel="stylesheet" type="text/css" href="' .
+#					ql_url_add_root_and_ts($sFileName) . '"/>';
+#		if ($bIEOnly) {
+#			$s = '<!--[if IE]>' . $s . '<![endif]-->' . NL;
+#		}
+#		$this->m_sHead .= "\t" . $s . NL;
+	}
+
+
+	## Embeds an XHTML template in the document, for use by JavaScript code.
+	# TODO: finish implementation.
+	#
+	# string $sTemplateName
+	#    Template name. The type is implicitly “xhtml”.
+	#
+	public function include_template($sTemplateName) {
+#		$s  = '<script type="text/javascript">/*<![CDATA[*/' .
+#					'Ql._mapXhtmlTemplates[' . ql_json_encode($sTemplateName) . '] = ' .
+#						ql_json_encode(?) . ';' .
+#				'/*]]>*/</script>';
+#		$this->m_sHead .= "\t" . $s . NL;
+	}
+
+
+	## TODO: comment.
+	#
+	public function send_body() {
+		# Yes, it is ugly. But it’s the only way to do it without scripts.
+		$s  = '<!--[if gte IE 8]><body class="css_ie80"><![endif]-->' . NL .
+				'<!--[if gte IE 7]><![if lt IE 8]><body class="css_ie70"><![endif]><![endif]-->' . NL .
+				'<!--[if gte IE 6]><![if lt IE 7]><body class="css_ie60"><![endif]><![endif]-->' . NL .
+				'<!--[if gte IE 5]><![if lt IE 6]><body class="css_ie55"><![endif]><![endif]-->' . NL .
+				'<!--[if !IE]><!--><body class="css_w3c"><!--><![endif]-->' . NL .
+					ql_indent(1, $this->m_sBody) .
+				'</body>' . NL .
+				'</html>';
+		$this->m_response->send_last($s);
+	}
+
+
+	## See QlResponseEntity::send_close().
+	#
+	public function send_close() {
+		if (!$this->m_bHeadSent) {
+			$this->send_head();
+		}
+		$this->send_body();
+	}
+
+
+	## TODO: comment.
+	#
+	public function send_head() {
+		$s  = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" ' .
+					'"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">' . NL .
+				'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="' . $this->m_sLocale . '">' . NL .
+				'<head>' . NL .
+					ql_indent(1, $this->m_sHead) .
+				'	<title>' .
+						($this->m_sSubtitle != null ? utf8_xmlenc($this->m_sSubtitle) . ' - ' : '') .
+						strip_tags($this->m_sTitle) . '</title>' . NL .
+				'</head>' . NL;
+		$this->m_response->send_chunk($s);
+		$this->m_bHeadSent = true;
+	}
+
+
+	## Sets a title for the page. The string is XHTML, which means that it must be escaped
+	# appropriately, and it may include tags.
+	#
+	public function set_subtitle($sSubtitle) {
+		$this->m_sSubtitle = $sSubtitle;
+	}
+
+
+	## Sets a title for the page. The string is XHTML, which means that it must be escaped
+	# appropriately, and it may include tags.
+	#
+	public function set_title($sTitle) {
+		$this->m_sTitle = $sTitle;
 	}
 }
 
