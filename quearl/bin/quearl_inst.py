@@ -20,6 +20,7 @@
 
 """Classes to manage a Quearl installation."""
 
+import configparser
 import os
 
 
@@ -35,12 +36,20 @@ class quearl_inst(object):
 
 		str sQuearlDir
 			Quearl installation subdirectory, e.g. the directory containing the “module” directory;
-			default: “Quearl”.
+			default: “quearl”.
 		"""
 
 		self._m_sModulesDir = os.path.join(sQuearlDir, 'module')
-		# TODO: FIXME: read this from module/core/module.conf file!
-		self._m_sRODataDir = os.path.normpath(os.path.join(self._m_sModulesDir, '../data.ro'))
+		self._m_sConfigsDir = os.path.join(sQuearlDir, 'config')
+		cpBootstrapConf = configparser.ConfigParser(
+			comment_prefixes      = '#',
+			delimiters            = ':',
+			empty_lines_in_values = False,
+			interpolation         = None
+		)
+		with open(os.path.join(self._m_sConfigsDir, 'core/bootstrap.conf'), 'r') as fileBootstrapConf:
+			cpBootstrapConf.read_string('[core]\n' + fileBootstrapConf.read())
+		self._m_sRODataDir = os.path.join(sQuearlDir, cpBootstrapConf['core']['rodata_lpath'])
 
 
 	def modules(self):
