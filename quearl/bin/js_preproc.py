@@ -107,13 +107,31 @@ class JsPreproc(object):
 	def minify(s):
 		"""Returns a minified version of the input JavaScript source code.
 
+		A key point of this minification is that line numbers of the input and the output must match;
+		this allows having meaningful line numbers reported back to the server whenever an error
+		(exception) occurs on the remote client.
+
 		str s
 			JavaScript source.
 		str return
 			Minified JavaScript source.
 		"""
 
-		# TODO: implementation.
+		# Delete C-style comments that don’t extent into multiple lines. Since removing the comment
+		# could join two tokens (e.g. “a/*b*/c” => “ac”), replace them with a single space, but also
+		# make sure that the pattern captures any surrounding whitespace, to mitigate the unnecessary
+		# whitespace we’re adding.
+		# TODO: this is not string- nor regexp-safe.
+		s = re.sub('[ \t\f\v]*/\*.*?\*/[ \t\f\v]*', ' ', s)
+
+		# TODO: this is not string- nor regexp-safe, and can break multi-line C-style comments.
+		s = re.sub('//.*$', '', s, flags = re.MULTILINE)
+
+		# Trim leading whitespace on each line.
+		s = re.sub('^[ \t\f\v]+', '', s, flags = re.MULTILINE)
+		# Trim trailing whitespace on each line.
+		s = re.sub('[ \t\f\v]+$', '', s, flags = re.MULTILINE)
+
 		return s
 
 
