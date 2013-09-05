@@ -20,6 +20,7 @@
 
 """Utilities for localization files (.l10n)."""
 
+import gzip
 import os
 import re
 import sys
@@ -97,7 +98,7 @@ class l10n_generator(object):
 				dictL10nEntries['COUNTRY_ISO3166'] = sCountry
 
 			# Generate the output.
-			sys.stdout.write('Updating {} file {}\n'.format(sType.upper(), sOutputFileName))
+			sys.stdout.write('Generating localization in {} format\n'.format(sType.upper()))
 			sFile = getattr(cls, 'l10n_to_' + sType)(sModulePrefix, dictL10nEntries)
 
 			# Make sure the destination directory exists.
@@ -107,7 +108,14 @@ class l10n_generator(object):
 				# The subdirectory was already there, or couldn’t be created. In the latter case,
 				# opening the file will fail, so an exception will be raised in any case.
 				pass
+
 			# Store the generated file.
+			if sType == 'js':
+				# Also write a gzipped version of the same file.
+				sys.stdout.write('Updating {}.gz\n'.format(sOutputFileName))
+				with open(sOutputFileName + '.gz', 'wb') as fileOutput:
+					fileOutput.write(gzip.compress(sFile.encode('utf-8')))
+			sys.stdout.write('Updating {}\n'.format(sOutputFileName))
 			with open(sOutputFileName, 'w') as fileOutput:
 				fileOutput.write(sFile)
 
