@@ -47,15 +47,12 @@ class l10n_generator(object):
 
 		for sFileName in os.listdir(sL10nDir):
 			if sFileName.endswith('.l10n'):
-				sFileName = os.path.join(sL10nDir, sFileName)
-				if os.path.isfile(sFileName):
-					sys.stdout.write('Processing l10n file {}\n'.format(sFileName))
-					cls.update_from_l10n_file(module, sFileName)
+				cls.update_from_l10n_file(module, os.path.join(sL10nDir, sFileName))
 
 
 	@classmethod
 	def update_from_l10n_file(cls, module, sL10nFileName):
-		"""Updates the localization files originating from the specified l10n file.
+		"""Creates/updates the localization files generated from the specified l10n file.
 
 		quearl_module module
 			Module to which the file belongs.
@@ -63,70 +60,96 @@ class l10n_generator(object):
 			Full path to the .l10n file.
 		"""
 
-		sModulePrefix = module.abbr().upper() + '_'
-
+		sModulePrefix = module.abbr().upper()
+		dictL10nEntries = None
 		# Find out the locale from the l10n file name.
 		match = re.search(
-			'[\\/]l10n[\\/](?P<locale>[^\\/]+)\.l10n$', sL10nFileName
+			'[\\/](?P<locale>(?P<language>[a-z]{2})-(?P<country>[a-z]{2}))\.l10n$', sL10nFileName
 		)
 		sLocale = match.group('locale')
-
-		dictL10nEntries = {}
-		dictL10nEntries[sModulePrefix + 'L10N_INCLUDED'] = True
-		with open(sL10nFileName, 'r') as fileL10n:
-			iLine = 0
-			# Parse through the whole file.
-			for sLine in fileL10n:
-				iLine += 1
-				sLine = sLine.lstrip()
-				# Skip empty lines and comments.
-				if len(sLine) > 0 and sLine[0] != '#':
-					match = re.match('^(?P<name>[0-9A-Z_]+)(:?:(?P<type>int))?\t+(?P<value>.*)$', sLine)
-					if not match:
-						raise SyntaxError('line {}: invalid syntax: {}'.format(iLine, repr(sLine)))
-					sType = match.group('type')
-					sValue = match.group('value')
-					if sType:
-						if sType == 'int':
-							# Enter ints as… ints.
-							oValue = int(sValue)
-						else:
-							raise SyntaxError('line {}: unknown type: {}'.format(iLine, sType))
-					else:
-						# Unescape strings.
-						oValue = sValue.replace('\\n', '\n').replace('\\\\', '\\')
-					# Add the entry.
-					dictL10nEntries[sModulePrefix + match.group('name')] = oValue
-
+		sLanguage = match.group('language')
+		sCountry = match.group('country')
 		# Get the last modification time of the .l10n file.
 		dtL10nFile = os.path.getmtime(sL10nFileName)
 
 		for sType in 'php', 'js':
 			sOutputDir = os.path.join(module.rodata_dir(), 'l10n', sType)
+			sOutputFileName = os.path.join(sOutputDir, sLocale + '.l10n.' + sType)
+			try:
+				# Try to get the last modification time of the output file.
+				dtOutputFile = os.path.getmtime(sOutputFileName)
+				if dtL10nFile <= dtOutputFile:
+					# The file doesn’t need to be (re-)generated.
+					continue
+			except OSError:
+				# Assume that the file does not exist.
+				pass
+
+			# Make sure we read and processed the source .l10n file.
+			if dictL10nEntries == None:
+				# We did not, so do it now.
+				with open(sL10nFileName, 'r') as fileL10n:
+					sys.stdout.write('Processing l10n file {}\n'.format(sL10nFileName))
+					dictL10nEntries = cls.parse_l10n(fileL10n)
+				# Add a few more constants.
+				dictL10nEntries['L10N_INCLUDED'  ] = True
+				dictL10nEntries['LANG_ISO639'    ] = sLanguage
+				dictL10nEntries['COUNTRY_ISO3166'] = sCountry
+
+			# Generate the output.
+			sys.stdout.write('Updating {} file {}\n'.format(sType.upper(), sOutputFileName))
+			sFile = getattr(cls, 'l10n_to_' + sType)(sModulePrefix, dictL10nEntries)
+
 			# Make sure the destination directory exists.
 			try:
 				os.makedirs(sOutputDir, 0o755, True)
 			except OSError:
+				# The subdirectory was already there, or couldn’t be created. In the latter case,
+				# opening the file will fail, so an exception will be raised in any case.
 				pass
-			sOutputFileName = os.path.join(sOutputDir, sLocale + '.l10n.' + sType)
-			# Try to get the last modification time of the output file.
-			try:
-				dtOutputFile = os.path.getmtime(sOutputFileName)
-			except OSError:
-				# Probably the file doesn’t exist.
-				dtOutputFile = None
-			# If the file needs to be (re-)generated, go ahead.
-			if dtOutputFile == None or dtL10nFile > dtOutputFile:
-				sys.stdout.write('Updating {} file {}\n'.format(sType, sOutputFileName))
-				sFile = getattr(cls, 'l10n_to_' + sType)(dictL10nEntries)
-				with open(sOutputFileName, 'w') as f:
-					f.write(sFile)
+			# Store the generated file.
+			with open(sOutputFileName, 'w') as fileOutput:
+				fileOutput.write(sFile)
 
 
 	@staticmethod
-	def l10n_to_php(dictL10nEntries):
+	def parse_l10n(fileL10n):
+		"""Parses a .l10n file, returning a dictionary containing the entries defined."""
+
+		# Prepare this module’s localization.
+		dictEntries = {}
+		iLine = 0
+		# Parse through the whole file.
+		for sLine in fileL10n:
+			iLine += 1
+			sLine = sLine.lstrip()
+			# Skip empty lines and comments.
+			if len(sLine) > 0 and sLine[0] != '#':
+				match = re.match('^(?P<name>[0-9A-Z_]+)(:?:(?P<type>int))?\t+(?P<value>.*)$', sLine)
+				if not match:
+					raise SyntaxError('line {}: invalid syntax: {}'.format(iLine, repr(sLine)))
+				sType = match.group('type')
+				sValue = match.group('value')
+				if sType:
+					if sType == 'int':
+						# Enter ints as… ints.
+						oValue = int(sValue)
+					else:
+						raise SyntaxError('line {}: unknown type: {}'.format(iLine, sType))
+				else:
+					# Unescape strings.
+					oValue = sValue.replace('\\n', '\n').replace('\\\\', '\\')
+				# Add the entry.
+				dictEntries[match.group('name')] = oValue
+		return dictEntries
+
+
+	@staticmethod
+	def l10n_to_php(sModulePrefix, dictL10nEntries):
 		"""Generates a PHP localization file with the provided entries.
 
+		str sModulePrefix
+			Prefix to be prepended to each generated constant’s name.
 		dict(object) dictL10nEntries
 			Localized constants.
 		str return
@@ -151,26 +174,30 @@ class l10n_generator(object):
 			else:
 				# Python and PHP are similar enough that for numeric types we can simply use repr().
 				sValue = repr(oValue)
-			s += "define('L10N_" + sName + "', " + sValue + ');\n'
+			s += "define('L10N_{}_{}', {});\n".format(sModulePrefix, sName, sValue)
 		s += '\n' \
 			  '?>'
 		return s
 
 
 	@staticmethod
-	def l10n_to_js(dictL10nEntries):
+	def l10n_to_js(sModulePrefix, dictL10nEntries):
 		"""Generates a JavaScript localization file with the provided entries.
 
+		str sModulePrefix
+			Prefix to be prepended to each generated constant’s name.
 		dict(object) dictL10nEntries
 			Localized constants.
 		str return
 			JavaScript version of the contents of dictL10nEntries.
 		"""
 
+		# Note that semicolons and most whitespace are omitted from the output, in an attempt to
+		# reduce the resulting JS size.
 		s = '// -*- coding: utf-8; mode: javascript; tab-width: 3 -*-\n' \
 			 '// AUTOMATICALLY-GENERATED FILE - do not edit!\n' \
 			 '\n' \
-			 'var L = L10n;\n'
+			 'var L=L10n\n'
 		for sName, oValue in dictL10nEntries.items():
 			if isinstance(oValue, bool):
 				sValue = oValue and 'true' or 'false'
@@ -178,8 +205,8 @@ class l10n_generator(object):
 				# Thanks to the similarities between Python strings and JS strings, for most types we
 				# can simply use repr().
 				sValue = repr(oValue)
-			s += 'L.' + sName + '=' + sValue + ';\n'
-		s += 'L = undefined;\n'
+			s += 'L.{}_{}={}\n'.format(sModulePrefix, sName, sValue)
+		s += 'L=undefined\n'
 		return s
 
 
