@@ -37,7 +37,7 @@ class l10n_generator(object):
 	def update_module(cls, module):
 		"""Updates every localization file in a given module.
 
-		quearl_module module
+		QuearlModule module
 			Module for which to update the localization.
 		"""
 
@@ -55,7 +55,7 @@ class l10n_generator(object):
 	def update_from_l10n_file(cls, module, sL10nFileName):
 		"""Creates/updates the localization files generated from the specified l10n file.
 
-		quearl_module module
+		QuearlModule module
 			Module to which the file belongs.
 		str sL10nFileName
 			Full path to the .l10n file.
@@ -229,8 +229,8 @@ if __name__ == '__main__':
 	sys.path.append(sDir)
 	import quearl_inst
 
-	# Obtain the Quearl installation subdirectory and instantiate a quearl_inst for it.
-	qinst = quearl_inst.quearl_inst(os.path.normpath(os.path.join(sDir, '..')))
+	# Obtain the Quearl installation subdirectory and instantiate a QuearlInst for it.
+	qinst = quearl_inst.QuearlInst(os.path.normpath(os.path.join(sDir, '..')))
 	# Update all modules.
 	for module in qinst.modules():
 		l10n_generator.update_module(module)

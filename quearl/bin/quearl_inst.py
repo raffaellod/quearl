@@ -26,9 +26,9 @@ import os
 
 
 ####################################################################################################
-# quearl_inst
+# QuearlInst
 
-class quearl_inst(object):
+class QuearlInst(object):
 	"""Provides access to a Quearl installation for maintenance purposes."""
 
 	def __init__(self, sQuearlDir):
@@ -58,7 +58,7 @@ class quearl_inst(object):
 		for sFileName in os.listdir(self._m_sModulesDir):
 			sFileName = os.path.join(self._m_sModulesDir, sFileName)
 			if os.path.isdir(sFileName):
-				yield quearl_module(self, sFileName)
+				yield QuearlModule(self, sFileName)
 
 
 	def rodata_dir(self):
@@ -73,15 +73,15 @@ class quearl_inst(object):
 
 
 ####################################################################################################
-# quearl_module
+# QuearlModule
 
-class quearl_module(object):
+class QuearlModule(object):
 	"""Quearl module installation directory."""
 
 	def __init__(self, qinst, sBaseDir):
 		"""Constructor.
 
-		quearl_inst qinst
+		QuearlInst qinst
 			Provides access to the Quearl installation.
 		str sBaseDir
 			Base directory of the module.
@@ -148,8 +148,8 @@ if __name__ == '__main__':
 	sDir = os.path.dirname(os.path.abspath(sys.argv[0]))
 	# Obtain the Quearl installation subdirectory.
 	sDir = os.path.normpath(os.path.join(sDir, '..'))
-	# Instantiate a quearl_inst.
-	qinst = quearl_inst(sDir)
+	# Instantiate a QuearlInst.
+	qinst = QuearlInst(sDir)
 
 	sys.exit(0)
 
