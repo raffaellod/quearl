@@ -124,6 +124,7 @@ class QuearlModule(object):
 		str return
 			Localization files directory, or None if non-existent.
 		"""
+
 		return self._m_sL10nDir
 
 

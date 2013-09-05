@@ -80,7 +80,7 @@ class l10n_generator(object):
 				# Try to get the last modification time of the output file.
 				dtOutputFile = os.path.getmtime(sOutputFileName)
 				if dtL10nFile <= dtOutputFile:
-					# The file doesn’t need to be (re-)generated.
+					# The file doesn’t need to be re-generated.
 					continue
 			except OSError:
 				# Assume that the file does not exist.
