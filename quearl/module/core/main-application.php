@@ -66,7 +66,6 @@ class QlApplication {
 			'core', $_SERVER['LROOTDIR'] . 'config/core/bootstrap.conf'
 		);
 		$this->merge_section_nounlock('core', $arrSection);
-		unset($arrSection);
 
 		# Now we can go ahead with constructing $this.
 		$this->m_sFileName = $_APP['core']['rwdata_lpath'] . 'core/app.dat';
@@ -78,8 +77,14 @@ class QlApplication {
 		$this->m_bDefaulted = false;
 
 		# Try to reload the whole $_APP from persistent storage.
-		unset($_APP);
-		$this->reload();
+		if (!$this->reload()) {
+			# If reloading failed, adjust the bootstrapped “core” section in the same way modules would
+			# before a load_section() returning true and merge_section(). Note that $arrSection still
+			# holds a reference to the section.
+			$arrSection['load_modules'] = preg_split(
+				'/\s*,\s*/', $arrSection['load_modules'], -1, PREG_SPLIT_NO_EMPTY
+			);
+		}
 
 		$GLOBALS['ql_app'] = $this;
 	}
@@ -210,20 +215,23 @@ class QlApplication {
 	#
 	private function merge_section_nounlock($sSection, &$arrNewSection) {
 		global $_APP;
-		if (!isset($_APP[$sSection])) {
-			$_APP[$sSection] = array();
-		}
-		$arrCurrSection =& $_APP[$sSection];
-		# Merge $arrNewSection into $arrCurrSection. Note that this loops iterates over the former,
-		# but updates the latter.
-		foreach ($arrNewSection as $sEntry => $sValue) {
-			if ($sValue === null) {
-				# Values set to null are removed from the section.
-				unset($arrCurrSection[$sEntry]);
-			} else {
-				# Keys in $arrNewSection override keys already in $arrCurrSection.
-				$arrCurrSection[$sEntry] = $sValue;
+		if (isset($_APP[$sSection])) {
+			# The section already exists, perform a merge of the two arrays.
+			$arrCurrSection =& $_APP[$sSection];
+			# Merge $arrNewSection into $arrCurrSection. Note that this loops iterates over the former,
+			# but updates the latter.
+			foreach ($arrNewSection as $sEntry => $sValue) {
+				if ($sValue === null) {
+					# Values set to null are removed from the section.
+					unset($arrCurrSection[$sEntry]);
+				} else {
+					# Keys in $arrNewSection override keys already in $arrCurrSection.
+					$arrCurrSection[$sEntry] = $sValue;
+				}
 			}
+		} else {
+			# The section did not already exist, so just use the array as-is.
+			$_APP[$sSection] =& $arrNewSection;
 		}
 	}
 
