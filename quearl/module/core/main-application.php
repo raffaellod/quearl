@@ -33,6 +33,31 @@ require_once 'main.php';
 # Classes
 
 
+## DESIGN_8261 QlApplication
+#
+# QlApplication stores any non-session-specific data, from the most essential (e.g. Quearl core
+# directories) to the most frivolous (e.g. color theme configuration).
+#
+# Every HTTP request requires QlApplication to be available in order to be handled, so the singleton
+# instance is made available as early as possible; QlApplication is instantiated even before
+# QlCoreModule.
+#
+# Due to the number of configuration files that need to be loaded and parsed for each module to set
+# up its own $_APP section, QlApplication is always persisted to disk, ready to be reloaded on every
+# HTTP request. The most typical code path (persisted status available and successfully loaded) must
+# read and process the smallest number of configuration files and entries as possible before the
+# persisted state is reloaded; this minimal subset of the “core” section is called bootstrap, and
+# it’s loaded from config/core/bootstrap.conf in QlApplication::__construct().
+#
+# If reloading from persistent state succeeds, the persisted data will replace everything, including
+# the bootstrapped “core” section, since that’s included in the persisted data anyway.
+#
+# In case of load failure (which includes every execution before the first request for a non-static
+# file is served), QlApplication will adjust the bootstrapped “core” section, and Quearl will
+# subsequently let each module (including the “core” module) load its own section, eventually
+# leading to a fully loaded QlApplication instance, which will then be persisted when the execution
+# of Quearl comes to an end.
+
 ## Manages the application (cross-session) data, stored in $_APP.
 #
 class QlApplication {
