@@ -2,6 +2,7 @@ backup
 db
 info.php
 quearl/bin/__pycache__
+quearl/config/core/bootstrap.conf
 test.php
 temp
 
