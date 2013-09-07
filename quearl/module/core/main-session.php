@@ -90,9 +90,8 @@ class QlSession {
 					# Bots should not be crawling with SIDs. Remove the SID and redirect the bot;
 					# hopefully it will then update its own cache, discarding the URL with SID.
 					header($_SERVER['SERVER_PROTOCOL'] . ' 301 Moved Permanently');
-					# TODO: don’t assume “http”.
-					$sURL = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['RFULLPATH'] . '?' .
-							  preg_replace('/(:?^s=[^&]&?|&?s=[^&])/', '', $_SERVER['QUERY_STRING']);
+					$sURL = $_SERVER['HTTP_PROTOCOL'] . $_SERVER['HTTP_HOST'] . $_SERVER['RFULLPATH'] .
+							  '?' . preg_replace('/(:?^s=[^&]&?|&?s=[^&])/', '', $_SERVER['QUERY_STRING']);
 					header('Location: ' . $sURL);
 					exit;
 				}
@@ -689,8 +688,7 @@ class QlSession {
 		# Note: a page of ours can actually be the referrer for a new session, when the previous one
 		# expired and the user clicked a link on a page from that session.
 		if (!empty($_SERVER['HTTP_REFERER'])) {
-			# TODO: don’t assume “http”.
-			$sProtHost = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['RROOTDIR'];
+			$sProtHost = $_SERVER['HTTP_PROTOCOL'] . $_SERVER['HTTP_HOST'] . $_SERVER['RROOTDIR'];
 			if (strncmp($_SERVER['HTTP_REFERER'], $sProtHost, strlen($sProtHost)) != 0) {
 				$_SESSION['ql_referrer'] = $_SERVER['HTTP_REFERER'];
 			}
