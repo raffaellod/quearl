@@ -180,10 +180,10 @@ class QlApplication {
 	#
 	private function & load_section_nolock($sSection, $sFileName) {
 		$sContents = file_get_contents($sFileName);
-		# Delete comments, since ql_str_parse822header() doesn’t discard them.
+		# Delete comments, since ql_parse_rfc822_header() doesn’t discard them.
 		$sContents = preg_replace('/^#.*$/m', '', $sContents);
 		# Parse and process the section.
-		$arrSection =& ql_str_parse822header($sContents);
+		$arrSection =& ql_parse_rfc822_header($sContents);
 		foreach ($arrSection as $sEntry => $sValue) {
 			if (substr($sEntry, -6) == '_lpath') {
 				# Make entries ending in “_lpath” absolute paths.

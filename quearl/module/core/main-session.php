@@ -217,7 +217,7 @@ class QlSession {
 		if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
 			$arrInstalledLocales =& $_APP['core']['installed_locales'];
 			$arrDefaultLanguageLocales =& $_APP['core']['default_language_locales'];
-			foreach (ql_str_parse_rfc2616_accept_field(
+			foreach (ql_parse_rfc2616_accept_field(
 				strtolower($_SERVER['HTTP_ACCEPT_LANGUAGE'])
 			) as $sLang => $fQ) {
 				# Check if this language/locale is installed.

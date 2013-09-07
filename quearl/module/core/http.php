@@ -163,123 +163,13 @@ function gzdecode($s) {
 }
 
 
-## Parses and breaks down an HTTP response string. If the headers are not complete, it returns false
-# to indicate that it should be called again once more data has been received from the HTTP server.
-#
-# string $s
-#    HTTP response string.
-# [string $sNL]
-#    New-line sequence used in $s. If omitted, automatic detection will be attempted.
-# array<string => mixed> return
-#    false if the headers were not completed; otherwise map containing these keys:
-#    “newline” => string
-#       New-line sequence used in the response.
-#    “protocol” => string
-#       Protocol/version (e.g. HTTP/1.0).
-#    “code” => int
-#       HTTP response code (HTTP_STATUS_* or newer codes).
-#    “codedesc” => string
-#       Description provided by the server for “code”.
-#    “headers” => array<string => mixed>
-#       Map of header fields => values.
-#    “body” => string
-#       Body of the response, as a single string.
-#
-function & ql_str_parsehttpresponse($s, $sNL = null) {
-	# Attempt to detect the new-line style if not provided.
-	if (
-		(empty($sNL) && ($sNL = ql_str_detectnl($s)) === false) ||
-		($ichHeadersEnd = strpos($s, $sNL . $sNL)) === false
-	) {
-		# The header is presumably incomplete, we need more data.
-		$arrResponse = false;
-		return $arrResponse;
-	}
-	$arrResponse = array(
-		'newline' => $sNL,
-	);
-
-	# Parse the first line, ideally “HTTP/x.y nnn …”.
-	$ich = strpos($s, $sNL);
-	$arrParts = explode(' ', substr($s, 0, $ich), 3);
-	$ich += strlen($sNL);
-	if (count($arrParts) > 1 && strncmp($arrParts[0], 'HTTP/', 5) == 0) {
-		$arrResponse['protocol'] = $arrParts[0];
-		$arrResponse['code'    ] = (int)$arrParts[1];
-		$arrResponse['codedesc'] = trim(@$arrParts[2]);
-	} else {
-		$arrResponse['protocol'] = 'HTTP/0.9';
-		$arrResponse['code'    ] = (int)$arrParts[0];
-		$arrResponse['codedesc'] = trim(@$arrParts[1] . ' ' . @$arrParts[2]);
-	}
-
-	# Parse the response header and separate it from the message body.
-	if ($ichHeadersEnd > $ich) {
-		$arrResponse['headers'] =& ql_str_parse822header(
-			substr($s, $ich, $ichHeadersEnd - $ich), $sNL
-		);
-	} else {
-		$arrResponse['headers'] = array();
-	}
-	# This is probably incomplete, but the caller can continue reading data from the server and
-	# adding to this string.
-	$arrResponse['body'] = substr($s, $ichHeadersEnd + (strlen($sNL) << 1));
-
-	# Special handling for cookies sent by the server.
-	if (isset($arrResponse['headers']['Set-Cookie'])) {
-		$mSetCookie =& $arrResponse['headers']['Set-Cookie'];
-		$arrCookies = array();
-		# ql_str_parse822header() doesn’t unnecessarily make the field an array if it’s not multiple,
-		# so we might have to.
-		foreach (is_array($mSetCookie) ? $mSetCookie : array($mSetCookie) as $sCookie) {
-			$arrParts = explode(';', $sCookie);
-			if (strpos($arrParts[0], '=') !== false) {
-				list($sName, $sValue) = explode('=', trim(array_shift($arrParts)), 2);
-				if ($sName == '') {
-					# Skip invalid attribute names.
-					continue;
-				}
-				# Build up the cookie as a map.
-				$arrCookie = array(
-					'value' => urldecode(trim($sValue)),
-				);
-				foreach ($arrParts as $sPart) {
-					$sPart = trim($sPart);
-					if (strtolower($sPart) == 'secure') {
-						$arrCookie['secure'] = true;
-					} else {
-						$arrPart = explode('=', $sPart, 2);
-						if (count($arrPart) == 2) {
-							$arrPart[0] = strtolower($arrPart[0]);
-							switch ($arrPart[0]) {
-								case 'expires':
-									$arrPart[1] = strtotime($arrPart[1]);
-								case 'path':
-								case 'domain':
-									$arrCookie[$arrPart[0]] = $arrPart[1];
-									break;
-							}
-						}
-					}
-				}
-				$arrCookies[$sName] =& $arrCookie;
-				unset($arrCookie);
-			}
-		}
-		unset($mSetCookie);
-		$arrResponse['headers']['Set-Cookie'] =& $arrCookies;
-	}
-	return $arrResponse;
-}
-
-
 ## Send an HTTP request for the specified URL.
 #
 # string $sUrl
 #    URL to request.
 # [int $fiOptions]
 #    Determines the behavior of the function; it can be 0 or a combination of QL_HG_* constants.
-# [array<string => mixed> $arrHeaders]
+# [array<string => mixed> $arrHeaderFields]
 #    Array of request headers; array field values are joined as strings using “; ” as separator as
 #    required by e.g. cookies.
 # [string $sPostData]
@@ -309,7 +199,7 @@ function & ql_str_parsehttpresponse($s, $sNL = null) {
 #       Body of the response, as a single string.
 #
 function & ql_http_get(
-	$sUrl, $fiOptions = QL_HG_RETURNBODY, array $arrHeaders = array(), $sPostData = null
+	$sUrl, $fiOptions = QL_HG_RETURNBODY, array $arrHeaderFields = array(), $sPostData = null
 ) {
 	global $ql_debug_http_fread;
 	$arrUrl = @parse_url($sUrl);
@@ -319,7 +209,7 @@ function & ql_http_get(
 	}
 	$sOrgUrl = $sUrl;
 	# Provide default values for the most essential fields.
-	$arrHeaders += array(
+	$arrHeaderFields += array(
 		'Accept'          => '*/*',
 		'Accept-Charset'  => 'utf-8;q=1,utf-16le;q=0.7,utf-16be;q=0.7,iso-8859-1;q=0.5',
 		'Accept-Encoding' => 'gzip,x-gzip,deflate,identity',
@@ -332,10 +222,10 @@ function & ql_http_get(
 	$cRedirects = 0;
 	# $arrSetCookies holds all the cookies the caller provided; $arrCookies will hold these and any
 	# additional cookies set by the server.
-	if (isset($arrHeaders['Cookie'])) {
+	if (isset($arrHeaderFields['Cookie'])) {
 		# Cookies are handled separately, so remove them from the request headers.
-		$arrSetCookies =& $arrHeaders['Cookie'];
-		unset($arrHeaders['Cookie']);
+		$arrSetCookies =& $arrHeaderFields['Cookie'];
+		unset($arrHeaderFields['Cookie']);
 	} else {
 		$arrSetCookies = array();
 	}
@@ -381,7 +271,7 @@ function & ql_http_get(
 				# Assemble the request header.
 				$sRequest = ($sPostData !== null ? 'POST ' : 'GET ') . $sUrl . " HTTP/1.1\r\n" .
 								'Host: ' . $arrUrl['host'] . ':' . $arrUrl['port'] . "\r\n";
-				foreach ($arrHeaders as $sName => $mValue) {
+				foreach ($arrHeaderFields as $sName => $mValue) {
 					$sRequest .= $sName . ': ' . $mValue . "\r\n";
 				}
 				# Add the cookies, if any.
@@ -414,7 +304,7 @@ function & ql_http_get(
 				$s = '';
 				do {
 					$s .= fread($socket, 4096);
-					$arrResponse = ql_str_parsehttpresponse($s);
+					$arrResponse = ql_http_parse_rfc2616_response($s);
 					# A false return value means that the headers were not fully read, so continue on
 					# reading more.
 				} while (!$arrResponse && !feof($socket));
@@ -594,7 +484,7 @@ function & ql_http_get(
 							# Redirecting from a POST becomes a GET.
 							if ($sPostData !== null) {
 								$sPostData = null;
-								unset($arrHeaders['Content-Type']);
+								unset($arrHeaderFields['Content-Type']);
 							}
 						}
 
@@ -713,7 +603,7 @@ function & ql_http_get(
 		$arrResponse['requrl'   ] = $sOrgUrl;
 		$arrResponse['url'      ] = $sUrl;
 		$arrResponse['redirects'] = $cRedirects;
-#		$arrResponse['reqheaders'] =& $arrHeaders;
+#		$arrResponse['reqheaders'] =& $arrHeaderFields;
 
 		# Only return cookies the server did not revoke.
 		foreach ($arrCookies as $sName => $arrCookie) {
@@ -735,40 +625,6 @@ function & ql_http_get(
 		# Else return everything, which is either the array or false.
 		return $arrResponse;
 	}
-}
-
-
-## Executes a GET HTTP request for the specified URL, using and/or updating a local cache to avoid
-# unnecessary data transfers.
-#
-# string $sUrl
-#    URL to request.
-# string $sCacheFileName
-#    Cache file name.
-# [array<string => mixed> $arrHeaders]
-#    Array of request headers; array field values are joined as strings using “; ” as separator as
-#    required by e.g. cookies.
-# string return
-#    Body of the server’s (possibly cached) response, or false if any errors occurred.
-#
-function ql_http_get_cached($sUrl, $sCacheFileName, array $arrHeaders = array()) {
-	if (file_exists($sCacheFileName)) {
-		$arrHeaders['If-Modified-Since'] = ql_format_timestamp(
-			'%P', filemtime($sCacheFileName), 'UTC'
-		);
-	}
-	$arrResponse =& ql_http_get($sUrl, 0, $arrHeaders);
-	if ($arrResponse === false || $arrResponse['code'] < 200 || $arrResponse['code'] >= 400) {
-		return false;
-	}
-	if ($arrResponse['code'] == HTTP_STATUS_NOT_MODIFIED) {
-		return file_get_contents($sCacheFileName);
-	}
-	file_put_contents($sCacheFileName, $arrResponse['body']);
-	if (isset($arrResponse['headers']['Last-Modified'])) {
-		touch($sCacheFileName, $arrResponse['headers']['Last-Modified']);
-	}
-	return $arrResponse['body'];
 }
 
 
@@ -856,7 +712,7 @@ function ql_http_get_multi(array $arrUrls, $fnCallback) {
 				$arrTarget['buffer'] .= fread($socket, 16384);
 				if (feof($socket)) {
 					# Read is over.
-					$arrResponse = ql_str_parsehttpresponse($arrTarget['buffer']);
+					$arrResponse = ql_http_parse_rfc2616_response($arrTarget['buffer']);
 					switch ($arrResponse['code']) {
 						case HTTP_STATUS_CONTINUE:
 							$iStatus = QL__FH_READ;
@@ -940,6 +796,165 @@ function ql_http_get_multi(array $arrUrls, $fnCallback) {
 			}
 		}
 	}
+}
+
+
+## Breaks down an RFC 2616 (“HTTP/1.1”) header returning the contained fields, converted into the
+# appropriate data type.
+#
+# string $s
+#    Header string.
+# [string $sNL]
+#    New-line sequence used in $s. If omitted, automatic detection will be attempted.
+# array<string => mixed> return
+#    Array of fields (each of which can also be an array, in case of multiple fields), or false in
+#    case of any errors.
+#
+function & ql_http_parse_rfc2616_header($s, $sNL = null) {
+	# Most of the parsing is the same as for RCF 822.
+	$arrFields =& ql_parse_rfc822_header($s, $sNL);
+	if ($arrFields === false) {
+		# Something went wrong.
+		return $arrFields;
+	}
+	# Convert the type of every known non-string field.
+	foreach ($arrFields as $sName => &$mValue) {
+		switch ($sName) {
+			default:
+				if (strncmp($sName, 'Accept', 6) == 0) {
+					$mValue =& ql_parse_rfc2616_accept_field($mValue);
+				}
+				break;
+
+			# Integer fields.
+			case 'Content-Length':
+				settype($mValue, 'int');
+				break;
+
+			# RFC 822-style date/time.
+			case 'Expires':
+			case 'If-Modified-Since':
+			case 'If-Unmodified-Since':
+			case 'Last-Modified':
+			case 'Retry-After':
+				$mValue = strtotime($mValue);
+				break;
+
+			case 'Set-Cookie':
+				# ql_parse_rfc822_header() doesn’t unnecessarily make the field an array if it’s not
+				# repeated, so do it now.
+				if (!is_array($mValue)) {
+					$mValue = array($mValue);
+				}
+				$arrCookies = array();
+				foreach ($mValue as $sCookie) {
+					$arrParts = explode(';', $sCookie);
+					if (strpos($arrParts[0], '=') !== false) {
+						list($sName, $sValue) = explode('=', trim(array_shift($arrParts)), 2);
+						if ($sName == '') {
+							# Skip invalid attribute names.
+							continue;
+						}
+						# Build up the cookie as a map.
+						$arrCookie = array(
+							'value' => urldecode(trim($sValue)),
+						);
+						foreach ($arrParts as $sPart) {
+							$sPart = trim($sPart);
+							if (strtolower($sPart) == 'secure') {
+								$arrCookie['secure'] = true;
+							} else {
+								$arrPart = explode('=', $sPart, 2);
+								if (count($arrPart) == 2) {
+									$arrPart[0] = strtolower($arrPart[0]);
+									switch ($arrPart[0]) {
+										case 'expires':
+											$arrPart[1] = strtotime($arrPart[1]);
+										case 'path':
+										case 'domain':
+											$arrCookie[$arrPart[0]] = $arrPart[1];
+											break;
+									}
+								}
+							}
+						}
+						$arrCookies[$sName] =& $arrCookie;
+						unset($arrCookie);
+					}
+				}
+				$mValue = $arrCookies;
+				break;
+		}
+	}
+	return $arrFields;
+}
+
+
+## Parses and breaks down an RFC 2616 (“HTTP/1.1”) response string. If the headers are not complete,
+# it returns false to indicate that it should be called again once more data has been received from
+# the HTTP server.
+#
+# string $s
+#    HTTP response string.
+# [string $sNL]
+#    New-line sequence used in $s. If omitted, automatic detection will be attempted.
+# array<string => mixed> return
+#    false if the headers were incomplete; otherwise map containing these keys:
+#    “newline” => string
+#       New-line sequence used in the response.
+#    “protocol” => string
+#       Protocol/version (e.g. HTTP/1.0).
+#    “code” => int
+#       HTTP response code (HTTP_STATUS_* or newer codes).
+#    “codedesc” => string
+#       Description provided by the server for “code”.
+#    “headers” => array<string => mixed>
+#       Map of header fields => values.
+#    “body” => string
+#       Body of the response, as a single string. Not necessarily the entire response body, but the
+#       caller can add to this any remaining bytes read from the remote server.
+#
+function & ql_http_parse_rfc2616_response($s, $sNL = null) {
+	# Attempt to detect the new-line style if not provided.
+	if (
+		(empty($sNL) && ($sNL = ql_str_detectnl($s)) === false) ||
+		($ichHeadersEnd = strpos($s, $sNL . $sNL)) === false
+	) {
+		# The header is presumably incomplete, we need more data.
+		$arrResponse = false;
+		return $arrResponse;
+	}
+	$arrResponse = array(
+		'newline' => $sNL,
+	);
+
+	# Parse the first line, ideally “HTTP/x.y nnn …”.
+	$ich = strpos($s, $sNL);
+	$arrParts = explode(' ', substr($s, 0, $ich), 3);
+	$ich += strlen($sNL);
+	if (count($arrParts) > 1 && strncmp($arrParts[0], 'HTTP/', 5) == 0) {
+		$arrResponse['protocol'] = $arrParts[0];
+		$arrResponse['code'    ] = (int)$arrParts[1];
+		$arrResponse['codedesc'] = trim(@$arrParts[2]);
+	} else {
+		$arrResponse['protocol'] = 'HTTP/0.9';
+		$arrResponse['code'    ] = (int)$arrParts[0];
+		$arrResponse['codedesc'] = trim(@$arrParts[1] . ' ' . @$arrParts[2]);
+	}
+
+	# Parse the response header and separate it from the message body.
+	if ($ichHeadersEnd > $ich) {
+		$arrResponse['headers'] =& http_parse_rfc2616_header(
+			substr($s, $ich, $ichHeadersEnd - $ich), $sNL
+		);
+	} else {
+		$arrResponse['headers'] = array();
+	}
+	# This is probably incomplete, but the caller can continue reading data from the server and
+	# adding to this string.
+	$arrResponse['body'] = substr($s, $ichHeadersEnd + (strlen($sNL) << 1));
+
+	return $arrResponse;
 }
 
 ?>
