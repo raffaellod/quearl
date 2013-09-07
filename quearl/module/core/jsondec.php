@@ -40,7 +40,8 @@ require_once 'main.php';
 #
 function ql_json_decode($s) {
 	$s = trim($s);
-	// Constants.
+
+	# Constants.
 	switch ($s) {
 		case '':
 		case 'undefined':
@@ -51,49 +52,63 @@ function ql_json_decode($s) {
 		case 'false':
 			return false;
 	}
-	# Numbers. JSON numbers are the same as PHP ones.
+
+	# Numbers. The representation of numbers in JSON is the same as in PHP.
 	if (is_numeric($s)) {
 		$f = (float)$s;
 		return strpos($s, '.') !== false || $f > 0x7fffffff ? $f : (int)$s;
 	}
+
 	# Strings.
-	if (preg_match('/^"[^"\\\\]*(\\\\.[^"\\\\]*)*"$/s', $s))
+	if (preg_match('/^"[^"\\\\]*(\\\\.[^"\\\\]*)*"$/s', $s)) {
+		# Convert JSON string escape sequences into their replacements.
 		return preg_replace(
 			'/\\\\([btnvfr"\\\\]|u([0-9A-Fa-f]{4}))/e',
-			'\'$2\' ? ' .
-			# xxxx yyyy yyzz zzzz -> 1110xxxx 10yyyyyy 10zzzzzz
-			'0x0$2 > 0x07ff ? pack(\'c3\', ' .
-										'0xe0 | ( 0x0$2           >> 12), ' .
-										'0x80 | ((0x0$2 & 0x0fc0) >>  6), ' .
-										'0x80 |  (0x0$2 & 0x003f)' .
-									') : (' .
-			# 0000 0yyy yyzz zzzz -> 110yyyyy 10zzzzzz
-			'0x0$2 > 0x007f ? chr(0xc0 | ((0x0$2 & 0x07c0) >> 6)) . ' .
-								  'chr(0x80 |  (0x0$2 & 0x003f)) : ' .
-			# 0000 0000 0zzz zzzz -> 0zzzzzzz
-								'chr(0x0$2)) : ' .
-			# PHP BUG: preg_replace('/e') escapes " as \" in backreferences, so '$1' = '"' comes out as
-			# as '\"', i.e. two chars instead of one. */
-			'strtr(substr(\'$1\', -1), \'btnvfr\', "\x08\x09\x0a\x0b\x0c\x0d")',
+			'
+				\'$2\'
+					? 0x0$2 > 0x07ff
+						# xxxx yyyy yyzz zzzz -> 1110xxxx 10yyyyyy 10zzzzzz
+						? pack(\'c3\', 0xe0 | ( 0x0$2           >> 12),
+											0x80 | ((0x0$2 & 0x0fc0) >>  6),
+											0x80 |  (0x0$2 & 0x003f))
+						: (0x0$2 > 0x007f
+							# 0000 0yyy yyzz zzzz -> 110yyyyy 10zzzzzz
+							? chr(0xc0 | ((0x0$2 & 0x07c0) >> 6)) . chr(0x80 | (0x0$2 & 0x003f))
+							# 0000 0000 0zzz zzzz -> 0zzzzzzz
+							: chr(0x0$2))
+				' .
+				# PHP BUG: preg_replace('/e') escapes " as \" in backreferences, so '$1' = '"' comes out
+				# as as '\"', i.e. two chars instead of one.
+				'
+					# Replace escapes.
+					: strtr(substr(\'$1\', -1), \'btnvfr\', "\x08\x09\x0a\x0b\x0c\x0d")
+			',
 			substr($s, 1, -1)
 		);
-	# Objects (using new).
+	}
+
+	# Objects deserialized using “new”.
 	if (preg_match('/^new\s+([A-Za-z_][0-9A-Za-z_]*)\s*\(\s*(.*)\s*\)$/s', $s, $arrMatch)) {
 		if ($arrMatch[2] != '') {
 			# Read constructor arguments like an array.
 			$arrArgs = ql_json_decode('[' . $arrMatch[2] . ']');
-			if (!is_array($arrArgs))
+			if (!is_array($arrArgs)) {
 				return null;
-		} else
+			}
+		} else {
 			$arrArgs = array();
+		}
+		# QlJsonClass-derived classes.
 		$sClassName = 'QlJson' . $arrMatch[1];
 		if (!class_exists($sClassName)) {
+			# Other classes with name starting in “Json”.
 			$sClassName = 'Json' . $arrMatch[1];
 			if (!class_exists($sClassName)) {
 				trigger_error('Unable to find class \'' . $sClassName . '\'', E_USER_WARNING);
 				return null;
 			}
 		}
+		# Instantiate the class, and load it from JSON.
 		$o = new $sClassName();
 		if (!$o->set_from_json($arrArgs)) {
 			trigger_error(
@@ -103,23 +118,24 @@ function ql_json_decode($s) {
 		}
 		return $o;
 	}
-	# Prepare to parse an array or soft object.
+
+	# Prepare to parse an array or soft (classless) object.
 	$cch = strlen($s) - 1;
-	if ($s{0} == '[')
-		if ($s{$cch} == ']')
+	if ($s{0} == '[') {
+		if ($s{$cch} == ']') {
 			$bSimple = true;
-		else {
+		} else {
 			trigger_error('JSON syntax error: expected matching \']\'', E_USER_WARNING);
 			return null;
 		}
-	else if ($s{0} == '{')
-		if ($s{$cch} == '}')
+	} else if ($s{0} == '{') {
+		if ($s{$cch} == '}') {
 			$bSimple = false;
-		else {
+		} else {
 			trigger_error('JSON syntax error: expected matching \'}\'', E_USER_WARNING);
 			return null;
 		}
-	else {
+	} else {
 		trigger_error('JSON syntax error: unexpected character \'' . $s{0} . '\'', E_USER_WARNING);
 		return null;
 	}
@@ -129,23 +145,27 @@ function ql_json_decode($s) {
 	$ichItemStart = 1;
 	for ($ich = 1; $ich <= $cch; ++$ich) {
 		# Skip whitespace, looking for EOS or a member delimiter (,).
-		if (($ich += strspn($s, " \t\r\n", $ich)) == $cch || ($ch = $s{$ich}) == ',') {
+		$ich += strspn($s, " \t\r\n", $ich);
+		if ($ich == $cch || ($ch = $s{$ich}) == ',') {
 			# Member or object completed. Nested objects will be parsed by recursing, so only parse
 			# top-level members (!$arrNested).
 			if (!$arrNested) {
 				$sItem = trim(substr($s, $ichItemStart, $ich - $ichItemStart));
-				if ($sItem == '' && $ich == $cch)
-					// L'ultimo valore può non esserci, se era la fine della
-					// stringa (invece una virgola senza valore dopo NO).
+				if ($sItem == '' && $ich == $cch) {
+					# Allow the last value to be omitted, it at EOS. Do not allow a trailing comma not
+					# followed by a value.
 					break;
-				if ($bSimple)
+				}
+				if ($bSimple) {
+					# Add to the array as index => value.
 					$arr[] = ql_json_decode($sItem);
-				else {
+				} else {
 					# This RE retrieves the key and any whitespace surrounding the semicolon.
 					if (!preg_match('/^("[^"\\\\]*(\\\\.[^"\\\\]*)*")\s*:\s*/s', $sItem, $arrMatch)) {
 						trigger_error('JSON syntax error: invalid key in object', E_USER_WARNING);
 						return null;
 					}
+					# Add to the array as key => value.
 					$arr[ql_json_decode($arrMatch[1])] = ql_json_decode(
 						substr($sItem, strlen($arrMatch[0]))
 					);
@@ -155,16 +175,16 @@ function ql_json_decode($s) {
 			}
 		} else {
 			$sMatch = substr($s, $ich);
-			if (preg_match('/^"[^"\\\\]*(\\\\.[^"\\\\]*)*"/s', $sMatch, $arrMatch))
+			if (preg_match('/^"[^"\\\\]*(\\\\.[^"\\\\]*)*"/s', $sMatch, $arrMatch)) {
 				# Skip strings.
 				# -1 since the loop will ++$ich anyway.
 				$ich += strlen($arrMatch[0]) - 1;
-			else if (preg_match('/^new\s+[A-Za-z_][0-9A-Za-z_]*\s*/', $sMatch, $arrMatch)) {
+			} else if (preg_match('/^new\s+[A-Za-z_][0-9A-Za-z_]*\s*/', $sMatch, $arrMatch)) {
 				# Skip objects using new.
 				# -1 since the loop will ++$ich anyway. Also, increase nesting level.
 				$ich += strlen($arrMatch[0]) - 1;
 				array_push($arrNested, ')');
-			} else
+			} else {
 				# Check begin/end of nested objects, to verify brackets matching.
 				switch ($ch) {
 					case '[':
@@ -184,6 +204,7 @@ function ql_json_decode($s) {
 						}
 						break;
 				}
+			}
 		}
 	}
 	return $arr;
