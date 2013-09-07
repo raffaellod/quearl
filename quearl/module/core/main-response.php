@@ -123,7 +123,11 @@ class QlResponse {
 	}
 
 
-	## TODO: comment.
+	## Sends a chunk of data to the remote client, also sending the headers if they had not already
+	# been sent.
+	#
+	# string $s
+	#    Data to be sent.
 	#
 	public function send_chunk($s) {
 		# Make sure we sent the headers.
@@ -149,8 +153,12 @@ class QlResponse {
 		foreach ($this->m_arrHeaders as $sName => &$mValue) {
 			if (is_string($mValue) || is_int($mValue) || is_float($mValue)) {
 				header($sName . ': ' . $mValue);
+			} else if (is_array($mValue)) {
+				# TODO: convert the array into multiple (repeated) headers.
+				# header(…, false);
+			} else {
+				# TODO: warn about this unexpected type.
 			}
-			# TODO: convert arrays and warn about strange types.
 		}
 		$this->m_bHeadersSent = true;
 	}
@@ -169,19 +177,32 @@ class QlResponse {
 	}
 
 
-	## TODO: comment.
+	## Sets a header field for the response.
+	#
+	# string $sName
+	#    Header field name.
+	# mixed $mValue
+	#    Header field value. Providing an array here will result in multiple headers with the same
+	#    name being sent, one for each item in the array.
 	#
 	public function set_header($sName, $mValue) {
 		$this->m_arrHeaders[$sName] = $mValue;
 	}
 
 
-	## TODO: comment.
+	## Assigns the response an HTTP status code, along with a description.
+	#
+	# int $iCode
+	#    HTTP status code.
+	# [string $sCodeDescription]
+	#    Description for the status code; defaults to a standard description of $iCode.
 	#
 	public function set_http_status($iCode, $sCodeDescription = null) {
 		# If a description has not been provided, use the standard for the specified code.
 		if ($sCodeDescription === null) {
 			static $arrCodeDescriptions = array(
+				# Sorted by associated status code, not alphabetically.
+
 				# 1xx
 				HTTP_STATUS_CONTINUE                        => 'Continue',
 				HTTP_STATUS_SWITCHING_PROTOCOLS             => 'Switching Protocols',
@@ -341,9 +362,8 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 				'<script type="text/javascript">/*<![CDATA[*/' . NL .
 				'	location.SID = "' . (defined('SID') ? SID : '') . '";' . NL .
 				'	location.SSID = "' . (defined('SSID') ? SSID : '') . '";' . NL .
-				# TODO: don’t assume “http”.
-				'	location.RROOTDIR = "http://' .
-						$_SERVER['HTTP_HOST'] . $_SERVER['RROOTDIR'] . '";' . NL .
+				'	location.RROOTDIR = "' . $_SERVER['HTTP_PROTOCOL'] . $_SERVER['HTTP_HOST'] .
+						$_SERVER['RROOTDIR'] . '";' . NL .
 				'	var Ql = {};' . NL .
 				'	Ql._mapXhtmlTemplates = {};' . NL .
 				'	var L10n = {};' . NL .
@@ -357,12 +377,18 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 
 	## Adds content to the document’s <body> element.
 	#
+	# string $s
+	#    Markup to be added.
+	#
 	public function add_body($s) {
 		$this->m_sBody .= $s;
 	}
 
 
 	## Adds content to the document’s <head> element.
+	#
+	# string $s
+	#    Markup to be added.
 	#
 	public function add_head($s) {
 		$this->m_sHead .= $s;
@@ -422,7 +448,7 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 	}
 
 
-	## TODO: comment.
+	## Sends the <body> section of the response document to the remote client.
 	#
 	public function send_body() {
 		# Yes, it is ugly. But it’s the only way to do it without scripts.
@@ -448,7 +474,7 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 	}
 
 
-	## TODO: comment.
+	## Sends the <head> section of the response document to the remote client.
 	#
 	public function send_head() {
 		$s  = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" ' .
@@ -468,6 +494,9 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 	## Sets a title for the page. The string is XHTML, which means that it must be escaped
 	# appropriately, and it may include tags.
 	#
+	# string $sSubtitle
+	#    New page subtitle.
+	#
 	public function set_subtitle($sSubtitle) {
 		$this->m_sSubtitle = $sSubtitle;
 	}
@@ -475,6 +504,9 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 
 	## Sets a title for the page. The string is XHTML, which means that it must be escaped
 	# appropriately, and it may include tags.
+	#
+	# string $sTitle
+	#    New page title.
 	#
 	public function set_title($sTitle) {
 		$this->m_sTitle = $sTitle;
