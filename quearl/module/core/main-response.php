@@ -493,7 +493,6 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 
 
 	## Links a JavaScript file from the document.
-	# TODO: finish implementation.
 	#
 	# string $sFileName
 	#    Script file name.
@@ -502,17 +501,17 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 	#    IE-only fixes in a JS file justifies splitting it in “all browsers” and “IE fixes”.
 	#
 	public function include_script($sFileName, $bIEOnly = false) {
-#		$s  = '<script type="text/javascript" charset="utf-8" src="' .
-#					ql_url_add_root_and_ts($sFileName) . '"></script>' . NL;
-#		if ($bIEOnly) {
-#			$s = '<!--[if IE]>' . $s . '<![endif]-->' . NL;
-#		}
-#		$this->m_sHead .= "\t" . $s . NL;
+		global $_APP;
+		$s  = '<script type="text/javascript" charset="utf-8" src="' .
+					utf8_xmlenc($_APP['core']['static_root_rpath'] . $sFileName) . '"></script>';
+		if ($bIEOnly) {
+			$s = '<!--[if IE]>' . $s . '<![endif]-->';
+		}
+		$this->m_sHead .= "\t" . $s . NL;
 	}
 
 
 	## Links a precompiled style sheet to the document.
-	# TODO: finish implementation.
 	#
 	# string $sFileName
 	#    Style sheet file name.
@@ -521,12 +520,13 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 	#    of IE-only fixes in a CSS file justifies splitting it in “all browsers” and “IE fixes”.
 	#
 	public function include_stylesheet($sFileName, $bIEOnly = false) {
-#		$s  = '<link rel="stylesheet" type="text/css" href="' .
-#					ql_url_add_root_and_ts($sFileName) . '"/>';
-#		if ($bIEOnly) {
-#			$s = '<!--[if IE]>' . $s . '<![endif]-->' . NL;
-#		}
-#		$this->m_sHead .= "\t" . $s . NL;
+		global $_APP;
+		$s  = '<link rel="stylesheet" type="text/css" href="' .
+					utf8_xmlenc($_APP['core']['static_root_rpath'] . $sFileName) . '"/>';
+		if ($bIEOnly) {
+			$s = '<!--[if IE]>' . $s . '<![endif]-->';
+		}
+		$this->m_sHead .= "\t" . $s . NL;
 	}
 
 
