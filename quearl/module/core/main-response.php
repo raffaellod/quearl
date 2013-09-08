@@ -397,7 +397,7 @@ abstract class QlResponseEntity {
 
 ## Minimal XHTML response document.
 #
-class QlXhtmlMinResponseDocument extends QlResponseEntity {
+class QlXhtmlResponseEntity extends QlResponseEntity {
 
 	## Content of the <body> section.
 	protected /*string*/ $m_sBody;
