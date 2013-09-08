@@ -90,7 +90,9 @@ define('HTTP_STATUS_NETWORK_AUTHENTICATION_REQUIRED', 511); # RFC 6585.
 # Classes
 
 
-## HTTP response.
+## Generates a valid HTTP response header and entity.
+#
+# TODO: support sending “Cache-Control: private” to allow for shared proxy caching.
 #
 class QlResponse {
 
@@ -98,41 +100,133 @@ class QlResponse {
 	private /*int*/ $m_iCode;
 	## Description for m_iCode.
 	private /*string*/ $m_sCodeDescription;
-	## Map of header names => values.
-	private /*array<string => mixed>*/ $m_arrHeaders;
-	## true if the headers have been sent.
-	private /*bool*/ $m_bHeadersSent;
+	## Map of header field names => values.
+	private /*array<string => mixed>*/ $m_arrHeaderFields;
+	## true if the header has been sent.
+	private /*bool*/ $m_bHeaderSent;
 
 
 	## Constructor.
 	#
 	public function __construct() {
 		$this->set_http_status(HTTP_STATUS_OK);
-		$this->m_arrHeaders = array();
-		$this->m_bHeadersSent = false;
+		$this->m_arrHeaderFields = array();
+		$this->m_bHeaderSent = false;
 	}
 
 
-	## Returns true if the HTTP headers have already been sent to the remote client.
+	## Associates an entity tag (ETag) and/or a last-modified timestamp to the response, to be used
+	# for caching control; see RFC 2616 § 14.19 “ETag” and § 14.29 “Last-Modified”. It also allows to
+	# specify a time interval for which remote clients should consider their cache to be up-to-date
+	# without even sending a conditional request to the server; see RFC 2616 § 14.21 “Expires”.
+	#
+	# If the remote client provided an “If-None-Match” request header that matches $sETag, or if it
+	# provided a “If-Modified-Since” timestamp that’s not older than $mTS, this method will respond
+	# the current request with HTTP status 304 (Not Modified) and halt execution; otherwise the
+	# specified response metadata will be prepared to be sent to the remote client in the appropriate
+	# header fiels, along with the rest of the response.
+	#
+	# [mixed $mTS]
+	#    Date/time (timestamp) of the last modification to the entity. If omitted, the response will
+	#    not provide a last modification time.
+	# [string $sETag]
+	#    Tag for the entity that this response would provide. If omitted, the response will not
+	#    provide an ETag.
+	# [int $iExpiresAfter]
+	#    Time that the response will be valid for, in seconds. Before this interval has elapsed, no
+	#    requests for the same resource will be made by the remote client. If omitted, the response
+	#    will have no expiration date, and caching will be controlled only by the other arguments.
+	#
+	public function allow_caching($mTS = null, $sETag = null, $iExpiresAfter = null) {
+		if ($sETag === null && $mTS === null) {
+			trigger_error('The arguments $sETag and $mTS cannot both be null', E_USER_WARNING);
+			return;
+		}
+		if ($this->m_bHeaderSent) {
+			trigger_error('HTTP response header has already been sent', E_USER_WARNING);
+		}
+		if ($mTS !== null) {
+			# Only check for an “If-Modified-Since” header field if the client did not also specify
+			# “If-None-Match”, as mandated by RFC 2616 § 14.26 “If-None-Match”.
+			if (!isset($_SERVER['HTTP_IF_NONE_MATCH']) && isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
+				$iCachedTS = strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']);
+				if ($iCachedTS !== false && $iCachedTS >= $mTS) {
+					# The entity has not been modified since the remote client last requested it, so
+					# clear all header fields and just respond with HTTP status 304.
+					$this->m_arrHeaderFields = array();
+					$this->set_http_status(HTTP_STATUS_NOT_MODIFIED);
+					exit;
+				}
+			}
+			# We’re still here, so the remote client has an outdated copy of this entity in its cache.
+			# Send it the new last modification time to give it a chance to refresh its cache.
+			$this->set_header_field('Last-Modified', ql_format_timestamp('%P', $mTS));
+		}
+		if ($sETag !== null) {
+			# Double-quote the ETag. Not sure if this is mandatory, since it’s not explicitly stated in
+			# the production rule for the ETag header fiels (see RFC 2616 § 14.19 “ETag”), but we do it
+			# anyway to avoid using the reserved prefix “W/” (indicating a weak ETag).
+			$sETag = '"' . $sETag . '"';
+			if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
+				# Convert the list of ETags cached by the remote client into an array.
+				$arrCachedETags = preg_split(
+					'/\s*,\s*/', $_SERVER['HTTP_IF_NONE_MATCH'], 0, PREG_SPLIT_NO_EMPTY
+				);
+				# Check if one of the cached ETags matches this entity’s tag or is the “match any”
+				# special value (“*”).
+				foreach ($arrCachedETags as $sCachedETag) {
+					if ($sCachedETag == $sETag || $sCachedETag == '*') {
+						# Clear all header fields, and just respond with HTTP status 304.
+						$this->m_arrHeaderFields = array();
+						$this->set_http_status(HTTP_STATUS_NOT_MODIFIED);
+						exit;
+					}
+				}
+			}
+			# We’re still here, so the remote client does not have a cached copy of this entity. Send
+			# the ETag out to give it a chance to cache it this time.
+			$this->set_header_field('ETag', $sETag);
+		}
+		if ($iExpiresAfter !== null) {
+			# Mark this response as valid for the specified number of seconds, after which all caches
+			# will have to re-validate it with a request that we may still respond with a 304 HTTP
+			# status (which could set a new Expires value, delaying the next validation, and so on).
+			global $ql_fScriptStart;
+			$this->set_header_field(
+				'Expires', ql_format_timestamp('%P', $ql_fScriptStart + $iExpiresAfter)
+			);
+			$this->set_header_field(
+				'Cache-Control', 'private, maxage=' . $iExpiresAfter . ', must-revalidate'
+			);
+		} else {
+			# Tell the remote client to always revalidate this response (see RFC 2616 § 14.9.4 “Cache
+			# Revalidation and Reload Controls”). Note that this does not disallow caching.
+			$this->set_header_field('Expires', '0');
+			$this->set_header_field('Cache-Control', 'private, maxage=0, must-revalidate');
+		}
+	}
+
+
+	## Returns true if the HTTP response header has already been sent to the remote client.
 	#
 	# bool return
-	#    true if the HTTP headers have been sent, or false otherwise.
+	#    true if the HTTP header has been sent, or false otherwise.
 	#
-	public function headers_sent() {
-		return $this->m_bHeadersSent;
+	public function header_sent() {
+		return $this->m_bHeaderSent;
 	}
 
 
-	## Sends a chunk of data to the remote client, also sending the headers if they had not already
-	# been sent.
+	## Sends a chunk of data to the remote client, also sending the header first if it hasn’t
+	# already been sent.
 	#
 	# string $s
 	#    Data to be sent.
 	#
-	public function send_chunk($s) {
-		# Make sure we sent the headers.
-		if (!$this->m_bHeadersSent) {
-			$this->send_headers();
+	public function send_data($s) {
+		# Make sure we sent the header.
+		if (!$this->m_bHeaderSent) {
+			$this->send_header();
 		}
 		echo $s;
 		# Send the data to the remote client right now; this enables browsers who render XHTML
@@ -146,34 +240,43 @@ class QlResponse {
 	}
 
 
-	## Sends to the remote client any HTTP headers accumulated to this point.
+	## Sends to the remote client any HTTP header fields accumulated to this point.
 	#
-	public function send_headers() {
-		header($_SERVER['SERVER_PROTOCOL'] . ' ' . $this->m_iCode . ' ' . $this->m_sCodeDescription);
-		foreach ($this->m_arrHeaders as $sName => &$mValue) {
-			if (is_string($mValue) || is_int($mValue) || is_float($mValue)) {
-				header($sName . ': ' . $mValue);
-			} else if (is_array($mValue)) {
-				# TODO: convert the array into multiple (repeated) headers.
-				# header(…, false);
-			} else {
-				# TODO: warn about this unexpected type.
+	public function send_header() {
+		if ($this->m_bHeaderSent) {
+			trigger_error('HTTP response header has already been sent', E_USER_WARNING);
+		} else {
+			if (
+				!isset($this->m_arrHeaderFields['Last-Modified']) &&
+				!isset($this->m_arrHeaderFields['ETag'])
+			) {
+				# No cache-enabling header fields are set, so assume that this response must not be
+				# cached and add the appropriate HTTP/1.1 header fields accordingly.
+				$this->set_header_field('Expires', '0');
+				$this->set_header_field(
+					'Cache-Control', 'private, no-cache, no-store, must-revalidate'
+				);
 			}
-		}
-		$this->m_bHeadersSent = true;
-	}
 
-
-	## TODO: comment.
-	#
-	public function send_last($s) {
-		# Check if we need to send out the headers.
-		if (!$this->m_bHeadersSent) {
-			# This is the first and last data chunk to be sent, so set a Content-Length header since we
-			# know exactly how many bytes we’re sending.
-			$this->set_header('Content-Length', strlen($s));
+			# Start by sending the HTTP status.
+			header(
+				$_SERVER['SERVER_PROTOCOL'] . ' ' . $this->m_iCode . ' ' . $this->m_sCodeDescription
+			);
+			# Send any other set header fields.
+			foreach ($this->m_arrHeaderFields as $sName => &$mValue) {
+				if (is_string($mValue) || is_int($mValue) || is_float($mValue)) {
+					header($sName . ': ' . $mValue);
+				} else if (is_array($mValue)) {
+					# TODO: convert the array into multiple (repeated) header fields.
+					# header(…, false);
+				} else {
+					# TODO: warn about this unexpected type.
+				}
+			}
+			$this->m_bHeaderSent = true;
+			# Free up some memory.
+			$this->m_arrHeaderFields = null;
 		}
-		$this->send_chunk($s);
 	}
 
 
@@ -182,11 +285,11 @@ class QlResponse {
 	# string $sName
 	#    Header field name.
 	# mixed $mValue
-	#    Header field value. Providing an array here will result in multiple headers with the same
-	#    name being sent, one for each item in the array.
+	#    Header field value. Providing an array here will result in multiple header fields with the
+	#    same name being sent, one for each item in the array.
 	#
-	public function set_header($sName, $mValue) {
-		$this->m_arrHeaders[$sName] = $mValue;
+	public function set_header_field($sName, $mValue) {
+		$this->m_arrHeaderFields[$sName] = $mValue;
 	}
 
 
@@ -296,18 +399,18 @@ abstract class QlResponseEntity {
 #
 class QlXhtmlMinResponseDocument extends QlResponseEntity {
 
-	## Document locale.
-	protected /*string*/ $m_sLocale;
-	## true if the <head> has been sent.
-	private /*bool*/ $m_bHeadSent;
-	## Document title (XHTML).
-	protected /*string*/ $m_sTitle;
-	## Document subtitle (XHTML).
-	protected /*string*/ $m_sSubtitle;
-	## Content of the <head> section.
-	protected /*string*/ $m_sHead;
 	## Content of the <body> section.
 	protected /*string*/ $m_sBody;
+	## Content of the <head> section.
+	protected /*string*/ $m_sHead;
+	## true if the <head> has been sent.
+	private /*bool*/ $m_bHeadSent;
+	## Document locale.
+	protected /*string*/ $m_sLocale;
+	## Document subtitle (XHTML).
+	protected /*string*/ $m_sSubtitle;
+	## Document title (XHTML).
+	protected /*string*/ $m_sTitle;
 
 
 	## Constructor.
@@ -334,23 +437,17 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 		# to a check on the Accept field.
 		$bAcceptXhtml = false;
 		if (isset($_SERVER['HTTP_ACCEPT'])) {
-			$arrAccept =& ql_str_parse_rfc2616_accept_field($_SERVER['HTTP_ACCEPT']);
+			$arrAccept =& ql_parse_rfc2616_accept_field($_SERVER['HTTP_ACCEPT']);
 			if (isset($arrAccept['application/xhtml+xml'])) {
 				$bAcceptXhtml = true;
 			}
 		}
 
-		# Prepare the headers.
-		$res = $this->m_response;
-		$res->set_header(
+		# Prepare the response header fields.
+		$this->m_response->set_header_field(
 			'Content-Type', ($bAcceptXhtml ? 'application/xhtml+xml' : 'text/html') . '; charset=utf-8'
 		);
-		$res->set_header('Vary', 'Accept');
-		$res->set_header('Content-Language', $this->m_sLocale);
-		$res->set_header('Cache-Control', 'private, pre-check=0, post-check=0, max-age=0');
-		$res->set_header('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT');
-		$res->set_header('Pragma', 'no-cache');
-		unset($res);
+		$this->m_response->set_header_field('Content-Language', $this->m_sLocale);
 
 		# Initialize the <head> contents.
 		$s  = '<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8"/>' .
@@ -460,7 +557,7 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 					ql_indent(1, $this->m_sBody) .
 				'</body>' . NL .
 				'</html>';
-		$this->m_response->send_last($s);
+		$this->m_response->send_data($s);
 	}
 
 
@@ -486,7 +583,7 @@ class QlXhtmlMinResponseDocument extends QlResponseEntity {
 						($this->m_sSubtitle != null ? utf8_xmlenc($this->m_sSubtitle) . ' - ' : '') .
 						strip_tags($this->m_sTitle) . '</title>' . NL .
 				'</head>' . NL;
-		$this->m_response->send_chunk($s);
+		$this->m_response->send_data($s);
 		$this->m_bHeadSent = true;
 	}
 

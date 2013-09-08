@@ -107,7 +107,7 @@ class QlApplication {
 			# before a load_section() returning true and merge_section(). Note that $arrSection still
 			# holds a reference to the section.
 			$arrSection['load_modules'] = preg_split(
-				'/\s*,\s*/', $arrSection['load_modules'], -1, PREG_SPLIT_NO_EMPTY
+				'/\s*,\s*/', $arrSection['load_modules'], 0, PREG_SPLIT_NO_EMPTY
 			);
 		}
 
