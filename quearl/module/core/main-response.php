@@ -112,98 +112,26 @@ class QlResponse {
 		$this->set_http_status(HTTP_STATUS_OK);
 		$this->m_arrHeaderFields = array();
 		$this->m_bHeaderSent = false;
-	}
 
-
-	## Associates an entity tag (ETag) and/or a last-modified timestamp to the response, to be used
-	# for caching control; see RFC 2616 § 14.19 “ETag” and § 14.29 “Last-Modified”. It also allows to
-	# specify a time interval for which remote clients should consider their cache to be up-to-date
-	# without even sending a conditional request to the server; see RFC 2616 § 14.21 “Expires”.
-	#
-	# If the remote client provided an “If-None-Match” request header that matches $sETag, or if it
-	# provided a “If-Modified-Since” timestamp that’s not older than $mTS, this method will respond
-	# the current request with HTTP status 304 (Not Modified) and halt execution; otherwise the
-	# specified response metadata will be prepared to be sent to the remote client in the appropriate
-	# header fiels, along with the rest of the response.
-	#
-	# [mixed $mTS]
-	#    Date/time (timestamp) of the last modification to the entity. If omitted, the response will
-	#    not provide a last modification time.
-	# [string $sETag]
-	#    Tag for the entity that this response would provide. If omitted, the response will not
-	#    provide an ETag.
-	# [int $iExpiresAfter]
-	#    Time that the response will be valid for, in seconds. Before this interval has elapsed, no
-	#    requests for the same resource will be made by the remote client. If omitted, the response
-	#    will have no expiration date, and caching will be controlled only by the other arguments.
-	#
-	public function allow_caching($mTS = null, $sETag = null, $iExpiresAfter = null) {
-		if ($sETag === null && $mTS === null) {
-			trigger_error('The arguments $sETag and $mTS cannot both be null', E_USER_WARNING);
-			return;
-		}
-		if ($this->m_bHeaderSent) {
-			trigger_error('HTTP response header has already been sent', E_USER_WARNING);
-		}
-		if ($mTS !== null) {
-			# Only check for an “If-Modified-Since” header field if the client did not also specify
-			# “If-None-Match”, as mandated by RFC 2616 § 14.26 “If-None-Match”.
-			if (!isset($_SERVER['HTTP_IF_NONE_MATCH']) && isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
-				$iCachedTS = strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']);
-				if ($iCachedTS !== false && $iCachedTS >= $mTS) {
-					# The entity has not been modified since the remote client last requested it, so
-					# clear all header fields and just respond with HTTP status 304.
-					$this->m_arrHeaderFields = array();
-					$this->set_http_status(HTTP_STATUS_NOT_MODIFIED);
-					exit;
-				}
+		/*
+		foreach ($_SERVER['HTTP_ACCEPT_ENCODING'] as $sEncoding) {
+			switch ($sEncoding) {
+				case 'x-gzip':
+				case 'gzip':
+					gzencode(…, 6);
+					break;
+				case 'deflate':
+					gzdeflate(…, 6);
+					break;
+				default:
+					# Unknown encoding type, skip it.
+					continue(2);
 			}
-			# We’re still here, so the remote client has an outdated copy of this entity in its cache.
-			# Send it the new last modification time to give it a chance to refresh its cache.
-			$this->set_header_field('Last-Modified', ql_format_timestamp('%P', $mTS));
+			$this->m_response->set_header_field('Content-Encoding', $sEncoding);
+			$this->m_response->set_header_field('Vary', 'Accept-Encoding');
+			break;
 		}
-		if ($sETag !== null) {
-			# Double-quote the ETag. Not sure if this is mandatory, since it’s not explicitly stated in
-			# the production rule for the ETag header fiels (see RFC 2616 § 14.19 “ETag”), but we do it
-			# anyway to avoid using the reserved prefix “W/” (indicating a weak ETag).
-			$sETag = '"' . $sETag . '"';
-			if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
-				# Convert the list of ETags cached by the remote client into an array.
-				$arrCachedETags = preg_split(
-					'/\s*,\s*/', $_SERVER['HTTP_IF_NONE_MATCH'], 0, PREG_SPLIT_NO_EMPTY
-				);
-				# Check if one of the cached ETags matches this entity’s tag or is the “match any”
-				# special value (“*”).
-				foreach ($arrCachedETags as $sCachedETag) {
-					if ($sCachedETag == $sETag || $sCachedETag == '*') {
-						# Clear all header fields, and just respond with HTTP status 304.
-						$this->m_arrHeaderFields = array();
-						$this->set_http_status(HTTP_STATUS_NOT_MODIFIED);
-						exit;
-					}
-				}
-			}
-			# We’re still here, so the remote client does not have a cached copy of this entity. Send
-			# the ETag out to give it a chance to cache it this time.
-			$this->set_header_field('ETag', $sETag);
-		}
-		if ($iExpiresAfter !== null) {
-			# Mark this response as valid for the specified number of seconds, after which all caches
-			# will have to re-validate it with a request that we may still respond with a 304 HTTP
-			# status (which could set a new Expires value, delaying the next validation, and so on).
-			global $ql_fScriptStart;
-			$this->set_header_field(
-				'Expires', ql_format_timestamp('%P', $ql_fScriptStart + $iExpiresAfter)
-			);
-			$this->set_header_field(
-				'Cache-Control', 'private, maxage=' . $iExpiresAfter . ', must-revalidate'
-			);
-		} else {
-			# Tell the remote client to always revalidate this response (see RFC 2616 § 14.9.4 “Cache
-			# Revalidation and Reload Controls”). Note that this does not disallow caching.
-			$this->set_header_field('Expires', '0');
-			$this->set_header_field('Cache-Control', 'private, maxage=0, must-revalidate');
-		}
+		*/
 	}
 
 
@@ -229,14 +157,32 @@ class QlResponse {
 			$this->send_header();
 		}
 		echo $s;
-		# Send the data to the remote client right now; this enables browsers who render XHTML
-		# incrementally to start downloading, or at least queueing up, any scripts and style sheets
-		# declared thus far.
-		$cBuffers = ob_get_level();
-		while ($cBuffers--) {
-			ob_flush();
+		# Remember that Quearl always runs with one buffering level to intercept errors, so flush the
+		# output buffer now.
+		ob_flush();
+	}
+
+
+	## Sends the contents of a file to the remote client, also sending the header first if it hasn’t
+	# already been sent.
+	#
+	# string $sFileName
+	#    File to be sent.
+	#
+	public function send_file($sFileName) {
+		# Make sure we sent the header.
+		if (!$this->m_bHeaderSent) {
+			$this->send_header();
 		}
-		flush();
+		# Remember that Quearl always runs with one buffering level to intercept errors, so terminate
+		# the output buffer now.
+		$sBuf = ob_get_clean();
+		if (strlen($sBuf) > 0) {
+			# Some bytes were unexpectedly sent before this file, probably by PHP itself (everything
+			# running on Quearl should use QlResponse::send_data()); log this extra content.
+			# TODO: log $sBuf.
+		}
+		readfile($sFileName);
 	}
 
 
@@ -247,6 +193,7 @@ class QlResponse {
 			trigger_error('HTTP response header has already been sent', E_USER_WARNING);
 		} else {
 			if (
+				$this->m_iCode != HTTP_STATUS_NOT_MODIFIED &&
 				!isset($this->m_arrHeaderFields['Last-Modified']) &&
 				!isset($this->m_arrHeaderFields['ETag'])
 			) {
@@ -270,7 +217,11 @@ class QlResponse {
 					# TODO: convert the array into multiple (repeated) header fields.
 					# header(…, false);
 				} else {
-					# TODO: warn about this unexpected type.
+					trigger_error(
+						'Unexpected data type for header field “' .
+							$sName . '”: “' . gettype($mValue) . '”',
+						E_USER_WARNING
+					);
 				}
 			}
 			$this->m_bHeaderSent = true;
@@ -367,11 +318,116 @@ class QlResponse {
 		$this->m_iCode = $iCode;
 		$this->m_sCodeDescription = $sCodeDescription;
 	}
+
+
+	## Associates an entity tag (ETag) and/or a last-modified timestamp to the response, to be used
+	# for caching control; see RFC 2616 § 14.19 “ETag” and § 14.29 “Last-Modified”. It also allows to
+	# specify a time interval for which remote clients should consider their cache to be up-to-date
+	# without even sending a conditional request to the server; see RFC 2616 § 14.21 “Expires”.
+	#
+	# If the remote client provided an “If-None-Match” request header that matches $sETag, or if it
+	# provided a “If-Modified-Since” timestamp that’s not older than $mTS, this method will respond
+	# the current request with HTTP status 304 (Not Modified) and halt execution; otherwise the
+	# specified response metadata will be prepared to be sent to the remote client in the appropriate
+	# header fiels, along with the rest of the response.
+	#
+	# Regardless of the return value, this method set a few header fields as mandated by RFC 2616 §
+	# 10.3.5 “304 Not Modified”: “Date”, “ETag” (if $sETag is not null), “Expires” and
+	# “Cache-Control”.
+	#
+	# [mixed $mTS]
+	#    Date/time (timestamp) of the last modification to the entity. If omitted, the response will
+	#    not provide a last modification time.
+	# [string $sETag]
+	#    Tag for the entity that this response would provide. If omitted, the response will not
+	#    provide an ETag.
+	# [int $iExpiresAfter]
+	#    Time that the response will be valid for, in seconds. Before this interval has elapsed, no
+	#    requests for the same resource will be made by the remote client. If omitted, the response
+	#    will have no expiration date, and caching will be controlled only by the other arguments.
+	# bool return
+	#    true if the file has been setup for sending, or false if the remote client has a valid
+	#    cached copy of the file.
+	#
+	public function use_cache($mTS = null, $sETag = null, $iExpiresAfter = null) {
+		if ($sETag === null && $mTS === null) {
+			trigger_error('The arguments $sETag and $mTS cannot both be null', E_USER_WARNING);
+			# Go ahead anyway; we can still add the “Expired” and “Cache-Control” header fields.
+		}
+		if ($this->m_bHeaderSent) {
+			trigger_error('HTTP response header has already been sent', E_USER_WARNING);
+			return false;
+		}
+		$bClientCacheValid = false;
+		if ($mTS !== null) {
+			# Only check for an “If-Modified-Since” header field if the client did not also specify
+			# “If-None-Match”, as mandated by RFC 2616 § 14.26 “If-None-Match”.
+			if (
+				!$bClientCacheValid &&
+				!isset($_SERVER['HTTP_IF_NONE_MATCH']) && isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])
+			) {
+				$iCachedTS = strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']);
+				if ($iCachedTS !== false && $iCachedTS >= $mTS) {
+					# The entity has not been modified since the remote client last cached it.
+					$bClientCacheValid = true;
+				}
+			}
+			# We’re still here, so the remote client has an outdated copy of this entity in its cache.
+			# Send it the new last modification time to give it a chance to refresh its cache.
+			$this->set_header_field('Last-Modified', ql_format_timestamp('%P', $mTS, 'UTC'));
+		}
+		if ($sETag !== null) {
+			# Double-quote the ETag. Not sure if this is mandatory, since it’s not explicitly stated in
+			# the production rule for the ETag header fiels (see RFC 2616 § 14.19 “ETag”), but we do it
+			# anyway to avoid using the reserved prefix “W/” (indicating a weak ETag).
+			$sETag = '"' . $sETag . '"';
+			if (!$bClientCacheValid && isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
+				# Convert the list of ETags cached by the remote client into an array.
+				$arrCachedETags = preg_split(
+					'/\s*,\s*/', $_SERVER['HTTP_IF_NONE_MATCH'], 0, PREG_SPLIT_NO_EMPTY
+				);
+				# Check if one of the cached ETags matches this entity’s tag or is the “match any”
+				# special value (“*”).
+				foreach ($arrCachedETags as $sCachedETag) {
+					if ($sCachedETag == $sETag || $sCachedETag == '*') {
+						# Match: the client cache is valid.
+						$bClientCacheValid = true;
+						break;
+					}
+				}
+			}
+			# We’re still here, so the remote client does not have a cached copy of this entity. Send
+			# the ETag out to give it a chance to cache it this time.
+			$this->set_header_field('ETag', $sETag);
+		}
+		if ($iExpiresAfter !== null) {
+			# Mark this response as valid for the specified number of seconds, after which all caches
+			# will have to re-validate it with a request that we may still respond with a 304 HTTP
+			# status (which could set a new Expires value, delaying the next validation, and so on).
+			global $ql_fScriptStart;
+			$this->set_header_field(
+				'Expires', ql_format_timestamp('%P', $ql_fScriptStart + $iExpiresAfter, 'UTC')
+			);
+			$this->set_header_field(
+				'Cache-Control', 'private, maxage=' . $iExpiresAfter . ', must-revalidate'
+			);
+		} else {
+			# Tell the remote client to always revalidate this response (see RFC 2616 § 14.9.4 “Cache
+			# Revalidation and Reload Controls”). Note that this does not disallow caching.
+			$this->set_header_field('Expires', '0');
+			$this->set_header_field('Cache-Control', 'private, maxage=0, must-revalidate');
+		}
+		# If the client has a valid cached copy of this entity, respond with HTTP status 304.
+		if ($bClientCacheValid) {
+			$this->set_http_status(HTTP_STATUS_NOT_MODIFIED);
+			$this->send_header();
+		}
+		return $bClientCacheValid;
+	}
 }
 
 
-## Holds the response body, allowing modules to add data to it during their processing of
-# QlModule::augment_response().
+## Base class for a response entity.
 #
 abstract class QlResponseEntity {
 
@@ -395,7 +451,85 @@ abstract class QlResponseEntity {
 };
 
 
-## Minimal XHTML response document.
+## Null (zero-length) response entity.
+#
+class QlNullResponseEntity extends QlResponseEntity {
+
+	## See QlResponseEntity::send_close().
+	#
+	public function send_close() {
+		$this->m_response->send_data('');
+	}
+};
+
+
+## Regular file sent as a response entity. Supports sending pre-generated compressed versions of the
+# file, if supported by the remote client.
+#
+class QlStaticResponseEntity extends QlResponseEntity {
+
+	## Name of the physical file that will be provided as the response entity.
+	protected $m_sFileName;
+
+
+	## Assigns a physical file that will be provided as the response entity.
+	#
+	# string $sFileName
+	#    Name of the file.
+	# string $sContentType
+	#    MIME content type of the file.
+	# [bool $bHasCompressedVersion]
+	#    If true, the remote client can will be served with a compressed version of the file,
+	#    provided that the client accepts one of the supported compression encodings, and that such
+	#    version of the file exists.
+	#
+	public function set_file($sFileName, $sContentType, $bHasCompressedVersion = false) {
+		if (!is_file($sFileName) || !is_readable($sFileName)) {
+			trigger_error('Invalid file name', E_USER_ERROR);
+		}
+
+		$this->m_sFileName = $sFileName;
+		if ($bHasCompressedVersion) {
+			# Check if we have a compressed version of this file matching the encodings accepted by the
+			# remote client.
+			foreach ($_SERVER['HTTP_ACCEPT_ENCODING'] as $sEncoding => $fQ) {
+				switch ($sEncoding) {
+					case 'gzip':
+					case 'x-gzip':
+						$sEncodedFileName = $sFileName . '.gz';
+						break;
+#					case 'deflate':
+#						$sEncodedFileName = $sFileName . '.z';
+#						break;
+					default:
+						# Unknown encoding type, skip it.
+						continue(2);
+				}
+				if (is_file($sEncodedFileName) && is_readable($sEncodedFileName)) {
+					# A copy of the file in this encoding exists, use it.
+					$this->m_response->set_header_field('Content-Encoding', $sEncoding);
+					$this->m_response->set_header_field('Vary', 'Accept-Encoding');
+					$this->m_sFileName = $sEncodedFileName;
+					break;
+				}
+			}
+		}
+		$this->m_response->set_header_field('Content-Type', $sContentType);
+		$this->m_response->set_header_field('Content-Length', filesize($this->m_sFileName));
+	}
+
+
+	## See QlResponseEntity::send_close().
+	#
+	public function send_close() {
+		$this->m_response->send_file($this->m_sFileName);
+	}
+};
+
+
+## XHTML document response entity.
+#
+# TODO: change to a use a real XHTML DOM which can be manipulated server-side.
 #
 class QlXhtmlResponseEntity extends QlResponseEntity {
 
@@ -548,7 +682,8 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	## Sends the <body> section of the response document to the remote client.
 	#
 	public function send_body() {
-		# Yes, it is ugly. But it’s the only way to do it without scripts.
+		# Yes, it is ugly. But it’s the only way to do it without remote or local scripts or user
+		# agent sniffing.
 		$s  = '<!--[if gte IE 8]><body class="css_ie80"><![endif]-->' . NL .
 				'<!--[if gte IE 7]><![if lt IE 8]><body class="css_ie70"><![endif]><![endif]-->' . NL .
 				'<!--[if gte IE 6]><![if lt IE 7]><body class="css_ie60"><![endif]><![endif]-->' . NL .
