@@ -149,9 +149,8 @@ function ql_image_resize(
 		case  3: $bRet = imagepng ($imgDst); break;
 		case 15: $bRet = imagewbmp($imgDst); break;
 	}
-	# …then get the output buffer’s contents, and discard the buffer.
-	$sImage = ob_get_contents();
-	ob_end_clean();
+	# …then get the output buffer’s contents and stop buffering.
+	$sImage = ob_get_clean();
 	imagedestroy($imgDst);
 	return $bRet ? $sImage : false;
 }
