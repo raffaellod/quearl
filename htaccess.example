@@ -1,0 +1,10 @@
+# -*- coding: utf-8; tab-width: 3 -*-
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Rewrite every request that hasn’t already been rewritten.
+RewriteCond %{ENV:REDIRECT_STATUS} =""
+RewriteRule ^(.*)$ quearl/module/core/main.php/$1 [L]
+</IfModule>
+
