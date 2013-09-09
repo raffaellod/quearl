@@ -38,14 +38,15 @@ require_once 'main.php';
 # string return
 #    MIME type.
 #
-function ql_file_getmimetype($sFileName) {
-	if (!($file = fopen($sFileName, 'rb')))
+function ql_mime_get_file_type($sFileName) {
+	if (!($file = fopen($sFileName, 'rb'))) {
 		return 'application/x-unknown-content-type';
+	}
 	# Read enough bytes to successfully compare to every pattern string defined below (current max
 	# bytes: 2114).
 	$s = fread($file, 4096);
 	fclose($file);
-	return ql_str_getmimetype($s);
+	return ql_mime_get_str_type($s);
 }
 
 
@@ -58,7 +59,7 @@ function ql_file_getmimetype($sFileName) {
 # string return
 #    MIME type.
 #
-function ql_str_getmimetype($s, $bReturnDb = false) {
+function ql_mime_get_str_type($s, $bReturnDb = false) {
 	# Entires tagged with /*S*/ had to be moved out of sort order to avoid being overridden by more
 	# generic entries which happened to be defined earlied in the sort order (e.g. “^BZ” would also
 	# match “^BZh”).
@@ -153,10 +154,11 @@ function ql_str_getmimetype($s, $bReturnDb = false) {
 		'http://www.w3.org/1999/XSL/Transform'                          => 'application/xslt+xml',
 		'http://www.w3.org/2000/svg'                                    => 'image/svg+xml',
 	);
-	if ($bReturnDb)
+	if ($bReturnDb) {
 		return $arrMimeCTDefs;
-	foreach ($arrMimeCTDefs as $sMimeType => $arrTypeDef)
-		foreach ($arrTypeDef as $sSignature => $iOffset)
+	}
+	foreach ($arrMimeCTDefs as $sMimeType => $arrTypeDef) {
+		foreach ($arrTypeDef as $sSignature => $iOffset) {
 			if (substr($s, $iOffset, strlen($sSignature)) === $sSignature) {
 				# Special case for XML files: scan for xmlns attributes in the root element.
 				# TODO: this is missing a lot of error checking!
@@ -165,12 +167,12 @@ function ql_str_getmimetype($s, $bReturnDb = false) {
 						$ich = 6 /*strlen('<' . '?xml ')*/;
 						$ich !== false;
 						$ich = strpos($s, '<', strpos($s, '>', $ich + 2))
-					)
-						if (substr($s, $ich + 1, 3) == '!--')
+					) {
+						if (substr($s, $ich + 1, 3) == '!--') {
 							# Comment: find the end, so the loop’s strpos() will correctly skip any
 							# commented-out “>” characters.
 							$ich = strpos($s, '-->', $ich + 4 /*strlen('<!--')*/);
-						else {
+						} else {
 							# If not a DOCTYPE declaration or preprocessing instruction, it’s the root
 							# element.
 							++$ich;
@@ -185,50 +187,66 @@ function ql_str_getmimetype($s, $bReturnDb = false) {
 									# Look for a default namespace.
 									$iMime = array_search('', $arrMatches[1], true);
 									if ($iMime !== false) {
-										if (isset($arrXmlNSDefs[$arrMatches[2][$iMime]]))
+										if (isset($arrXmlNSDefs[$arrMatches[2][$iMime]])) {
 											return $arrXmlNSDefs[$arrMatches[2][$iMime]];
+										}
 										unset($arrMatches[2][$iMime]);
 									}
 									# Lacking a default, assume that the first namespace is the main one.
-									foreach ($arrMatches[2] as $sUri)
-										if (isset($arrXmlNSDefs[$sUri]))
+									foreach ($arrMatches[2] as $sUri) {
+										if (isset($arrXmlNSDefs[$sUri])) {
 											return $arrXmlNSDefs[$sUri];
+										}
+									}
 								}
 								break;
 							}
 						}
+					}
 				}
 				return $sMimeType;
 			}
+		}
+	}
 	return 'application/x-unknown-content-type';
 }
 
 
-## Searches for conflicts in the MIME type pattern strings in ql_str_getmimetype()’s $arrMimeCTDefs.
-# The nesting of loops might look scary, but it’s really just ql_str_getmimetype()’s foreach double-
-# loop applied to itself.
+## Searches for conflicts in the MIME type pattern strings in ql_mime_get_str_type()’s
+# $arrMimeCTDefs. The nesting of loops might look scary, but it’s really just
+# ql_mime_get_str_type()’s foreach double-loop applied to itself.
 #
-function ql__str_getmimetype_check() {
-	$arrMimeCTDefs = ql_str_getmimetype('', true);
+function ql_mime__check() {
+	$arrMimeCTDefs = ql_mime_get_str_type('', true);
 	echo '<h1>Checking for MIME pattern conflicts…</h1>' . NL;
 	$arrMimeTypes = array_keys($arrMimeCTDefs);
-	foreach ($arrMimeTypes as $iMime1 => $sMimeType1)
-		foreach ($arrMimeCTDefs[$sMimeType1] as $sSignature1 => $iOffset1)
-			foreach ($arrMimeTypes as $iMime2 => $sMimeType2)
-				if ($iMime1 != $iMime2)
-					foreach ($arrMimeCTDefs[$sMimeType2] as $sSignature2 => $iOffset2)
-						if ($iOffset1 <= $iOffset2 + strlen($sSignature2) &&
+	foreach ($arrMimeTypes as $iMime1 => $sMimeType1) {
+		foreach ($arrMimeCTDefs[$sMimeType1] as $sSignature1 => $iOffset1) {
+			foreach ($arrMimeTypes as $iMime2 => $sMimeType2) {
+				if ($iMime1 != $iMime2) {
+					foreach ($arrMimeCTDefs[$sMimeType2] as $sSignature2 => $iOffset2) {
+						if (
+							$iOffset1 <= $iOffset2 + strlen($sSignature2) &&
 							$iOffset2 <= $iOffset1 + strlen($sSignature1) &&
-							substr($sSignature1, $iOffset2 - $iOffset1, strlen($sSignature2)) == $sSignature2
-						)
+							substr(
+								$sSignature1, $iOffset2 - $iOffset1, strlen($sSignature2)
+							) == $sSignature2
+						) {
 							# TODO: shouldn’t this also check for ! && ! ? As in, shouldn’t the condition
 							# be !^^ ?
-							if (strlen($sSignature1) > strlen($sSignature2) && $iMime1 < $iMime2)
+							if (strlen($sSignature1) > strlen($sSignature2) && $iMime1 < $iMime2) {
 								echo '<b>Notice</b>: ' . $sMimeType1 . ' and ' . $sMimeType2 .
 									' could be ambiguous if their order was reversed.<br/>' . NL;
-							else
+							} else {
 								echo '<b>Warning</b>: ' . $sMimeType1 . ' and ' . $sMimeType2 .
 									' are ambiguous!<br/>' . NL;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	echo '<br/>Scan completed.' . NL;
 }
 
