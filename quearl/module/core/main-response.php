@@ -701,7 +701,7 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	}
 
 
-	## Links a JavaScript file from the document.
+	## Links a pre-processed JavaScript file from the document.
 	#
 	# string $sFileName
 	#    Script file name.
@@ -709,18 +709,18 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	#    If true, the script will only be loaded in Internet Explorer. Use this when the amount of
 	#    IE-only fixes in a JS file justifies splitting it in “all browsers” and “IE fixes”.
 	#
-	public function include_script($sFileName, $bIEOnly = false) {
+	public function include_js($sFileName, $bIEOnly = false) {
 		global $_APP;
 		$s  = '<script type="text/javascript" charset="utf-8" src="' .
 					utf8_xmlenc($_APP['core']['static_root_rpath'] . $sFileName) . '"></script>';
 		if ($bIEOnly) {
 			$s = '<!--[if IE]>' . $s . '<![endif]-->';
 		}
-		$this->m_sHead .= "\t" . $s . NL;
+		$this->m_sHead .= $s . NL;
 	}
 
 
-	## Links a precompiled style sheet to the document.
+	## Links a pre-processed style sheet to the document.
 	#
 	# string $sFileName
 	#    Style sheet file name.
@@ -728,14 +728,14 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	#    If true, the style sheet will only be loaded in Internet Explorer. Use this when the amount
 	#    of IE-only fixes in a CSS file justifies splitting it in “all browsers” and “IE fixes”.
 	#
-	public function include_stylesheet($sFileName, $bIEOnly = false) {
+	public function include_css($sFileName, $bIEOnly = false) {
 		global $_APP;
 		$s  = '<link rel="stylesheet" type="text/css" href="' .
 					utf8_xmlenc($_APP['core']['static_root_rpath'] . $sFileName) . '"/>';
 		if ($bIEOnly) {
 			$s = '<!--[if IE]>' . $s . '<![endif]-->';
 		}
-		$this->m_sHead .= "\t" . $s . NL;
+		$this->m_sHead .= $s . NL;
 	}
 
 
