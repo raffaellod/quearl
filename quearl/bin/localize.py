@@ -75,7 +75,7 @@ class l10n_generator(object):
 
 		for sType in 'php', 'js':
 			sOutputDir = os.path.join(module.rodata_dir(), 'l10n', sType)
-			sOutputFileName = os.path.join(sOutputDir, sLocale + '.l10n.' + sType)
+			sOutputFileName = os.path.join(sOutputDir, sLocale + '.' + sType)
 			try:
 				# Try to get the last modification time of the output file.
 				dtOutputFile = os.path.getmtime(sOutputFileName)

@@ -345,7 +345,7 @@ abstract class QlModule {
 	# TODO: document how this works.
 	#
 	public function localize() {
-		require $this->m_sRODataDir . 'l10n/php/' . $_SESSION['ql_locale'] . '.l10n.php';
+		require $this->m_sRODataDir . 'l10n/php/' . $_SESSION['ql_locale'] . '.php';
 	}
 
 
