@@ -445,7 +445,9 @@ class QlCoreModule extends QlModule {
 		#    REQUEST_URI          (see above)
 
 		# Root directory of this installation, according to the server (default is “…/quearl/”).
-		$_SERVER['LROOTDIR'] = substr(__FILE__, 0, -20 /*-strlen('module/core/main.php')*/);
+		$_SERVER['LROOTDIR'] = substr(
+			__FILE__, 0, -31 /*-strlen('module/core/main-coremodule.php')*/
+		);
 		# Path of the current script, relative to LROOTDIR. Does not include the first directory,
 		# which is assumed to be the installation directory (default “quearl”), nor a leading path
 		# separator.
