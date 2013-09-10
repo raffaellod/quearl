@@ -395,7 +395,7 @@ class QlCoreModule extends QlModule {
 		# More of a personal preference…
 		#ini_set('short_open_tag',   0);
 
-		# Undo stupid magic_quotes.
+		# Undo silly magic_quotes.
 		if (get_magic_quotes_gpc()) {
 			ql_array_stripslashes($_GET);
 			ql_array_stripslashes($_POST);
@@ -485,6 +485,9 @@ class QlCoreModule extends QlModule {
 	# Quearl execution stage: adds a few useful variables to $_SERVER, possibly responds to HTTP
 	# requests for static files; sets up a database connection, authenticates the user, initializes
 	# all modules, and responds the HTTP request.
+	#
+	# QlResponseEntity return
+	#    Generated response entity.
 	#
 	private static function main_run() {
 		# Notice that this variable is a reference, so it will stay up-to-date.
@@ -628,83 +631,99 @@ class QlCoreModule extends QlModule {
 		$ql_arrStatic = array();
 
 
-		# Establish the main database connection.
-		global $ql_db, $_APP;
-		$ql_db = new QlDbConnection(
-			$_APP['core']['database_host'],
-			$_APP['core']['database_username'],
-			$_APP['core']['database_password']
-		);
-		$ql_db->select_database($_APP['core']['database_name']);
-		exit;
+		try {
+			# Establish the main database connection.
+			global $ql_db, $_APP;
+			$ql_db = new QlDbConnection(
+				$_APP['core']['database_host'],
+				$_APP['core']['database_username'],
+				$_APP['core']['database_password']
+			);
+			$ql_db->select_database($_APP['core']['database_name']);
+			exit;
 
-		# Create the QlSession object.
-		new QlSession();
+			# Create the QlSession object.
+			new QlSession();
 
-		# Select a locale for this request (and session, possibly).
-		$sRequestLocale = 'TODO';
-		echo $sRequestLocale . '<br/>ALL OK';
-		exit;
-		if (
-			$sRequestLocale !== null &&
-			array_search($sRequestLocale, $_APP['core']['installed_locales'], true)
-		) {
-			# The link-specified language has the highest priority.
-			$_SESSION['ql_locale'] = $sRequestLocale;
-		}
-		if (empty($_SESSION['ql_locale'])) {
-			# The user (if logged in at all) has no locale preference, and the URL they’re visiting
-			# doesn’t specify a locale either. Try to detect the locale in some other way.
-			$_SESSION['ql_locale'] = QlSession::detect_locale();
-
-			# If the URL specified a language that we couldn’t use (typo in the URL?), or no language
-			# was specified at all (e.g. accessing the web site root, “/”), redirect to the root
-			# specific to the locale we just determined to be most fitting.
-			if ($sRequestLocale != $_SESSION['ql_locale']) {
-				ql_redirect($_SERVER['RROOTDIR'] . $_SESSION['ql_locale'] . '/');
+			# Select a locale for this request (and session, possibly).
+			$sRequestLocale = 'TODO';
+			echo $sRequestLocale . '<br/>ALL OK';
+			exit;
+			if (
+				$sRequestLocale !== null &&
+				array_search($sRequestLocale, $_APP['core']['installed_locales'], true)
+			) {
+				# The link-specified language has the highest priority.
+				$_SESSION['ql_locale'] = $sRequestLocale;
 			}
-		}
+			if (empty($_SESSION['ql_locale'])) {
+				# The user (if logged in at all) has no locale preference, and the URL they’re visiting
+				# doesn’t specify a locale either. Try to detect the locale in some other way.
+				$_SESSION['ql_locale'] = QlSession::detect_locale();
 
-		# This is the earliest point at which a logout can be performed.
-		global $ql_sAction;
-		if ($ql_sAction == 'logout') {
-			global $ql_session;
-			$ql_session->logout();
-			ql_refresh();
-		}
-
-		# Initialize all loaded modules. This non-foreach loop allows new modules to be inserted while
-		# we’re iterating on it.
-		for (reset($arrModules); $sName = key($arrModules); next($arrModules)) {
-			$arrModules[$sName]->init();
-		}
-
-		# Search for a module to handle this request. $ent is guaranteed to be non-null after the
-		# loop, since QlCoreModule will always return an entity, acting as fall-back module.
-		$ent = null;
-		foreach ($arrModules as $module) {
-			$ent = $module->handle_request('???', $response);
-			# If the module instantiated a response entity, no need to iterate any further.
-			if ($ent) {
-				break;
+				# If the URL specified a language that we couldn’t use (typo in the URL?), or no
+				# language was specified at all (e.g. accessing the web site root, “/”), redirect to the
+				# root specific to the locale we just determined to be most fitting.
+				if ($sRequestLocale != $_SESSION['ql_locale']) {
+					ql_redirect($_SERVER['RROOTDIR'] . $_SESSION['ql_locale'] . '/');
+				}
 			}
-		}
 
-		if ($ent instanceof QlXhtmlResponseEntity) {
-			# Allow each module to add to the response’s entity head and HTTP header. We want the most
-			# basic modules to add their scripts before their dependant modules to keep the dependency
-			# chain working, so we iterate over $arrModules backwards.
-			$module = end($arrModules);
-			do {
-				$module->augment_response_head('', $response, $ent);
-			} while ($module = prev($arrModules));
+			# This is the earliest point at which a logout can be performed.
+			global $ql_sAction;
+			if ($ql_sAction == 'logout') {
+				global $ql_session;
+				$ql_session->logout();
+				ql_refresh();
+			}
 
-			# Allow each module to add to the response’s entity body. This iterates in the usual most-
-			# specialized-to-most-basic module order, allowing more basic modules to provide defaults for
-			# what the most specialized modules did not add.
+			# Initialize all loaded modules. This non-foreach loop allows new modules to be inserted
+			# while we’re iterating on it.
+			for (reset($arrModules); $sName = key($arrModules); next($arrModules)) {
+				$arrModules[$sName]->init();
+			}
+
+			# Search for a module to handle this request. $ent is guaranteed to be non-null after the
+			# loop, since QlCoreModule will always return an entity, acting as fall-back module.
+			$ent = null;
 			foreach ($arrModules as $module) {
-				$module->augment_response_body('', $response, $ent);
+				$ent = $module->handle_request('???', $response);
+				# If the module instantiated a response entity, no need to iterate any further.
+				if ($ent) {
+					break;
+				}
 			}
+
+			if ($ent instanceof QlXhtmlResponseEntity) {
+				# Let modules expand the response’s <head> and HTTP header. Basic modules should add
+				# their scripts before their dependant modules, so iterate over $arrModules backwards.
+				$module = end($arrModules);
+				do {
+					$module->augment_response_head('', $response, $ent);
+				} while ($module = prev($arrModules));
+
+				# Let modules augment the response’s <body>. Iterate in the usual most-specialized-to-
+				# most-basic module order, allowing basic modules to provide defaults for what more
+				# specialized modules did not add.
+				foreach ($arrModules as $module) {
+					$module->augment_response_body('', $response, $ent);
+				}
+			}
+		} catch (QlErrorResponse $er) {
+			if (!defined('L10N_CORE_L10N_INCLUDED')) {
+				# The module hasn’t been localized yet, do it now. If the locale hasn’t been determined
+				# yet, attempt an automatic detection.
+				if (!isset($_SESSION['ql_locale'])) {
+					if (empty($_SESSION)) {
+						$_SESSION = array();
+					}
+					$_SESSION['ql_locale'] = QlSession::detect_locale();
+				}
+				QlModule::get('core')->localize();
+			}
+
+			# Create the error response entity, replacing any other entity we might have generated.
+			$ent = $er->create_entity($response);
 		}
 
 		# Response entities can begin sending data during the loop above; for all other responses,

@@ -88,56 +88,6 @@ abstract class QlModule {
 	}
 
 
-	## Displays an error page for issues detected very early during the initialization of Quearl or
-	# one of its modules. The error page is a template, which will be sent as a response to the
-	# browser along with any optional HTTP headers. This method does not return.
-	#
-	# This may be called before $ql_session or $ql_db are available, and will work even in case
-	# $ql_app was defaulted.
-	#
-	# string $sTemplateName
-	#    Name of the “page” template to be used.
-	# [array<mixed> $arrVars]
-	#    Array or array-of-arrays; either way, the leaf elements maps substitution variables with
-	#    their names. Localization constants can only be sourced from the core module.
-	# [array<string => mixed> $arrHeaders]
-	#    Map of HTTP headers (name => value) to be sent as part of the response.
-	# [string $sLocale]
-	#    Locale to be used to decide which template localization to load; see the $sLocale argument
-	#    for QlModule::get_template_filename().
-	#
-	public function early_error_response(
-		$iHttpStatus, $sTemplateName, array $arrVars = array(), array $arrHeaders = array(),
-		$sLocale = null
-	) {
-		if (!defined('L10N_CORE_L10N_INCLUDED')) {
-			# The core module hasn’t been localized yet; do it with the specified locale.
-			# Make sure that we do have a specified locale, though.
-			if ($sLocale === null) {
-				$sLocale = QlSession::detect_locale();
-			}
-			QlModule::get('core')->localize($sLocale);
-		}
-
-		# Create the response.
-		$response = new QlResponse();
-		$response->set_http_status($iHttpStatus);
-		# Output the headers.
-		foreach ($arrHeaders as $sName => &$mValue) {
-			$response->set_header_field($sName, $mValue);
-		}
-
-		# Create a minimal entity for the response.
-		$ent = new QlXhtmlResponseEntity($response, $sLocale);
-		$ent->set_subtitle(L10N_CORE_ERR_DBUNAVAIL_TITLE);
-		# Generate the page contents from the template.
-		$ent->add_body($this->load_template('page', $sTemplateName, $arrVars, $sLocale));
-		# Display the page, then abort.
-		$ent->send_close();
-		exit;
-	}
-
-
 	## Returns a loaded QlModule instance given its abbreviation.
 	#
 	# string $sAbbr
@@ -394,11 +344,8 @@ abstract class QlModule {
 	#
 	# TODO: document how this works.
 	#
-	public function localize($sLocale = null) {
-		if ($sLocale == null) {
-			$sLocale = $_SESSION['ql_locale'];
-		}
-		require $this->m_sRODataDir . 'l10n/php/' . $sLocale . '.l10n.php';
+	public function localize() {
+		require $this->m_sRODataDir . 'l10n/php/' . $_SESSION['ql_locale'] . '.l10n.php';
 	}
 
 

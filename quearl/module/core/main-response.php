@@ -427,6 +427,78 @@ class QlResponse {
 }
 
 
+## Generates an error response for issues detected very early during the initialization of Quearl or
+# one of its modules. The error page is a template, which will be sent as a response to the browser
+# along with any optional HTTP headers.
+#
+# This may be thrown before $ql_session or $ql_db are available, and will work even in case $ql_app
+# was defaulted.
+#
+class QlErrorResponse extends Exception {
+
+	## HTTP status to report to the remote client.
+	private /*int*/ $m_iHttpStatus;
+	## Subtitle of the page; should be a brief description of the error.
+	private /*string*/ $m_sSubtitle;
+	## Name of the “page” template to be used.
+	private /*string*/ $m_sTemplateName;
+	## Array or array-of-arrays; either way, the leaf elements maps substitution variables with their
+	# names. Localization constants can only be sourced from the core module.
+	private /*array<mixed>*/ $m_arrVars;
+	## HTTP header fields (name => value) to be sent as part of the response.
+	private /*array<string => mixed>*/ $m_arrHeaderFields;
+
+
+	## Constructor.
+	#
+	# int $iHttpStatus
+	#    HTTP status to report to the remote client.
+	# string $sSubtitle
+	#    Subtitle of the page; should be a brief description of the error.
+	# string $sTemplateName
+	#    Name of the “page” template to be used.
+	# [array<mixed> $arrVars]
+	#    Array or array-of-arrays; either way, the leaf elements maps substitution variables with
+	#    their names. Localization constants can only be sourced from the core module.
+	# [array<string => mixed> $arrHeaderFields]
+	#    Map of HTTP header fields (name => value) to be sent as part of the response.
+	#
+	public function __construct(
+		$iHttpStatus, $sSubtitle, $sTemplateName, array $arrVars = array(),
+		array $arrHeaderFields = array()
+	) {
+		$this->m_iHttpStatus = $iHttpStatus;
+		$this->m_sSubtitle = $sSubtitle;
+		$this->m_sTemplateName = $sTemplateName;
+		$this->m_arrVars =& $arrVars;
+		$this->m_arrHeaderFields =& $arrHeaderFields;
+	}
+
+
+	## Generates a response entity to inform the user about the error.
+	#
+	# QlResponse $response
+	#    Response the entity will be part of.
+	#
+	public function create_entity(QlResponse $response) {
+		# Prepare the response.
+		$response->set_http_status($this->m_iHttpStatus);
+		foreach ($this->m_arrHeaderFields as $sName => &$mValue) {
+			$response->set_header_field($sName, $mValue);
+		}
+
+		# Create and prepare the response entity.
+		$ent = new QlXhtmlResponseEntity($response);
+		$ent->set_subtitle(constant($this->m_sSubtitle));
+		$ent->add_body(
+			QlModule::get('core')->load_template('page', $this->m_sTemplateName, $this->m_arrVars)
+		);
+
+		return $ent;
+	}
+};
+
+
 ## Base class for a response entity.
 #
 abstract class QlResponseEntity {
@@ -492,6 +564,11 @@ class QlStaticResponseEntity extends QlResponseEntity {
 		if ($bHasCompressedVersion) {
 			# Check if we have a compressed version of this file matching the encodings accepted by the
 			# remote client.
+			# TODO: investigate these links:
+			#    <http://support.microsoft.com/default.aspx?scid=kb;en-us;Q313712>
+			#    <http://support.microsoft.com/default.aspx?scid=kb;en-us;Q312496>
+			#    <http://www.vervestudios.co/projects/compression-tests/results>
+			#
 			foreach ($_SERVER['HTTP_ACCEPT_ENCODING'] as $sEncoding => $fQ) {
 				switch ($sEncoding) {
 					case 'gzip':
@@ -551,17 +628,15 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	#
 	# QlResponse $response
 	#    Response this entity is part of.
-	# [string $sLocale]
-	#    Locale that the document will claim to be for; defaults to $_SESSION['locale'].
 	#
-	public function __construct(QlResponse $response, $sLocale = null) {
+	public function __construct(QlResponse $response) {
 		parent::__construct($response);
 
 		# If this class is being instantiated, this request will get a visible page (as opposed to
 		# this being e.g. an asynchrnous request), so keep track of it.
 		$_SESSION['ql_lastpage'] = rawurldecode($_SERVER['RFULLPATH']);
 
-		$this->m_sLocale = ($sLocale !== null ? $sLocale : $_SESSION['ql_locale']);
+		$this->m_sLocale = $_SESSION['ql_locale'];
 		$this->m_bHeadSent = false;
 		global $_APP;
 		$this->m_sTitle = $_APP['core']['site_short_name'];
