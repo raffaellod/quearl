@@ -636,7 +636,7 @@ class QlCoreModule extends QlModule {
 		try {
 			# Establish the main database connection.
 			global $ql_db, $_APP;
-			$ql_db = new QlDbConnection(
+			$ql_db = new QlDb(
 				$_APP['core']['database_host'],
 				$_APP['core']['database_username'],
 				$_APP['core']['database_password']

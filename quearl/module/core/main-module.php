@@ -178,7 +178,7 @@ abstract class QlModule {
 					$arrWhereClauses[$sFieldName] = array(
 						$arrFilter[0],
 						$arrFilter[0] == 'lk' || $arrFilter[0] == 'nl'
-							? QlDbConnection::pcre_to_like($arrFilter[1])
+							? QlDb::bre_to_like($arrFilter[1])
 							: $arrFilter[1],
 					);
 				}
@@ -189,8 +189,8 @@ abstract class QlModule {
 	}
 
 
-	## Returns an array of query components to be used in calls to QlDbConnection::query_item_list()
-	# for a specified table.
+	## Returns an array of query components to be used in calls to QlDb::query_item_list() for a
+	# specified table.
 	#
 	# string $sTable
 	#    Table name.
@@ -278,7 +278,7 @@ abstract class QlModule {
 	# static file. If the module won’t handle the request, it must return null.
 	#
 	# Note: this method is called before QlModule::init(), so extra attention must be made to avoid
-	# trying to access resources that are not yet available (e.g. QlDbConnection, QlSession).
+	# trying to access resources that are not yet available (e.g. QlDb, QlSession).
 	#
 	# string $sUrl
 	#    Requested URL.
