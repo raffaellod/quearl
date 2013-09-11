@@ -104,7 +104,7 @@ class QlDb {
 				@@collation_connection     = 'utf8_general_ci',
 				@@collation_database       = 'utf8_general_ci',
 				@@collation_server         = 'utf8_general_ci';
-		", $link);
+		", $this->m_conn);
 	}
 
 
@@ -145,6 +145,22 @@ class QlDb {
 			$this->query_raw('LOCK TABLE ' . substr($sLocks, 0, -2) . ';');
 			$this->m_bPendingLocks = true;
 		}
+	}
+
+
+	## Translates a basic regular expression (BRE) into a LIKE expression.
+	#
+	# string $s
+	#    Basic regular expression to translate.
+	# string return
+	#    Resulting LIKE expression.
+	#
+	public static function bre_to_like($s) {
+		return str_replace(
+			array( '%',  '_', '*', '?'),
+			array('\%', '\_', '%', '_'),
+			$s
+		);
 	}
 
 
@@ -213,18 +229,6 @@ class QlDb {
 			);
 		}
 		return mysql_real_escape_string($s, $this->m_conn);
-	}
-
-
-	## Selects a database to operate on.
-	#
-	# string $sDatabaseName
-	#    Name of the database.
-	# bool return
-	#    true on success, false on failure.
-	#
-	public function select_database($sDatabaseName) {
-		return mysql_select_db($sDatabaseName, $this->m_conn);
 	}
 
 
@@ -319,22 +323,6 @@ class QlDb {
 	#
 	public function get_version() {
 		return 'MySQL Server ' . mysql_get_server_info($this->m_conn);
-	}
-
-
-	## Translates a basic regular expression (BRE) into a LIKE expression.
-	#
-	# string $s
-	#    Basic regular expression to translate.
-	# string return
-	#    Resulting LIKE expression.
-	#
-	public static function bre_to_like($s) {
-		return str_replace(
-			array( '%',  '_', '*', '?'),
-			array('\%', '\_', '%', '_'),
-			$s
-		);
 	}
 
 
@@ -718,6 +706,24 @@ class QlDb {
 		$m = mysql_result($q, $iRow, $iCol);
 		mysql_free_result($q);
 		return $m;
+	}
+
+
+	## Selects a database to operate on.
+	#
+	# string $sDatabaseName
+	#    Name of the database.
+	#
+	public function select_database($sDatabaseName) {
+		if (!mysql_select_db($sDatabaseName, $this->m_conn)) {
+			trigger_error('Unable to select database “' . $sDatabaseName . '”', E_USER_WARNING);
+			# TODO: more specific error.
+			throw new QlErrorResponse(
+				HTTP_STATUS_SERVICE_UNAVAILABLE,
+				'L10N_CORE_ERR_DBUNAVAIL_TITLE',
+				'error_database_unavailable'
+			);
+		}
 	}
 
 

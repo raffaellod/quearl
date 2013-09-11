@@ -642,7 +642,6 @@ class QlCoreModule extends QlModule {
 				$_APP['core']['database_password']
 			);
 			$ql_db->select_database($_APP['core']['database_name']);
-			exit;
 
 			# Create the QlSession object.
 			new QlSession();
