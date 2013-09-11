@@ -313,6 +313,7 @@ class QlApplication {
 				$this->m_iCRC = $iCRC;
 				file_put_contents($this->m_sFileName, $s);
 			}
+			flock($this->m_fileLock, LOCK_UN);
 			fclose($this->m_fileLock);
 			$this->m_fileLock = null;
 		}
