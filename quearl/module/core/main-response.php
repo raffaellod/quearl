@@ -145,6 +145,37 @@ class QlResponse {
 	}
 
 
+	## Initiates an HTTP redirection by adding a Location header field pointing to the specified URI,
+	# and returns a null response entity.
+	#
+	# string $sUri
+	#    URI to redirect the remote client to.
+	# [int $iHttpStatusCode]
+	#    HTTP status code; defaults to HTTP_STATUS_SEE_OTHER.
+	# [string $sHttpStatusCodeDescription]
+	#    Description for the status code; defaults to a standard description of $iCode.
+	# QlNullResponseEntity
+	#    Null response entity.
+	#
+	public function redirect(
+		$sUri, $iHttpStatusCode = HTTP_STATUS_SEE_OTHER, $sHttpStatusCodeDescription = null
+	) {
+		if (strncmp($sUri, 'http://', 7) != 0 && strncmp($sUri, 'https://', 8) != 0) {
+			# If the URI does not specify an HTTP schema, assume it doesn’t specify a host either.
+			$sUri = $_SERVER['HTTP_PROTOCOL'] . $_SERVER['HTTP_HOST'] . $sUri;
+			# If we have a session ID, add it, since we’re redirecting within this host.
+			if (defined('SID') && SID != '') {
+				$sUri = ql_url_addqs($sUri, SID);
+			}
+		}
+		# Set the necessary header fields.
+		$this->set_http_status($iHttpStatusCode, $sHttpStatusCodeDescription);
+		$this->set_header_field('Location', $sUri);
+		# Return a null response.
+		return new QlNullResponseEntity($this);
+	}
+
+
 	## Sends a chunk of data to the remote client, also sending the header first if it hasn’t
 	# already been sent.
 	#
@@ -526,6 +557,15 @@ abstract class QlResponseEntity {
 ## Null (zero-length) response entity.
 #
 class QlNullResponseEntity extends QlResponseEntity {
+
+	## Constructor. See QlResponseEntity::__construct().
+	#
+	public function __construct(QlResponse $response) {
+		parent::__construct($response);
+		$this->m_response->set_header_field('Content-Type',   'text/plain');
+		$this->m_response->set_header_field('Content-Length', '0');
+	}
+
 
 	## See QlResponseEntity::send_close().
 	#
