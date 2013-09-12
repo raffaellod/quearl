@@ -106,14 +106,23 @@ class QlSession {
 			$bLoaded = $this->load();
 			# If no session was loaded, create a new one.
 			if (!$bLoaded) {
-				do {
-					# Create a new session ID, making sure it’s really new (i.e. not already in the db).
+				# Create a new session ID, making sure it’s really new (i.e. not already in the db).
+				for (;;) {
 					$this->m_sID = ql_str_uid(32, $ql_fScriptStart, $_SERVER['REMOTE_REAL_ADDR']);
+					# Try with the freshly-generated ID. Notice that we create the session as locked.
 					$ql_db->query('
 						INSERT INTO sessions(id, locked, firsthit, lasthit)
 						VALUES (\'' . $this->m_sID . '\', 1, ' . $iTS . ', ' . $iTS . ');
 					');
-				} while ($ql_db->get_last_affected_rows() != 1);
+					if ($ql_db->get_last_affected_rows() == 1) {
+						# Success.
+						break;
+					}
+					if ($ql_db->get_last_error() != ER_DUP_ENTRY) {
+						# If the error is not due to a duplicate key, we have a bigger problem.
+						trigger_error('Unable to INSERT INTO sessions', E_USER_ERROR);
+					}
+				}
 				if ($ql_debug_session_SID) {
 					ql_log('DEBUG', 'QlSession::__construct(): new session: “' . $this->m_sID . '”');
 				}
