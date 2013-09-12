@@ -92,7 +92,7 @@ define('HTTP_STATUS_NETWORK_AUTHENTICATION_REQUIRED', 511); # RFC 6585.
 
 ## Generates a valid HTTP response header and entity.
 #
-# TODO: support sending “Cache-Control: private” to allow for shared proxy caching.
+# TODO: support sending “Cache-Control: public” to allow for shared proxy caching.
 #
 class QlResponse {
 
