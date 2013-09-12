@@ -712,7 +712,7 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	public function include_js($sFileName, $bIEOnly = false) {
 		global $_APP;
 		$s  = '<script type="text/javascript" charset="utf-8" src="' .
-					utf8_xmlenc($_APP['core']['static_root_rpath'] . $sFileName) . '"></script>';
+					make_static_url($sFileName) . '"></script>';
 		if ($bIEOnly) {
 			$s = '<!--[if IE]>' . $s . '<![endif]-->';
 		}
@@ -730,8 +730,7 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	#
 	public function include_css($sFileName, $bIEOnly = false) {
 		global $_APP;
-		$s  = '<link rel="stylesheet" type="text/css" href="' .
-					utf8_xmlenc($_APP['core']['static_root_rpath'] . $sFileName) . '"/>';
+		$s  = '<link rel="stylesheet" type="text/css" href="' . make_static_url($sFileName) . '"/>';
 		if ($bIEOnly) {
 			$s = '<!--[if IE]>' . $s . '<![endif]-->';
 		}
@@ -751,6 +750,24 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 #						ql_json_encode(?) . ';' .
 #				'/*]]>*/</script>';
 #		$this->m_sHead .= "\t" . $s . NL;
+	}
+
+
+	## Generates a “static_root_rpath”-based path for the specified file name.
+	#
+	# string $sFileName
+	#    Local name of the file.
+	# string return
+	#    Absolute URL for the file using the static files path.
+	#
+	protected static function make_static_url($sFileName) {
+		if ($_APP['core']['static_host'] == '') {
+			$sUrl = $_SERVER['HTTP_PROTOCOL'] . $_APP['core']['static_host'];
+		} else {
+			$sUrl = '';
+		}
+		$sUrl .= $_APP['core']['static_root_rpath'] . $sFileName;
+		return utf8_xmlenc($sUrl);
 	}
 
 

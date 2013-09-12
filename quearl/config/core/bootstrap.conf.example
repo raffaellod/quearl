@@ -31,7 +31,7 @@ lock_lpath: data.rw/core/
 ## Logs directory. Must be writable by the web server.
 log_lpath: data.rw/core/log/
 
-## Installation root as seen from a remote client.
+## Installation root as seen from a remote client; see [DESIGN_5011 Remote root path].
 root_rpath: /
 
 ## Private read-only data directory, for files generated automatically by processes outside of the
@@ -42,14 +42,14 @@ rodata_lpath: data.ro/
 # remote clients, but readable/writable by the web server.
 rwdata_lpath: data.rw/
 
-## Host for static files (JS, CSS, graphics), as seen from a remote client, including the port if
-# not the default. The actual server can still be the same machine running Quearl. This server must
-# be using the same protocol (http or https) as the server running Quearl.
+## Host for static files (JS, CSS, graphics), as seen from a remote client. The actual server can
+# still be the same machine running Quearl, but in any case it must be using the same protocol
+# (http:// or https://). See [DESIGN_5015 Static files].
 static_host:
 
 ## Path at which static files can be accessed by a remote client on the server specified by
 # “static_host”; if the latter is empty, this must be an absolute remote path on the server running
-# Quearl, i.e. it must include “root_rpath”.
+# Quearl, i.e. it must include “root_rpath”. See [DESIGN_5015 Static files].
 static_root_rpath: /.static/
 
 

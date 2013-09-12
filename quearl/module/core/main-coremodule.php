@@ -548,8 +548,7 @@ class QlCoreModule extends QlModule {
 		# Initialize the response object.
 		$response = new QlResponse();
 
-		# If this server is also serving static files (no other host configured, or this is the
-		# configured host) and…
+		# If this server is also serving static files (see [DESIGN_5015 Static files]) and…
 		global $_APP;
 		if (
 			$_APP['core']['static_host'] == '' ||

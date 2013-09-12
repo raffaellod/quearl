@@ -31,6 +31,73 @@ require_once 'main.php';
 # Classes
 
 
+## DESIGN_5010 Local root path
+#
+# Quearl has two root paths: a local one and a remote one. The local root path is the one Quearl has
+# been deployed to; the remote root path is the root for all the URLs that Quearl will provide
+# contents for (see also [DESIGN_5011 Remote root path]).
+#
+# Quearl is designed to be deployed to any location within the domain’s web server root; the default
+# name of the local root folder is “quearl”, but since all paths within Quearl are relative, this
+# can be changed by modifying the URL rewriting rule in the web server root to refer to the correct
+# location of module/core/main.php (see htaccess.example).
+
+## DESIGN_5011 Remote root path
+#
+# Quearl has two root paths: a local one and a remote one. The local root path is the one Quearl has
+# been deployed to (see also [DESIGN_5010 Local root path]); the remote root path is the root for
+# all the URLs that Quearl will provide contents for.
+#
+# If the remote root path is configured to be “/” (the host’s root directory), Quearl will respond
+# to every request received by the web host; this is the default for a clean installation. The
+# remote root path can be changed to a subdirectory (e.g. “/quearl/”), allowing for running
+# concurrent instances of Quearl, or sharing the same host with other software (resulting in e.g.
+# “www.example.com/quearl/”, allowing for “www.example.com/wiki/” and “www.example.com/forum/” to be
+# served by other software).
+#
+# In order to configure the remote root path:
+# •  Modify the URL rewriting rule in the web server root to only make Quearl process requests for
+#    files into that path;
+# •  Change the “root_rpath” entry in config/core/bootstrap.conf to match the absolute remote root
+#    path.
+
+## DESIGN_5015 Static files
+#
+# Due to the amount of resources (CPU, database connection, sessions, locking, and of course time)
+# used up to serve each HTTP request for dynamic content, and because Quearl processes every file
+# request within its installation remote root path (see [DESIGN_5011 Remote root path]), Quearl has
+# a separate subpath for “fast-lane” files, referred to as “static files” to distinguish them from
+# dynamic content (though static files are not necessarily static - keep on reading).
+#
+# The path for static files is configured via two config/core/bootstrap.conf variables:
+#
+# •  “static_host”
+#    This is the host name that the remote client will contact for static files. The DNS name can
+#    resolve to the same server that’s running the Quearl instance, but in any case the server must
+#    be using the same protocol (http:// or https://).
+# •  “static_root_rpath”
+#    Path at which static files can be accessed on the host specified by “static_host”; it must
+#    always be an absolute remote path.
+#
+# When Quearl detects that the URL of the request being served falls within the “static_root_path”
+# variable, it tries to process the request using the “fast-lane” code path: after each
+# QlModule-derived class (“module”) has been instantiated, but before any of them is initialized
+# (i.e. before their QlModule::init() method is called), each module is asked to generate a response
+# for the request (its QlModule::handle_static_request() method is called). If any module returns a
+# valid QlResponseEntity-derived class instance, this will be sent to the remote client as the
+# response, skipping any additional processing. Unlike responses for dynamic content, responses for
+# static files are handled in full by a single module, so once a module generates a response, no
+# other module will know about it.
+#
+# To guarantee the fastest execution, QlModule::handle_static_request() is invoked before most
+# Quearl services are made available; the only one that can be relied upon is QlApplication (see
+# [DESIGN_8261 QlApplication]). This means that no session data is available, and no database
+# connection is established yet.
+#
+# While these resource constraints make it impossible to serve most kinds of content, there’s no
+# hard restriction forcing the source of the response to be a static file; any kind of content can
+# be served as long as that’s possible within the resource constraints.
+
 ## Interface for Quearl modules.
 #
 abstract class QlModule {
@@ -278,7 +345,8 @@ abstract class QlModule {
 	# static file. If the module won’t handle the request, it must return null.
 	#
 	# Note: this method is called before QlModule::init(), so extra attention must be made to avoid
-	# trying to access resources that are not yet available (e.g. QlDb, QlSession).
+	# trying to access resources that are not yet available (e.g. QlDb, QlSession). See
+	# [DESIGN_5015 Static files] for more information.
 	#
 	# string $sUrl
 	#    Requested URL.
