@@ -631,6 +631,13 @@ class QlCoreModule extends QlModule {
 		global $ql_arrStatic;
 		$ql_arrStatic = array();
 
+		# Extract the locale from the URL, if possible.
+		$sRequestLocale = null;
+		if (preg_match(
+			'/^\/(?P<locale>[a-z]{2}-[a-z]{2})(?:\/|$)/AD', $_SERVER['REQUEST_URI'], $arrMatch
+		)) {
+			$sRequestLocale = $arrMatch['locale'];
+		}
 
 		try {
 			# Establish the main database connection.
@@ -646,9 +653,6 @@ class QlCoreModule extends QlModule {
 			new QlSession();
 
 			# Select a locale for this request (and session, possibly).
-			$sRequestLocale = 'TODO';
-			echo $sRequestLocale . '<br/>ALL OK';
-			exit;
 			if (
 				$sRequestLocale !== null &&
 				array_search($sRequestLocale, $_APP['core']['installed_locales'], true)
@@ -663,11 +667,13 @@ class QlCoreModule extends QlModule {
 
 				# If the URL specified a language that we couldn’t use (typo in the URL?), or no
 				# language was specified at all (e.g. accessing the web site root, “/”), redirect to the
-				# root specific to the locale we just determined to be most fitting.
-				if ($sRequestLocale != $_SESSION['ql_locale']) {
-					ql_redirect($_SERVER['RROOTDIR'] . $_SESSION['ql_locale'] . '/');
+				# root specific to the locale we just detected.
+				if ($sRequestLocale !== $_SESSION['ql_locale']) {
+					return $response->redirect($_SERVER['RROOTDIR'] . $_SESSION['ql_locale'] . '/');
 				}
 			}
+			echo $_SESSION['ql_locale'] . '<br/>ALL OK';
+			exit;
 
 			# This is the earliest point at which a logout can be performed.
 			global $ql_sAction;
