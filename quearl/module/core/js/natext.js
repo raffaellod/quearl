@@ -37,7 +37,7 @@
 //    Each of the remaining arguments indicates the requested type (if it’s a Function/class) or a
 //    list of allowed types (if it’s an Array) for the corresponding argument in vArgs.
 //
-function $Function$checkArgs_debug(fn, vArgs/*, …*/) {
+function $Function$checkArgs(fn, vArgs/*, …*/) {
 	for (var iArg = 2, cArgs = arguments.length, iFnArg = 0; iArg < cArgs; ++iArg, ++iFnArg) {
 		var vTypes = arguments[iArg],
 			 vArg = vArgs[iFnArg], bValid = false,
@@ -113,7 +113,7 @@ function $Function$checkArgs_debug(fn, vArgs/*, …*/) {
 		}
 	}
 }
-Function.checkArgs = $Function$checkArgs_debug;
+Function.checkArgs = $Function$checkArgs;
 
 
 /// Creates an implementation of Object.toString() method returining "[object ClassName]", where
