@@ -284,7 +284,7 @@ class QlCoreModule extends QlModule {
 		if (!preg_match(
 			'/^
 				# Match the module abbreviation.
-				[0-9a-z]+\/
+				[_0-9a-z]+\/
 				# Match and capture “l10n\/js” or other supported pre-processed static file types from a
 				# whitelist.
 				(?P<dir>l10n\/js|css|js)\/
