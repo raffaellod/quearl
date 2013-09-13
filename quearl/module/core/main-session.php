@@ -74,7 +74,10 @@ class QlSession {
 	## Constructor. Upon the first time a session is created, propagation of its ID via query string
 	# and cookies is enabled; from the second time on, only the best propagation method is kept.
 	#
-	public function __construct() {
+	# QlResponse $response
+	#    Response to use to perform any redirections.
+	#
+	public function __construct($response) {
 		global $_APP, $ql_db, $ql_fScriptStart;
 		global $ql_debug_session_SID;
 		$iTS = (int)$ql_fScriptStart;
@@ -89,11 +92,9 @@ class QlSession {
 				if (isset($_GET['s'])) {
 					# Bots should not be crawling with SIDs. Remove the SID and redirect the bot;
 					# hopefully it will then update its own cache, discarding the URL with SID.
-					header($_SERVER['SERVER_PROTOCOL'] . ' 301 Moved Permanently');
-					$sURL = $_SERVER['HTTP_PROTOCOL'] . $_SERVER['HTTP_HOST'] . $_SERVER['RFULLPATH'] .
-							  '?' . preg_replace('/(:?^s=[^&]&?|&?s=[^&])/', '', $_SERVER['QUERY_STRING']);
-					header('Location: ' . $sURL);
-					exit;
+					$sUrl = $_SERVER['RFULLPATH'] . '?' .
+							  preg_replace('/(:?^s=[^&]&?|&?s=[^&])/', '', $_SERVER['QUERY_STRING']);
+					throw $response->redirect($sUrl, HTTP_STATUS_MOVED_PERMANENTLY);
 				}
 			}
 			unset($sBotList);
