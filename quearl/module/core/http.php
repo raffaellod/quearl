@@ -42,15 +42,15 @@ define('QL_HG_RETURNBODY', 0x10000000);
 # Internal states of ql_http_get*().
 
 ## End.
-define('QL__FH_END',      0);
+define('QL__HG_END',      0);
 ## Establish a connection to the sever.
-define('QL__FH_CONNECT',  1);
+define('QL__HG_CONNECT',  1);
 ## Build the HTTP request message and send the request.
-define('QL__FH_SEND',     2);
+define('QL__HG_SEND',     2);
 ## Read and parse the server’s request.
-define('QL__FH_READ',     3);
+define('QL__HG_READ',     3);
 ## Close the connection to the server.
-define('QL__FH_SHUTDOWN', 4);
+define('QL__HG_SHUTDOWN', 4);
 
 
 
@@ -338,10 +338,10 @@ function & ql_http_get(
 	}
 	$arrCookies = $arrSetCookies;
 
-	$iStatus = QL__FH_CONNECT;
+	$iStatus = QL__HG_CONNECT;
 	do {
 		switch ($iStatus) {
-			case QL__FH_CONNECT:
+			case QL__HG_CONNECT:
 				# Ensure that the URL includes scheme and port.
 				$arrUrl += array(
 					'scheme' => 'http',
@@ -349,14 +349,14 @@ function & ql_http_get(
 				);
 				$socket = @fsockopen($arrUrl['host'], $arrUrl['port'], $iSocketErr, $sSocketErr, 10);
 				if (is_resource($socket)) {
-					$iStatus = QL__FH_SEND;
+					$iStatus = QL__HG_SEND;
 				} else {
 					$arrResponse = false;
-					$iStatus = QL__FH_END;
+					$iStatus = QL__HG_END;
 				}
 				break;
 
-			case QL__FH_SEND:
+			case QL__HG_SEND:
 				# Compose the URL into a string.
 				$sUrl = $arrUrl['scheme'] . '://';
 				if (isset($arrUrl['user'])) {
@@ -399,13 +399,13 @@ function & ql_http_get(
 
 				# Submit the request.
 				fwrite($socket, $sRequest);
-				$iStatus = QL__FH_READ;
+				$iStatus = QL__HG_READ;
 				break;
 
-			case QL__FH_READ:
+			case QL__HG_READ:
 				# In most cases, this is the last stage; the behavior will only be different in case of
 				# redirections or HTTP_STATUS_CONTINUE return status.
-				$iStatus = QL__FH_SHUTDOWN;
+				$iStatus = QL__HG_SHUTDOWN;
 
 				# Read the response header up to (and including some of) the beginning of the body.
 				$s = '';
@@ -563,7 +563,7 @@ function & ql_http_get(
 
 				# HTTP_STATUS_CONTINUE must not specify a redirect using Location.
 				if ($arrResponse['code'] == HTTP_STATUS_CONTINUE) {
-					$iStatus = QL__FH_READ;
+					$iStatus = QL__HG_READ;
 				} else if (
 					isset($arrResponse['headers']['Location']) &&
 					($arrRedirectUrl = @parse_url($arrResponse['headers']['Location'])) !== false
@@ -599,9 +599,9 @@ function & ql_http_get(
 							isset($arrResponse['headers']['Connection']) &&
 							strtolower($arrResponse['headers']['Connection']) == 'keep-alive'
 						) {
-							$iStatus = QL__FH_SEND;
+							$iStatus = QL__HG_SEND;
 						} else {
-							$iStatus = QL__FH_CONNECT;
+							$iStatus = QL__HG_CONNECT;
 						}
 					}
 				} else {
@@ -629,12 +629,12 @@ function & ql_http_get(
 				}
 				break;
 
-			case QL__FH_SHUTDOWN:
+			case QL__HG_SHUTDOWN:
 				fclose($socket);
-				$iStatus = QL__FH_END;
+				$iStatus = QL__HG_END;
 				break;
 		}
-	} while ($iStatus != QL__FH_END);
+	} while ($iStatus != QL__HG_END);
 	if ($arrResponse) {
 		# Provide some more information about the response.
 		$arrResponse['requrl'   ] = $sOrgUrl;
@@ -752,7 +752,7 @@ function ql_http_get_multi(array $arrUrls, $fnCallback) {
 					$arrResponse = ql_http_parse_rfc2616_response($arrTarget['buffer']);
 					switch ($arrResponse['code']) {
 						case HTTP_STATUS_CONTINUE:
-							$iStatus = QL__FH_READ;
+							$iStatus = QL__HG_READ;
 							break;
 
 						case HTTP_STATUS_OK:
@@ -761,7 +761,7 @@ function ql_http_get_multi(array $arrUrls, $fnCallback) {
 						case HTTP_STATUS_NO_CONTENT:
 
 							call_user_func($fnCallback, $arrTarget['requrl'], $arrResponse);
-							$iStatus = QL__FH_SHUTDOWN;
+							$iStatus = QL__HG_SHUTDOWN;
 							break;
 
 						case HTTP_STATUS_MOVED_PERMANENTLY:
@@ -792,38 +792,38 @@ function ql_http_get_multi(array $arrUrls, $fnCallback) {
 								}
 
 								if ($arrResponse['headers']['Connection'] == 'keep-alive') {
-									$iStatus = QL__FH_SEND;
+									$iStatus = QL__HG_SEND;
 								} else {
-									$iStatus = QL__FH_CONNECT;
+									$iStatus = QL__HG_CONNECT;
 								}
 							} else {
-								$iStatus = QL__FH_SHUTDOWN;
+								$iStatus = QL__HG_SHUTDOWN;
 							}
 							break;
 
 						default:
-							$iStatus = QL__FH_SHUTDOWN;
+							$iStatus = QL__HG_SHUTDOWN;
 							break;
 					}
 					$arrTarget['buffer'] = '';
 					switch ($iStatus) {
-						case QL__FH_CONNECT:
+						case QL__HG_CONNECT:
 							# Re-queue for reading.
 							$arrRemaining[] =& $arrTarget;
 							unset($arrRRemaining[$i]);
 							fclose($socket);
 							break;
 
-						case QL__FH_SEND:
+						case QL__HG_SEND:
 							# Move this handle from the write array to the read array.
 							$arrWRemaining[$i] =& $arrRRemaining[$i];
 							unset($arrRRemaining[$i]);
 							break;
 
-						case QL__FH_READ:
+						case QL__HG_READ:
 							break;
 
-						case QL__FH_SHUTDOWN:
+						case QL__HG_SHUTDOWN:
 							# Terminate the connection.
 							unset($arrRRemaining[$i]);
 							fclose($socket);

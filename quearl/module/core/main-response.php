@@ -154,7 +154,7 @@ class QlResponse {
 	#    HTTP status code; defaults to HTTP_STATUS_SEE_OTHER.
 	# [string $sHttpStatusCodeDescription]
 	#    Description for the status code; defaults to a standard description of $iCode.
-	# QlNullResponseEntity
+	# QlNullResponseEntity return
 	#    Null response entity.
 	#
 	public function redirect(

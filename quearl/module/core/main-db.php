@@ -744,7 +744,7 @@ class QlDb {
 				if (!is_finite($m)) {
 					return 'NULL';
 				}
-				# Fall through…
+				# Fall through.
 			case 'integer':
 				return (string)$m;
 			case 'string':

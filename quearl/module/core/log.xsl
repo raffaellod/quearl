@@ -247,7 +247,7 @@ XML style sheet referenced by Quearl-generated logs.
 						case "var-name":
 							// Advance to the following “var-ellipsis” element.
 							eltTarget = eltTarget.nextSibling;
-							// Fall through…
+							// Fall through.
 						case "var-ellipsis": {
 							var eltVarEllipsis = eltTarget;
 							var eltVarValue = eltVarEllipsis.nextSibling;

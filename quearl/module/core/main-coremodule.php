@@ -337,13 +337,13 @@ class QlCoreModule extends QlModule {
 	#
 	protected function init() {
 		parent::init();
-		# The “core” $_APP section is always loaded by QlCoreModule::main() before this method is
+		# The “core” $_APP section is always loaded by QlCoreModule::main_run() before this method is
 		# called.
 	}
 
 
-	## Initializes Quearl and processeses the request, generating a response and then terminating.
-	# Does not return.
+	## Initializes Quearl and processeses the request, generating and sending a response. Does not
+	# return.
 	#
 	public static function main() {
 		self::main_init();
