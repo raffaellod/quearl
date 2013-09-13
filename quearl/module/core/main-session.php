@@ -62,13 +62,13 @@ define('QL_CLIENTTYPE_CRAWLER', 1);
 class QlSession {
 
 	## Session ID.
-	public /*string*/ $m_sID;
+	private /*string*/ $m_sID;
 	## Subsession ID (if subsessions are enabled for this session).
-	public /*string*/ $m_sSubID;
+	private /*string*/ $m_sSubID;
 	## If true, write_and_close() needs to be called.
-	public /*bool*/ $m_bLocked;
+	private /*bool*/ $m_bLocked;
 	## Type of remote client for which this request is being processed (QL_CLIENTTYPE_*).
-	public /*int*/ $m_iClientType;
+	private /*int*/ $m_iClientType;
 
 
 	## Constructor. Upon the first time a session is created, propagation of its ID via query string
