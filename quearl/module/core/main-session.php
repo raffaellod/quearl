@@ -179,8 +179,10 @@ class QlSession {
 
 	## Destructor.
 	#
-	public function __destructor() {
-		$this->write_and_close();
+	public function __destruct() {
+		if ($this->m_bLocked) {
+			$this->write_and_close();
+		}
 		unset($GLOBALS['ql_session'], $GLOBALS['_SESSION']);
 	}
 
@@ -326,7 +328,9 @@ class QlSession {
 			WHERE lasthit < ' . ((int)$ql_fScriptStart - $_APP['core']['session_gc_max_idle']) . ';
 		');
 		# TODO: make self-adapting.
-		ql_log('DEBUG', 'Deleted ' . $ql_db->get_last_affected_rows() . ' expired sessions',
+		ql_log(
+			'DEBUG',
+			'Deleted ' . $ql_db->get_last_affected_rows() . ' expired sessions',
 			'If this is occurring too often, decrease the gc rate; if too rarely, increase it.'
 		);
 	}
@@ -445,7 +449,7 @@ class QlSession {
 		# check and the locking below, also update its lasthit.
 		$ql_db->query('
 			UPDATE sessions
-			SET lasthit = ' . (int)$ql_fScriptStart . ',
+			SET lasthit = ' . (int)$ql_fScriptStart . '
 			WHERE id = \'' . $sSID . '\';
 		');
 		if ($ql_db->get_last_affected_rows() != 1) {
@@ -469,7 +473,7 @@ class QlSession {
 			');
 		} while ($ql_db->get_last_affected_rows() != 1 && --$cRetries && (sleep(1) || true));
 		if (!$cRetries) {
-			# TODO: warn the user and change this to ql_log(), don’t just drop the bomb.
+			# TODO: warn the user and change this to E_USER_WARNING, don’t just drop the bomb.
 			trigger_error('Unable to acquire session lock', E_USER_ERROR);
 		}
 
@@ -482,10 +486,9 @@ class QlSession {
 		$arrData = @unserialize($sData);
 		if (!$arrData) {
 			# There was some problem with loading the session, discard it.
-			ql_log(
-				'E_USER_WARNING',
+			trigger_error(
 				'QlSession::load(): User session “' . $sSID . '” data corrupt',
-				'<pre>' . ql_lenc($sData) . '</pre>'
+				E_USER_WARNING
 			);
 			$ql_db->query('
 				DELETE FROM sessions
@@ -499,10 +502,10 @@ class QlSession {
 			# The session is valid, but it wasn’t started from the same IP address as the one
 			# originating this HTTP request: revoke the lock and pretend we didn’t see it; the only
 			# side effect will be that we updated its lasthit timestamp.
-			ql_log(
-				'E_USER_NOTICE',
+			trigger_error(
 				'QlSession::load(): IP address mismatch for user session “' . $sSID . '”: was ' .
-					$arrData['ql_ipaddr'] . ', now accessed from ' . $_SERVER['REMOTE_REAL_ADDR']
+					$arrData['ql_ipaddr'] . ', now accessed from ' . $_SERVER['REMOTE_REAL_ADDR'],
+				E_USER_NOTICE
 			);
 			$ql_db->query('
 				UPDATE sessions
@@ -776,41 +779,44 @@ class QlSession {
 	## Saves the $_SESSION array to the database storage, then discards it.
 	#
 	public function write_and_close() {
-		global $_APP, $ql_db, $ql_fScriptStart;
-		if (!$this->m_bLocked) {
-			return;
-		}
+		if ($this->m_bLocked) {
+			# “sub” is merely a reference to an item in “subs”, so it shouldn’t be saved.
+			if ($this->m_sSubID != '') {
+				unset($_SESSION['sub']);
+			}
+			# Update and unlock the session record.
+			global $ql_db, $ql_fScriptStart;
+			$ql_db->query('
+				UPDATE sessions
+				SET
+					locked = 0,
+					iduser = ' . ($_SESSION['ql_user_id'] ? $_SESSION['ql_user_id'] : 'NULL') . ',
+					lasthit = ' . (int)$ql_fScriptStart . ',
+					data = \'' . $ql_db->escape(serialize($_SESSION)) . '\'
+				WHERE id = \'' . $this->m_sID . '\'
+					AND locked = 1;
+			');
+			# Restore “sub”.
+			if ($this->m_sSubID != '') {
+				$_SESSION['sub'] =& $_SESSION['subs'][$this->m_sSubID];
+			}
+			# Ensure the update really worked.
+			if ($ql_db->get_last_affected_rows() == 1) {
+				$this->m_bLocked = false;
 
-		# “sub” is merely a reference to an item in “subs”, so it shouldn’t be saved.
-		if ($this->m_sSubID != '') {
-			unset($_SESSION['sub']);
-		}
-		# Update and unlock the session record.
-		$ql_db->query('
-			UPDATE sessions
-			SET
-				locked = 0,
-				iduser = ' . ($_SESSION['ql_user_id'] ? $_SESSION['ql_user_id'] : 'NULL') . ',
-				lasthit = ' . (int)$ql_fScriptStart . ',
-				data = \'' . $ql_db->escape(serialize($_SESSION)) . '\'
-			WHERE id = \'' . $this->m_sID . '\'
-				AND locked = 1;
-		');
-		# Restore “sub”.
-		if ($this->m_sSubID != '') {
-			$_SESSION['sub'] =& $_SESSION['subs'][$this->m_sSubID];
-		}
-		# Ensure the update really worked.
-		if ($ql_db->get_last_affected_rows() != 1) {
-			return;
-		}
-		$this->m_bLocked = false;
-
-		# Clean up, once in a while.
-		if (
-			mt_rand(1, $_APP['core']['session_gc_divisor']) <= $_APP['core']['session_gc_probability']
-		) {
-			$this->gc();
+				# Clean up, once in a while.
+				global $_APP;
+				if (
+					mt_rand(1, $_APP['core']['session_gc_divisor']) <=
+					$_APP['core']['session_gc_probability']
+				) {
+					$this->gc();
+				}
+			} else {
+				trigger_error('QlSession::write_and_close(): update failed', E_USER_WARNING);
+			}
+		} else {
+			trigger_error('QlSession::write_and_close(): called more than once!', E_USER_WARNING);
 		}
 	}
 }
