@@ -65,7 +65,7 @@ class l10n_generator(object):
 		dictL10nEntries = None
 		# Find out the locale from the l10n file name.
 		match = re.search(
-			'[\\/](?P<locale>(?P<language>[a-z]{2})-(?P<country>[a-z]{2}))\.l10n$', sL10nFileName
+			r'[\/](?P<locale>(?P<language>[a-z]{2})-(?P<country>[a-z]{2}))\.l10n$', sL10nFileName
 		)
 		sLocale = match.group('locale')
 		sLanguage = match.group('language')
@@ -133,7 +133,7 @@ class l10n_generator(object):
 			sLine = sLine.lstrip()
 			# Skip empty lines and comments.
 			if len(sLine) > 0 and sLine[0] != '#':
-				match = re.match('^(?P<name>[0-9A-Z_]+)(:?:(?P<type>int))?\t+(?P<value>.*)$', sLine)
+				match = re.match(r'^(?P<name>[0-9A-Z_]+)(:?:(?P<type>int))?\t+(?P<value>.*)$', sLine)
 				if not match:
 					raise SyntaxError('line {}: invalid syntax: {}'.format(iLine, repr(sLine)))
 				sType = match.group('type')

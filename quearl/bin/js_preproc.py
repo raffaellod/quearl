@@ -122,15 +122,15 @@ class JsPreproc(object):
 		# make sure that the pattern captures any surrounding whitespace, to mitigate the unnecessary
 		# whitespace we’re adding.
 		# TODO: this is not string- nor regexp-safe.
-		s = re.sub('[ \t\f\v]*/\*.*?\*/[ \t\f\v]*', ' ', s)
+		s = re.sub(r'[ \t\f\v]*/\*.*?\*/[ \t\f\v]*', ' ', s)
 
 		# TODO: this is not string- nor regexp-safe, and can break multi-line C-style comments.
-		s = re.sub('//.*$', '', s, flags = re.MULTILINE)
+		s = re.sub(r'//.*$', '', s, flags = re.MULTILINE)
 
 		# Trim leading whitespace on each line.
-		s = re.sub('^[ \t\f\v]+', '', s, flags = re.MULTILINE)
+		s = re.sub(r'^[ \t\f\v]+', '', s, flags = re.MULTILINE)
 		# Trim trailing whitespace on each line.
-		s = re.sub('[ \t\f\v]+$', '', s, flags = re.MULTILINE)
+		s = re.sub(r'[ \t\f\v]+$', '', s, flags = re.MULTILINE)
 
 		return s
 
