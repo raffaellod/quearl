@@ -48,7 +48,11 @@ class QuearlInst(object):
 			interpolation         = None
 		)
 		with open(os.path.join(self._m_sConfigsDir, 'core/bootstrap.conf'), 'r') as fileBootstrapConf:
-			cpBootstrapConf.read_string('[core]\n' + fileBootstrapConf.read())
+			sBootstrapConf = fileBootstrapConf.read()
+			# Strip the UTF-8 BOM, if present.
+			if sBootstrapConf.startswith('\ufeff'):
+				sBootstrapConf = sBootstrapConf[1:]
+			cpBootstrapConf.read_string('[core]\n' + sBootstrapConf)
 		self._m_sRODataDir = os.path.join(sQuearlDir, cpBootstrapConf['core']['rodata_lpath'])
 
 

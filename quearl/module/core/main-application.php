@@ -179,6 +179,10 @@ class QlApplication {
 	#
 	private function & load_section_nolock($sSection, $sFileName) {
 		$sContents = file_get_contents($sFileName);
+		# Strip the UTF-8 BOM, if present.
+		if (substr($sContents, 0, 3) == "\xef\xbb\xbf") {
+			$sContents = substr($sContents, 3);
+		}
 		# Delete comments, since ql_parse_rfc822_header() doesn’t discard them.
 		$sContents = preg_replace('/^#.*$/m', '', $sContents);
 		# Parse and process the section.
