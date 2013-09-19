@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- -*- coding: utf-8; mode: xslt; tab-width: 3 -*-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Quearl
-Copyright 2007-2013 Raffaello D. Di Napoli
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Copyright 2007, 2008, 2009, 2010, 2011, 2012, 2013
+Raffaello D. Di Napoli
+
 This file is part of Quearl.
 
 Quearl is free software: you can redistribute it and/or modify it under the terms of the GNU Affero
@@ -16,10 +16,10 @@ Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License along with Quearl. If not,
 see <http://www.gnu.org/licenses/>.
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
 
-XML style sheet referenced by Quearl-generated logs.
--->
+<!-- XML style sheet referenced by Quearl-generated logs. -->
+
 
 <xsl:stylesheet version="1.0" xml:lang="en-US" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:output method="html" encoding="utf-8" media-type="application/xhtml+xml"/>
