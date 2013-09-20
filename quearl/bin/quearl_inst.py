@@ -20,7 +20,7 @@
 
 """Classes to manage a Quearl installation."""
 
-import configparser
+from configparser import ConfigParser
 import os
 
 
@@ -39,21 +39,33 @@ class QuearlInst(object):
 			default: “quearl”.
 		"""
 
-		self._m_sModulesDir = os.path.join(sQuearlDir, 'module')
-		self._m_sConfigsDir = os.path.join(sQuearlDir, 'config')
-		cpBootstrapConf = configparser.ConfigParser(
+		self._m_conf = ConfigParser(
 			comment_prefixes      = '#',
 			delimiters            = ':',
 			empty_lines_in_values = False,
 			interpolation         = None
 		)
-		with open(os.path.join(self._m_sConfigsDir, 'core/bootstrap.conf'), 'r') as fileBootstrapConf:
-			sBootstrapConf = fileBootstrapConf.read()
-			# Strip the BOM, if present.
-			if sBootstrapConf.startswith('\ufeff'):
-				sBootstrapConf = sBootstrapConf[1:]
-			cpBootstrapConf.read_string('[core]\n' + sBootstrapConf)
-		self._m_sRODataDir = os.path.join(sQuearlDir, cpBootstrapConf['core']['rodata_lpath'])
+		self._m_sModulesDir = os.path.join(sQuearlDir, 'module')
+		self._m_sConfigsDir = os.path.join(sQuearlDir, 'config')
+		self.load_conf('core', 'core/bootstrap.conf')
+		self._m_sRODataDir = os.path.join(sQuearlDir, self._m_conf['core']['rodata_lpath'])
+
+
+	def load_conf(self, sSectionName, sConfFileName):
+		"""Loads a configuration file, in much the same way QlApplication does.
+
+		str sSectionName
+			Section to be loaded.
+		str sConfFileName
+			Path to the file to load.
+		"""
+
+		with open(os.path.join(self._m_sConfigsDir, sConfFileName), 'r') as fileConf:
+			sConf = fileConf.read()
+		# Strip the BOM, if present.
+		if sConf.startswith('\ufeff'):
+			sConf = sConf[1:]
+		self._m_conf.read_string('[{}]\n{}'.format(sSectionName, sConf))
 
 
 	def modules(self):
