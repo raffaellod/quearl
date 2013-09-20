@@ -97,7 +97,7 @@ class l10n_generator(object):
 				dictL10nEntries['COUNTRY_ISO3166'] = sCountry
 
 			# Generate the output.
-			sys.stdout.write('Generating localization in {} format\n'.format(sType.upper()))
+			sys.stdout.write('  Generating localization in {} format\n'.format(sType.upper()))
 			sFile = getattr(cls, 'l10n_to_' + sType)(sModulePrefix, dictL10nEntries)
 
 			# Make sure the destination directory exists.
@@ -111,10 +111,10 @@ class l10n_generator(object):
 			# Store the generated file.
 			if sType == 'js':
 				# Also write a gzipped version of the same file.
-				sys.stdout.write('Writing {}.gz\n'.format(sOutputFileName))
+				sys.stdout.write('  Writing {}.gz\n'.format(sOutputFileName))
 				with open(sOutputFileName + '.gz', 'wb') as fileOutput:
 					fileOutput.write(gzip.compress(sFile.encode('utf-8')))
-			sys.stdout.write('Writing {}\n'.format(sOutputFileName))
+			sys.stdout.write('  Writing {}\n'.format(sOutputFileName))
 			with open(sOutputFileName, 'w') as fileOutput:
 				fileOutput.write(sFile)
 

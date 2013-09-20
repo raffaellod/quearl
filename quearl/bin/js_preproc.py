@@ -77,12 +77,12 @@ class JsPreproc(object):
 			pass
 
 		# Read and pre-process the source JS file.
+		sys.stdout.write('Processing JS file {}\n'.format(sInputFileName))
 		with open(sInputFileName, 'r') as fileInput:
-			sys.stdout.write('Pre-processing JS file {}\n'.format(sInputFileName))
 			sJsSource = fileInput.read()
 
 		# Generate the output.
-		sys.stdout.write('Minifying JavaScript\n')
+		sys.stdout.write('  Minifying JavaScript\n')
 		sMinSource = cls.minify(sJsSource)
 
 		# Make sure the destination directory exists.
@@ -94,11 +94,11 @@ class JsPreproc(object):
 			pass
 
 		# Write a gzipped version of the same file.
-		sys.stdout.write('Updating {}.gz\n'.format(sOutputFileName))
+		sys.stdout.write('  Writing {}.gz\n'.format(sOutputFileName))
 		with open(sOutputFileName + '.gz', 'wb') as fileOutput:
 			fileOutput.write(gzip.compress(sMinSource.encode('utf-8')))
 		# Store the generated file.
-		sys.stdout.write('Updating {}\n'.format(sOutputFileName))
+		sys.stdout.write('  Writing {}\n'.format(sOutputFileName))
 		with open(sOutputFileName, 'w') as fileOutput:
 			fileOutput.write(sMinSource)
 
