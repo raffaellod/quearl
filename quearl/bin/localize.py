@@ -86,12 +86,11 @@ class l10n_generator(object):
 				# Assume that the file does not exist.
 				pass
 
-			# Make sure we read and processed the source .l10n file.
+			# Make sure we read and processed the source .l10n file…
 			if dictL10nEntries == None:
-				# We did not, so do it now.
-				with open(sL10nFileName, 'r') as fileL10n:
-					sys.stdout.write('Processing l10n file {}\n'.format(sL10nFileName))
-					dictL10nEntries = cls.parse_l10n(fileL10n)
+				# …and if we didn’t, do it now.
+				sys.stdout.write('Processing l10n file {}\n'.format(sL10nFileName))
+				dictL10nEntries = cls.parse_l10n(sL10nFileName)
 				# Add a few more constants.
 				dictL10nEntries['L10N_INCLUDED'  ] = True
 				dictL10nEntries['LANG_ISO639'    ] = sLanguage
@@ -112,25 +111,36 @@ class l10n_generator(object):
 			# Store the generated file.
 			if sType == 'js':
 				# Also write a gzipped version of the same file.
-				sys.stdout.write('Updating {}.gz\n'.format(sOutputFileName))
+				sys.stdout.write('Writing {}.gz\n'.format(sOutputFileName))
 				with open(sOutputFileName + '.gz', 'wb') as fileOutput:
 					fileOutput.write(gzip.compress(sFile.encode('utf-8')))
-			sys.stdout.write('Updating {}\n'.format(sOutputFileName))
+			sys.stdout.write('Writing {}\n'.format(sOutputFileName))
 			with open(sOutputFileName, 'w') as fileOutput:
 				fileOutput.write(sFile)
 
 
 	@staticmethod
-	def parse_l10n(fileL10n):
-		"""Parses a .l10n file, returning a dictionary containing the entries defined."""
+	def parse_l10n(sL10nFileName):
+		"""Parses a .l10n file, returning a dictionary containing the entries defined.
+
+		str sL10nFileName
+			Full path to the .l10n file.
+		dict(object) return
+			Localized constants.
+		"""
+
+		with open(sL10nFileName, 'r') as fileL10n:
+			sL10nFile = fileL10n.read()
+		# Strip the BOM, if present.
+		if sL10nFile.startswith('\ufeff'):
+			sL10nFile = sL10nFile[1:]
 
 		# Prepare this module’s localization.
 		dictEntries = {}
 		iLine = 0
 		# Parse through the whole file.
-		for sLine in fileL10n:
+		for sLine in sL10nFile.splitlines():
 			iLine += 1
-			sLine = sLine.lstrip()
 			# Skip empty lines and comments.
 			if len(sLine) > 0 and sLine[0] != '#':
 				match = re.match(r'^(?P<name>[0-9A-Z_]+)(:?:(?P<type>int))?\t+(?P<value>.*)$', sLine)

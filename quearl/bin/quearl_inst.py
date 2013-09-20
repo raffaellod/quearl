@@ -49,7 +49,7 @@ class QuearlInst(object):
 		)
 		with open(os.path.join(self._m_sConfigsDir, 'core/bootstrap.conf'), 'r') as fileBootstrapConf:
 			sBootstrapConf = fileBootstrapConf.read()
-			# Strip the UTF-8 BOM, if present.
+			# Strip the BOM, if present.
 			if sBootstrapConf.startswith('\ufeff'):
 				sBootstrapConf = sBootstrapConf[1:]
 			cpBootstrapConf.read_string('[core]\n' + sBootstrapConf)
