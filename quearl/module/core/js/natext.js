@@ -17,8 +17,9 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-// Extensions to native classes, i.e. Array, String, Function…
-// Meant to be usable with or w/o Quearl proper.
+/** Extensions to native classes, i.e. Array, String, Function and so on. Meant to be usable with or
+w/o Quearl proper.
+*/
 
 
 
@@ -26,17 +27,17 @@ see <http://www.gnu.org/licenses/>.
 // Function (pre)
 
 
-/// Checks the validity of a function’s arguments, throwing an exception if invalid arguments are
-// found.
-//
-// fn:Function
-//    Function whose arguments are to be checked.
-// vArgs:arguments
-//    The arguments object of the function that is requesting argument validation.
-// […:var*]
-//    Each of the remaining arguments indicates the requested type (if it’s a Function/class) or a
-//    list of allowed types (if it’s an Array) for the corresponding argument in vArgs.
-//
+/** Checks the validity of a function’s arguments, throwing an exception if invalid arguments are
+found.
+
+fn:Function
+	Function whose arguments are to be checked.
+vArgs:arguments
+	The arguments object of the function that is requesting argument validation.
+[…:var*]
+	Each of the remaining arguments indicates the requested type (if it’s a Function/class) or a list
+	of allowed types (if it’s an Array) for the corresponding argument in vArgs.
+*/
 function $Function$checkArgs(fn, vArgs/*, …*/) {
 	for (var iArg = 2, cArgs = arguments.length, iFnArg = 0; iArg < cArgs; ++iArg, ++iFnArg) {
 		var vTypes = arguments[iArg],
@@ -116,14 +117,14 @@ function $Function$checkArgs(fn, vArgs/*, …*/) {
 Function.checkArgs = $Function$checkArgs;
 
 
-/// Creates an implementation of Object.toString() method returining "[object ClassName]", where
-// ClassName is the specified string.
-//
-// sType:String
-//    Full name of the class.
-// return:Function
-//    Generated function.
-//
+/** Creates an implementation of Object.toString() method returning "[object ClassName]", where
+ClassName is the specified string.
+
+sType:String
+	Full name of the class.
+return:Function
+	Generated function.
+*/
 function $Function$createToStringMethod(sType) {
 	Function.checkArgs($Function$createToStringMethod, arguments, String);
 	sType = "[object " + sType + "]";
@@ -134,9 +135,9 @@ function $Function$createToStringMethod(sType) {
 Function.createToStringMethod = $Function$createToStringMethod;
 
 
-/// Special value for Function.checkArgs(), meaning “an object of any type”.
+/** Special value for Function.checkArgs(), meaning “an object of any type”. */
 Object.ANYTYPE/*:Object*/ = {};
-/// Special value for Function.checkArgs(): “optional object of any type”.
+/** Special value for Function.checkArgs(): “optional object of any type”. */
 Object.ANYTYPEOPT/*:Object*/ = {};
 
 Object.ANYTYPE.toString = Function.createToStringMethod("Object.ANYTYPE");
@@ -148,11 +149,11 @@ Object.ANYTYPEOPT.toString = Function.createToStringMethod("Object.ANYTYPEOPT");
 // Array
 
 
-/// Adjusts a sparse array, making up for browser bugs.
-//
-// return:Array(var*)
-//    this.
-//
+/** Adjusts a sparse array, making up for browser bugs.
+
+return:Array(var*)
+	this.
+*/
 if ([, ].length == 2) {
 	// IE5.5 bug, IE6 bug, IE7 bug, IE8 bug: a trailing sparse element is not ignored.
 	function $Array$s_fixLast() {
@@ -184,15 +185,15 @@ if ([, ].length == 2) {
 }
 
 
-/// Calls the specified method on every object contained in the array.
-//
-// sProp:String
-//    Name of the method to call.
-// arrArgs:Array(var*)
-//    Arguments to be passed to the method.
-// return:Array
-//    this.
-//
+/** Calls the specified method on every object contained in the array.
+
+sProp:String
+	Name of the method to call.
+arrArgs:Array(var*)
+	Arguments to be passed to the method.
+return:Array
+	this.
+*/
 function $Array$applyOnEach(sProp, arrArgs) {
 	Function.checkArgs($Array$applyOnEach, arguments, String, Array);
 	for (var i = 0, c = this.length; i < c; ++i) {
@@ -208,15 +209,15 @@ function $Array$applyOnEach(sProp, arrArgs) {
 Array.prototype.applyOnEach = $Array$applyOnEach;
 
 
-/// Calls the specified method on every object contained in the array.
-//
-// sProp:String
-//    Name of the method to call.
-// …:var*
-//    Arguments to be passed to the method.
-// return:Array
-//    this.
-//
+/** Calls the specified method on every object contained in the array.
+
+sProp:String
+	Name of the method to call.
+…:var*
+	Arguments to be passed to the method.
+return:Array
+	this.
+*/
 function $Array$callOnEach(sProp/*, …*/) {
 	// Make an array of the arguments past sProp.
 	var arrArgs = [];
@@ -228,10 +229,10 @@ function $Array$callOnEach(sProp/*, …*/) {
 Array.prototype.callOnEach = $Array$callOnEach;
 
 
-/// See Object.clone().
-//
+/** See Object.clone().
+*/
 if (0 in [].concat([, ].s())) {
-	// OP9 bug: [].concat([, ]) returns [undefined] intead of [, ] ; this requires cloning
+	// OP9 bug: [].concat([, ]) returns [undefined] instead of [, ] ; this requires cloning
 	// iteratively. Note that [, ] must be cleared from FX1.5 bug, FX2 bug and FX3 bug, using s().
 	// Fun.
 	function $Array$clone_slow() {
@@ -248,14 +249,14 @@ if (0 in [].concat([, ].s())) {
 }
 
 
-/// Creates a new map, using this as the set of keys, and another array as the set of associated
-// values.
-//
-// arrValues:Array(var*)
-//    Set of values.
-// return:Object(var*)
-//    Newly created map.
-//
+/** Creates a new map, using this as the set of keys, and another array as the set of associated
+values.
+
+arrValues:Array(var*)
+	Set of values.
+return:Object(var*)
+	Newly created map.
+*/
 function $Array$combine(arrValues) {
 	Function.checkArgs($Array$combine, arguments, Array);
 	var map = {};
@@ -269,8 +270,8 @@ function $Array$combine(arrValues) {
 Array.prototype.combine = $Array$combine;
 
 
-/// Defined in JavaScript 1.6.
-//
+/** Defined in JavaScript 1.6.
+*/
 if (!Array.prototype.every) {
 	function $Array$prototype$every(fnCallback, oContext /*= undefined*/) {
 		return Array.every(this, fnCallback, oContext);
@@ -294,18 +295,18 @@ if (!Array.every) {
 }
 
 
-/// Creates a new array, using the specified value as either a generator function, or a constant to
-// be repeated for each value.
-//
-// c:int
-//    Number of elements the new array will contain.
-// [vFiller:(Function|var)]
-//    Either a Function which will be called with the pair (current index, total) for each of the
-//    elements, or a value which will be identically repeated in each element. If omitted, a sparse
-//    array will be created.
-// return:Array(var*)
-//    Newly generated array.
-//
+/** Creates a new array, using the specified value as either a generator function, or a constant to
+be repeated for each value.
+
+c:int
+	Number of elements the new array will contain.
+[vFiller:(Function|var)]
+	Either a Function which will be called with the pair (current index, total) for each of the
+	elements, or a value which will be identically repeated in each element. If omitted, a sparse
+	array will be created.
+return:Array(var*)
+	Newly generated array.
+*/
 function $Array$fill(c, vFiller /*= undefined*/) {
 	Function.checkArgs($Array$fill, arguments, Number, Object.ANYTYPEOPT);
 	var arr = [];
@@ -326,22 +327,26 @@ function $Array$fill(c, vFiller /*= undefined*/) {
 Array.fill = $Array$fill;
 
 
-/// Creates a series of values in the range [0; 1], to be used as animation steps; the values are
-// calculated according to the number of steps and the requested function.
-//
-// sAnim:String
-//    Animation to be obtained; can be one of these values:
-//    "linear"       y = x / c; [0, c) => [0, 1];
-//    "accelerated"  y = (x / c) ^ 2; [0, c) => [0, 1];
-//    "braked"       same as "accelerated", but with both x and y flipped;
-//    "smoothscroll" y = 4 * (x / c) ^ 3; [0, c / 2] => [0, 0.5]; for each point, x and y are
-//       flipped, and the second half of the array is filled with the resulting values; this gives a
-//       quick acceleration, which is then stopped and reverted.
-// c:int
-//    Number of steps in which the animation will be split.
-// return:Array(float*)
-//    Array of step values.
-//
+/** Creates a series of values in the range [0; 1], to be used as animation steps; the values are
+calculated according to the number of steps and the requested function.
+
+sAnim:String
+	Animation to be obtained; can be one of these values:
+	•	"linear"
+		y = x / c; [0, c) => [0, 1];
+	•	"accelerated"
+		y = (x / c) ^ 2; [0, c) => [0, 1];
+	•	"braked"
+		Same as "accelerated", but with both x and y flipped;
+	•	"smoothscroll"
+		y = 4 * (x / c) ^ 3; [0, c / 2] => [0, 0.5]; for each point, x and y are flipped, and the
+		second half of the array is filled with the resulting values; this gives a quick acceleration,
+		which is then stopped and reverted.
+c:int
+	Number of steps in which the animation will be split.
+return:Array(float*)
+	Array of step values.
+*/
 function $Array$fillAnimSteps(sAnim, c) {
 	Function.checkArgs($Array$fillAnimSteps, arguments, String, Number);
 	var arr = [];
@@ -380,15 +385,15 @@ function $Array$fillAnimSteps(sAnim, c) {
 			}
 			break;
 	}
-	// The rounded sum of rounded vaules will likely never be exactly 1, so fake it here.
+	// The rounded sum of rounded values will likely never be exactly 1, so fake it here.
 	arr[c] = 1;
 	return arr;
 }
 Array.fillAnimSteps = $Array$fillAnimSteps;
 
 
-/// Defined in JavaScript 1.6.
-//
+/** Defined in JavaScript 1.6.
+*/
 if (!Array.prototype.filter) {
 	function $Array$prototype$filter(fnFilter, oContext /*= undefined*/) {
 		return Array.filter(this, fnFilter, oContext);
@@ -413,12 +418,12 @@ if (!Array.filter) {
 }
 
 
-/// Flips the array or a map, returning a map with the keys being the original values, and the
-// values being the original keys.
-//
-// return:Object(var*)
-//    Resulting map.
-//
+/** Flips the array or a map, returning a map with the keys being the original values, and the
+values being the original keys.
+
+return:Object(var*)
+	Resulting map.
+*/
 function $Array$prototype$flip() {
 	Function.checkArgs($Array$prototype$flip, arguments);
 	var map = {};
@@ -441,8 +446,8 @@ function $Array$flip(map) {
 Array.flip = $Array$flip;
 
 
-/// Defined in JavaScript 1.6.
-//
+/** Defined in JavaScript 1.6.
+*/
 if (!Array.prototype.forEach) {
 	function $Array$prototype$forEach(fnCallback, oContext /*= undefined*/) {
 		Array.forEach(this, fnCallback, oContext);
@@ -465,14 +470,14 @@ if (!Array.forEach) {
 }
 
 
-/// Creates an array by shallow-copying elements from an Array-look-alike, such as a DOM NodeList.
-//
-// o:Object
-//    Object that behaves like an Array (i.e. provides .length and is addressable with square
-//    brackets notation).
-// return:Array(var*)
-//    New array, with the same contents as the source object.
-//
+/** Creates an array by shallow-copying elements from an Array-look-alike, such as a DOM NodeList.
+
+o:Object
+	Object that behaves like an Array (i.e. provides .length and is addressable with square brackets
+	notation).
+return:Array(var*)
+	New array, with the same contents as the source object.
+*/
 function $Array$from(o) {
 	Function.checkArgs($Array$from, arguments, Object);
 	var arr = [];
@@ -487,8 +492,8 @@ function $Array$from(o) {
 Array.from = $Array$from;
 
 
-/// Defined in JavaScript 1.6.
-//
+/** Defined in JavaScript 1.6.
+*/
 if (!Array.prototype.indexOf) {
 	function $Array$prototype$indexOf(v, iStart /*= 0*/) {
 		return Array.indexOf(this, v, iStart);
@@ -514,17 +519,17 @@ if (!Array.indexOf) {
 }
 
 
-/// Searches an array for an object with a specified property.
-//
-// vProp:(String|int)
-//    Name or index of the value to be checked in each item.
-// v:var
-//    Value the property must have to pass the filtering.
-// [iStart:int]
-//    Index of the first item to scan; defaults to 0.
-// return:int
-//    Index of the first item satisfying the criterion.
-//
+/** Searches an array for an object with a specified property.
+
+vProp:(String|int)
+	Name or index of the value to be checked in each item.
+v:var
+	Value the property must have to pass the filtering.
+[iStart:int]
+	Index of the first item to scan; defaults to 0.
+return:int
+	Index of the first item satisfying the criterion.
+*/
 function $Array$indexOfByProp(vProp, v, iStart /*= 0*/) {
 	return Array.indexOfByProp(this, vProp, v, iStart);
 }
@@ -549,15 +554,15 @@ function $Array$indexOfByProp(arr, vProp, v, iStart /*= 0*/) {
 Array.indexOfByProp = $Array$indexOfByProp;
 
 
-/// Adds an item to the array at a specific index.
-//
-// i:int
-//    Index of the new item.
-// v:var
-//    Value to be inserted.
-// return:Array
-//    this.
-//
+/** Adds an item to the array at a specific index.
+
+i:int
+	Index of the new item.
+v:var
+	Value to be inserted.
+return:Array
+	this.
+*/
 function $Array$insertAt(i, v) {
 	Function.checkArgs($Array$insertAt, arguments, Number, Object.ANYTYPEOPT);
 	this.splice(i, 0, v);
@@ -566,16 +571,15 @@ function $Array$insertAt(i, v) {
 Array.prototype.insertAt = $Array$insertAt;
 
 
-/// Adds an item to the array, maintaining the order in the (already sorted) array.
-//
-// v:var
-//    Value to be added.
-// [fnCompare:Function]
-//    Function to be called to compare to items; defaults to using the standard comparison
-//    operators.
-// return:int
-//    Index of the newly inserted item.
-//
+/** Adds an item to the array, maintaining the order in the (already sorted) array.
+
+v:var
+	Value to be added.
+[fnCompare:Function]
+	Function to be called to compare to items; defaults to using the standard comparison operators.
+return:int
+	Index of the newly inserted item.
+*/
 function $Array$insertSorted(v, fnCompare /*= undefined*/) {
 	Function.checkArgs($Array$insertSorted, arguments, Object.ANYTYPEOPT, [undefined, Function]);
 	if (!fnCompare) {
@@ -611,8 +615,8 @@ function $Array$insertSorted(v, fnCompare /*= undefined*/) {
 Array.prototype.insertSorted = $Array$insertSorted;
 
 
-/// Defined in JavaScript 1.6.
-//
+/** Defined in JavaScript 1.6.
+*/
 if (!Array.prototype.lastIndexOf) {
 	function $Array$prototype$lastIndexOf(v, iStart /*= this.length - 1*/) {
 		return Array.lastIndexOf(this, v, iStart);
@@ -640,8 +644,8 @@ if (!Array.lastIndexOf) {
 }
 
 
-/// Defined in JavaScript 1.6.
-//
+/** Defined in JavaScript 1.6.
+*/
 if (!Array.prototype.map) {
 	function $Array$prototype$map(fnMap, oContext /*= undefined*/) {
 		return Array.map(this, fnMap, oContext);
@@ -667,8 +671,8 @@ if (!Array.map) {
 }
 
 
-/// Defined in ECMAScript 5 and JavaScript 1.8.
-//
+/** Defined in ECMAScript 5 and JavaScript 1.8.
+*/
 if (!Array.prototype.reduce) {
 	function $Array$prototype$reduce(fnCallback, vInitialValue /*= undefined*/) {
 		return Array.reduce(this, fnCallback, vInitialValue);
@@ -700,13 +704,13 @@ if (!Array.reduce) {
 }
 
 
-/// Searches the array for a value, and removes it from the array.
-//
-// v:var
-//    Value to remove.
-// return:var
-//    Removed item.
-//
+/** Searches the array for a value, and removes it from the array.
+
+v:var
+	Value to remove.
+return:var
+	Removed item.
+*/
 function $Array$remove(v) {
 	Function.checkArgs($Array$remove, arguments, Object.ANYTYPEOPT);
 	var i = this.indexOf(v);
@@ -718,13 +722,13 @@ function $Array$remove(v) {
 Array.prototype.remove = $Array$remove;
 
 
-/// Removes from the array an item, based on its index.
-//
-// i:int
-//    Index of the item to be removed.
-// return:var
-//    Removed item.
-//
+/** Removes from the array an item, based on its index.
+
+i:int
+	Index of the item to be removed.
+return:var
+	Removed item.
+*/
 function $Array$removeAt(i) {
 	Function.checkArgs($Array$removeAt, arguments, Number);
 	return this.splice(i, 1)[0];
@@ -732,17 +736,17 @@ function $Array$removeAt(i) {
 Array.prototype.removeAt = $Array$removeAt;
 
 
-/// Searches an array for an object with a specified property, and removes it.
-//
-// vProp:(String|int)
-//    Name or index of the value to be checked in each item.
-// v:var
-//    Value the property must have to pass the filtering.
-// [iStart:int]
-//    Index of the first item to scan; defaults to 0.
-// return:var
-//    Removed item.
-//
+/** Searches an array for an object with a specified property, and removes it.
+
+vProp:(String|int)
+	Name or index of the value to be checked in each item.
+v:var
+	Value the property must have to pass the filtering.
+[iStart:int]
+	Index of the first item to scan; defaults to 0.
+return:var
+	Removed item.
+*/
 function $Array$removeByProp(vProp, v, iStart /*= 0*/) {
 	Function.checkArgs(
 		$Array$removeByProp, arguments, [String, Number], Object.ANYTYPEOPT, [undefined, Number]
@@ -753,11 +757,11 @@ function $Array$removeByProp(vProp, v, iStart /*= 0*/) {
 Array.prototype.removeByProp = $Array$removeByProp;
 
 
-/// Redistributes the value in the array in a random order.
-//
-// return:Array
-//    this.
-//
+/** Redistributes the value in the array in a random order.
+
+return:Array
+	this.
+*/
 function $Array$shuffle() {
 	Function.checkArgs($Array$shuffle, arguments);
 	for (var c = this.length, i, vTemp; c; ) {
@@ -784,8 +788,8 @@ function $Array$shuffle() {
 Array.prototype.shuffle = $Array$shuffle;
 
 
-/// Defined in JavaScript 1.6.
-//
+/** Defined in JavaScript 1.6.
+*/
 if (!Array.prototype.some) {
 	function $Array$prototype$some(fnCallback, oContext /*= undefined*/) {
 		return Array.some(this, fnCallback, oContext);
@@ -809,8 +813,8 @@ if (!Array.some) {
 }
 
 
-/// See Object.toJSONString().
-//
+/** See Object.toJSONString().
+*/
 function $Array$toJSONString(oParserStatus /*= undefined*/) {
 	Function.checkArgs($Array$toJSONString, arguments, [undefined, Object]);
 	if (oParserStatus) {
@@ -845,8 +849,8 @@ Array.prototype.toJSONString = $Array$toJSONString;
 // Boolean
 
 
-/// See Object.toJSONString().
-//
+/** See Object.toJSONString().
+*/
 function $Boolean$toJSONString(oParserStatus /*= undefined*/) {
 	Function.checkArgs($Boolean$toJSONString, arguments, [undefined, Object]);
 	return this.toString();
@@ -857,24 +861,24 @@ Boolean.prototype.toJSONString = $Boolean$toJSONString;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Browser
-//
-// Helps writing code to work around special cases in buggy browsers (mostly IE), and collects and
-// uniforms “miscellaneous” facilities.
-//
+
+/** Helps writing code to work around special cases in buggy browsers (mostly IE), and collects and
+uniforms “miscellaneous” facilities.
+*/
 var Browser = {};
 Browser.toString = Function.createToStringMethod("Browser");
 
-/// true if the browser supports event bubbling and capturing, or false if only bubbling is
-// supported.
+/** true if the browser supports event bubbling and capturing, or false if only bubbling is
+supported. */
 Browser.eventCapturing/*:bool*/ = ("addEventListener" in document);
-/// true if the browser is Internet Explorer.
+/** true if the browser is Internet Explorer. */
 Browser.isIE/*:bool*/ =
 /*@cc_on
 	true ||
 @*/
 	false;
-/// Version of the browser, as MMmmrr. Non-null only if a specific browser was detected above (i.e.
-// if any is* attribute is true).
+/** Version of the browser, as MMmmrr. Non-null only if a specific browser was detected above (i.e.
+if any is* attribute is true). */
 Browser.version/*:int*/ = (function() {
 	if (Browser.isIE) {
 		if (!document.implementation) {
@@ -901,13 +905,13 @@ Browser.version/*:int*/ = (function() {
 })();
 
 
-/// Write debug messages to a browser-provided facility.
-//
-// s:String
-//    Debug message.
-// return:String
-//    The message. This allows to write func(Browser.log("test")).
-//
+/** Write debug messages to a browser-provided facility.
+
+s:String
+	Debug message.
+return:String
+	The message. This allows to write func(Browser.log("test")).
+*/
 function $Browser$log(s) {
 	Function.checkArgs($Browser$log, arguments, String);
 	if (window.console && window.console.log) {
@@ -926,13 +930,13 @@ Browser.log = $Browser$log;
 // Date
 
 
-/// Formats a date/time. Same as PHP’s ql_format_timestamp().
-//
-// sFormat:String
-//    Requested format.
-// return:String
-//    Formatted date/time.
-//
+/** Formats a date/time. Same as PHP’s ql_format_timestamp().
+
+sFormat:String
+	Requested format.
+return:String
+	Formatted date/time.
+*/
 Date.prototype.format = function $Date$format(sFormat) {
 	return sFormat.replace(/%[crRxX]/g, (function($0, ich, s) {
 		switch ($0) {
@@ -1003,14 +1007,14 @@ Date.prototype.format = function $Date$format(sFormat) {
 Date.prototype.format = $Date$format;
 
 
-/// Generates a human-readable representation of a duration in milliseconds (Date’s unit). Same as
-// PHP’s ql_format_duration().
-//
-// iTD:int
-//    Duration in milliseconds.
-// return:String
-//    Formatted duration.
-//
+/** Generates a human-readable representation of a duration in milliseconds (Date’s unit). Same as
+PHP’s ql_format_duration().
+
+iTD:int
+	Duration in milliseconds.
+return:String
+	Formatted duration.
+*/
 function $Date$formatDuration(iTD) {
 	var s = "";
 	for (var sUnit in Date.formatDuration._arrSteps) {
@@ -1035,8 +1039,8 @@ Date.formatDuration._arrSteps = {
 };
 
 
-/// See Object.toJSONString().
-//
+/** See Object.toJSONString().
+*/
 function $Date$toJSONString(oParserStatus /*= undefined*/) {
 	Function.checkArgs($Date$toJSONString, arguments, [undefined, Object]);
 	return "new Date(" + this.getTime() + ")";
@@ -1049,24 +1053,24 @@ Date.prototype.toJSONString = $Date$toJSONString;
 // Function
 
 
-/// Unique value that, if passed to a constructor, should cause it to skip the regular
-// initialization of the object; see [MAN#0001 JS: Inheritance and augmentation].
+/** Unique value that, if passed to a constructor, should cause it to skip the regular
+initialization of the object; see [MAN#0001 JS: Inheritance and augmentation]. */
 Function.PROTOTYPING/*:Object*/ = {};
 Function.PROTOTYPING.toString = Function.createToStringMethod("Function.PROTOTYPING");
 
 
-/// Non-callable function. The only way to implement it here is… to not implement it.
-//
+/** Non-callable function. The only way to implement it here is… to not implement it.
+*/
 Function.Abstract = null;
 
 
-/// Extends a class with the members of another class, thereby imitating multiple inheritance;
-// members already present in the prototype will not be overwritten. See [MAN#0001 JS: Inheritance
-// and augmentation].
-//
-// vParent:(Function|Object)
-//    The parent class (Function), or an Object to be used as prototype.
-//
+/** Extends a class with the members of another class, thereby imitating multiple inheritance;
+members already present in the prototype will not be overwritten. See [MAN#0001 JS: Inheritance and
+augmentation].
+
+vParent:(Function|Object)
+	The parent class (Function), or an Object to be used as prototype.
+*/
 function $Function$augmentWith(vParent) {
 	Function.checkArgs($Function$augmentWith, arguments, [Function, Object]);
 	var oProto = this.prototype,
@@ -1081,16 +1085,16 @@ function $Function$augmentWith(vParent) {
 Function.prototype.augmentWith = $Function$augmentWith;
 
 
-/// Returns this, permanently bound to the specified arguments. Any further arguments passed during
-// calls, will be appended to those specified here.
-//
-// [o:Object]
-//    this to be bound.
-// […:var*]
-//    Arguments to be bound.
-// return:Function
-//    Function that will invoke this with additional arguments.
-//
+/** Returns this, permanently bound to the specified arguments. Any further arguments passed during
+calls, will be appended to those specified here.
+
+[o:Object]
+	this to be bound.
+[…:var*]
+	Arguments to be bound.
+return:Function
+	Function that will invoke this with additional arguments.
+*/
 if (!Function.prototype.bind) {
 	function $Function$bind(o/*, …*/) {
 		Function.checkArgs($Function$bind, arguments, Object.ANYTYPE);
@@ -1127,21 +1131,21 @@ if (!Function.prototype.bind) {
 }
 
 
-/// Returns the specified non-Function, permanently bound to the specified arguments. Any further
-// arguments passed during calls, will be appended to those specified here.
-//
-// Alternate version of Function.bind() for browsers whose DOM objects aren’t instances of Function
-// (IE6/IE7/IE8, maybe others: DOM does not mandate so).
-//
-// fn:non-Function
-//    Method to be invoked.
-// [o:Object]
-//    this to be bound.
-// […:var*]
-//    Arguments to be bound.
-// return:Function
-//    Function that will invoke fn with additional arguments.
-//
+/** Returns the specified non-Function, permanently bound to the specified arguments. Any further
+arguments passed during calls, will be appended to those specified here.
+
+Alternate version of Function.bind() for browsers whose DOM objects are not instances of Function
+(IE6/IE7/IE8, maybe others: DOM does not mandate so).
+
+fn:non-Function
+	Method to be invoked.
+[o:Object]
+	this to be bound.
+[…:var*]
+	Arguments to be bound.
+return:Function
+	Function that will invoke fn with additional arguments.
+*/
 (function() {
 	// Non-random counter of temporary properties. They only have to be unique for each (callback,
 	// object) pair, so this is quite safe.
@@ -1213,36 +1217,36 @@ if (!Function.prototype.bind) {
 })();
 
 
-/// Empty (no-op) function. It may take any arguments, which will be entirely ignored.
-//
-// […:var*]
-//    Unused arguments.
-//
+/** Empty (no-op) function. It may take any arguments, which will be entirely ignored.
+
+[…:var*]
+	Unused arguments.
+*/
 function $Function$Empty(/*…*/) {
 }
 Function.Empty = $Function$Empty;
 
 
-/// False function. It may take any arguments, which will be entirely ignored.
-//
-// […:var*]
-//    Unused arguments.
-// return:bool
-//    false.
-//
+/** False function. It may take any arguments, which will be entirely ignored.
+
+[…:var*]
+	Unused arguments.
+return:bool
+	false.
+*/
 function $Function$False(/*…*/) {
 	return false;
 }
 Function.False = $Function$False;
 
 
-/// Identity function. It returns the (first) argument it was passed.
-//
-// v:var
-//    Argument to be returned.
-// return:var
-//    Argument passed.
-//
+/** Identity function. It returns the (first) argument it was passed.
+
+v:var
+	Argument to be returned.
+return:var
+	Argument passed.
+*/
 function $Function$Identity(v) {
 	Function.checkArgs($Function$Identity, arguments, Object.ANYTYPEOPT);
 	return v;
@@ -1250,14 +1254,14 @@ function $Function$Identity(v) {
 Function.Identity = $Function$Identity;
 
 
-/// Makes a class (Function) a descendant of the specified class or prototype. See [MAN#0001 JS:
-// Inheritance and augmentation] for more information.
-//
-// vParent:(Function|Object)
-//    The parent class (Function), or an Object to be used as prototype.
-// return:Function
-//    this.
-//
+/** Makes a class (Function) a descendant of the specified class or prototype. See [MAN#0001 JS:
+Inheritance and augmentation] for more information.
+
+vParent:(Function|Object)
+	The parent class (Function), or an Object to be used as prototype.
+return:Function
+	this.
+*/
 function $Function$inheritFrom(vParent) {
 	Function.checkArgs($Function$inheritFrom, arguments, [Function, Object]);
 	var oParent;
@@ -1273,26 +1277,26 @@ function $Function$inheritFrom(vParent) {
 Function.prototype.inheritFrom = $Function$inheritFrom;
 
 
-/// True function. It may take any arguments, which will be entirely ignored.
-//
-// […:var*]
-//    Unused arguments.
-// return:bool
-//    true.
-//
+/** True function. It may take any arguments, which will be entirely ignored.
+
+[…:var*]
+	Unused arguments.
+return:bool
+	true.
+*/
 function $Function$True(/*…*/) {
 	return true;
 }
 Function.True = $Function$True;
 
 
-/// Returns the name of the function.
-//
-// fn:Function
-//    Function whose name is to be retrieved.
-// return:String
-//    The name of the function, i.e. identifier on the right of “function” in its declaration.
-//
+/** Returns the name of the function.
+
+fn:Function
+	Function whose name is to be retrieved.
+return:String
+	The name of the function, i.e. identifier on the right of “function” in its declaration.
+*/
 function $Function$getName(fn) {
 	Function.checkArgs($Function$getName, arguments, Object.ANYTYPE);
 	// Just in case… some browsers may lack the ability to decompile functions.
@@ -1305,8 +1309,8 @@ function $Function$getName(fn) {
 Function.getName = $Function$getName;
 
 
-/// See Object.toJSONString().
-//
+/** See Object.toJSONString().
+*/
 function $Function$toJSONString(oParserStatus /*= undefined*/) {
 	Function.checkArgs($Function$toJSONString, arguments, [undefined, Object]);
 	// Trimming is necessary on the left too, because of OP9 bug which adds a new line before the
@@ -1321,31 +1325,31 @@ Function.prototype.toJSONString = $Function$toJSONString;
 // Math
 
 
-/// Synchronization constants.
+/** Synchronization constants. */
 Math.MIN_TIMEOUT/*:int*/ = 10;
-/// Sort UI delay: mostly unnoticeable to the user.
+/** Sort UI delay: mostly unnoticeable to the user. */
 Math.UI_SHORT_DELAY/*:int*/ = 400;
-/// Medium UI delay: fair delay, doesn’t bother the user.
+/** Medium UI delay: fair delay, doesn’t bother the user. */
 Math.UI_MEDIUM_DELAY/*:int*/ = 1500;
-/// Long UI delay: for when the user expects a longer wait.
+/** Long UI delay: for when the user expects a longer wait. */
 Math.UI_LONG_DELAY/*:int*/ = 3000;
-/// Frame rate for smooth animations.
+/** Frame rate for smooth animations. */
 Math.UI_SMOOTH_RATE/*:int*/ = 40;
 
 
-/// Calculates the distance between the specified 2D points.
-//
-// x1:float
-//    Abscissa of the first point.
-// y1:float
-//    Ordinate of the first point.
-// x2:float
-//    Abscissa of the second point.
-// y2:float
-//    Ordinate of the second point.
-// return:float
-//    Distance between the points.
-//
+/** Calculates the distance between the specified 2D points.
+
+x1:float
+	Abscissa of the first point.
+y1:float
+	Ordinate of the first point.
+x2:float
+	Abscissa of the second point.
+y2:float
+	Ordinate of the second point.
+return:float
+	Distance between the points.
+*/
 function $Math$distance(x1, y1, x2, y2) {
 	Function.checkArgs($Math$distance, arguments, Number, Number, Number, Number);
 	var dx = x2 - x1, dy = y2 - y1;
@@ -1359,21 +1363,25 @@ Math.distance = $Math$distance;
 // Number
 
 
+/** Largest positive value for an int. */
 Number.INT_MAX/*:int*/ = 0x7fffffff;
+/** Largest negative value for an int. */
 Number.INT_MIN/*:int*/ = 0x80000000;
+/** Bit-mask of the sign bit in an int value. */
 Number.INT_SIGN_MASK/*:int*/ = 0x80000000;
 
-/// Formats a number for display.
-//
-// v:(Number|String)
-//    Number to be formatted, or a string that will be converted to a number.
-// [cDecs:int]
-//    Decimal digits to include in the returned string; defaults to 0.
-// return:String
-//    String representation of the number.
-//
+/** Formats a number for display.
+
+v:(Number|String)
+	Number to be formatted, or a string that will be converted to a number.
+[cDecs:int]
+	Decimal digits to include in the returned string; defaults to 0.
+return:String
+	String representation of the number.
+*/
 (function() {
-	// Cache of RegExps built so far.
+
+	/** Cache of RegExps built so far. */
 	var mapDecsRegExpCache/*:Object(RegExp*)*/ = {};
 
 
@@ -1412,15 +1420,15 @@ Number.INT_SIGN_MASK/*:int*/ = 0x80000000;
 })();
 
 
-/// Converts a number in a size in a suitable multiple unit of byte.
-//
-// i:int
-//    Size to convert.
-// iMaxMultiple:int
-//    Max multiple unit to be used: 0 = B, 1 = KB, 2 = MB, and so on.
-// return:String
-//    Formatted size.
-//
+/** Converts a number in a size in a suitable multiple unit of byte.
+
+i:int
+	Size to convert.
+iMaxMultiple:int
+	Max multiple unit to be used: 0 = B, 1 = KB, 2 = MB, and so on.
+return:String
+	Formatted size.
+*/
 function $Number$formatByteSize(i, iMaxMultiple /*= undefined*/) {
 	if (iMaxMultiple === undefined) {
 		iMaxMultiple = 10;
@@ -1445,26 +1453,26 @@ function $Number$formatByteSize(i, iMaxMultiple /*= undefined*/) {
 Number.formatByteSize = $Number$formatByteSize;
 
 
-/// Formats a currency.
-//
-// i:float
-//    Number to convert.
-// return:String
-//    Formatted currency.
-//
+/** Formats a currency.
+
+i:float
+	Number to convert.
+return:String
+	Formatted currency.
+*/
 function $Number$formatCy(i) {
 	return Number.format(i, L10n.CORE_CUR_DECS);
 }
 Number.formatCy = $Number$formatCy;
 
 
-/// Rotates leftwards the bits in the number.
-//
-// c:int
-//    Number of bits to be rotated.
-// return:int
-//    Resulting number.
-//
+/** Rotates leftwards the bits in the number.
+
+c:int
+	Number of bits to be rotated.
+return:int
+	Resulting number.
+*/
 function $Number$rotateLeft(c) {
 	Function.checkArgs($Number$rotateLeft, arguments, Number);
 	return (this << c) | (this >>> (32 - c));
@@ -1472,11 +1480,11 @@ function $Number$rotateLeft(c) {
 Number.prototype.rotateLeft = $Number$rotateLeft;
 
 
-/// Returns a fixed-length hexadecimal representation of the number.
-//
-// return:String
-//    Representation of the number.
-//
+/** Returns a fixed-length hexadecimal representation of the number.
+
+return:String
+	Representation of the number.
+*/
 function $Number$toHexString() {
 	Function.checkArgs($Number$toHexString, arguments);
 	// Break the number in two, to avoid problems with negative numbers.
@@ -1486,8 +1494,8 @@ function $Number$toHexString() {
 Number.prototype.toHexString = $Number$toHexString;
 
 
-/// See Object.toJSONString().
-//
+/** See Object.toJSONString().
+*/
 function $Number$toJSONString(oParserStatus /*= undefined*/) {
 	Function.checkArgs($Number$toJSONString, arguments, [undefined, Object]);
 	return this.toString();
@@ -1495,11 +1503,11 @@ function $Number$toJSONString(oParserStatus /*= undefined*/) {
 Number.prototype.toJSONString = $Number$toJSONString;
 
 
-/// Returns a little-endian fixed-length hexadecimal representation of the number.
-//
-// return:String
-//    Representation of the number.
-//
+/** Returns a little-endian fixed-length hexadecimal representation of the number.
+
+return:String
+	Representation of the number.
+*/
 function $Number$toLEHexString() {
 	Function.checkArgs($Number$toLEHexString, arguments);
 	// Break the number in two, to avoid problems with negative numbers.
@@ -1511,14 +1519,14 @@ function $Number$toLEHexString() {
 Number.prototype.toLEHexString = $Number$toLEHexString;
 
 
-/// Sums another integer to this, disregarding the sign bits of both. Truncation on overflow is
-// performed.
-//
-// i2:int
-//    Second addend.
-// return:int
-//    Unsigned sum of this and the second addend.
-//
+/** Sums another integer to this, disregarding the sign bits of both. Truncation on overflow is
+performed.
+
+i2:int
+	Second addend.
+return:int
+	Unsigned sum of this and the second addend.
+*/
 function $Number$uAdd(i2) {
 	Function.checkArgs($Number$uAdd, arguments, Number);
 	return ((this & Number.INT_MAX) + (i2 & Number.INT_MAX)) ^
@@ -1532,11 +1540,11 @@ Number.prototype.uAdd = $Number$uAdd;
 // Object
 
 
-/// Returns a shallow copy of the object.
-//
-// return:Object(var*)
-//    Copy of the object.
-//
+/** Returns a shallow copy of the object.
+
+return:Object(var*)
+	Copy of the object.
+*/
 function $Object$clone(oSrc) {
 	Function.checkArgs($Object$clone, arguments, Object);
 	var oDst = {};
@@ -1548,11 +1556,11 @@ function $Object$clone(oSrc) {
 Object.clone = $Object$clone;
 
 
-/// Defined in ECMAScript 5 and JavaScript 1.8.1.
-//
-// Note: in WK, non-Functions do have a __proto__ property, but the native .getPrototypeOf() will
-// throw complaining that is has been called on a non-object.
-//
+/** Defined in ECMAScript 5 and JavaScript 1.8.1.
+
+Note: in WK, non-Functions do have a __proto__ property, but the native .getPrototypeOf() will throw
+complaining that is has been called on a non-object.
+*/
 if (!Object.getPrototypeOf)
 	if ("o".__proto__) {
 		function $Object$getPrototypeOf___proto__(o) {
@@ -1576,16 +1584,16 @@ if (!Object.getPrototypeOf)
 	}
 
 
-/// Augments an object, performing a set-OR with another; properties in the second object have
-// precedence over same-name properties in the first.
-//
-// oDst:Object
-//    Object to be augmented.
-// oSrc:Object
-//    Object from which properties will be copied to oDst.
-// return:Object
-//    The destination object.
-//
+/** Augments an object, performing a set-OR with another; properties in the second object have
+precedence over same-name properties in the first.
+
+oDst:Object
+	Object to be augmented.
+oSrc:Object
+	Object from which properties will be copied to oDst.
+return:Object
+	The destination object.
+*/
 function $Object$merge(oDst, oSrc) {
 	Function.checkArgs($Object$merge, arguments, Object.ANYTYPE, Object.ANYTYPE);
 	for (var sKey in oSrc) {
@@ -1596,15 +1604,15 @@ function $Object$merge(oDst, oSrc) {
 Object.merge = $Object$merge;
 
 
-/// Returns a JSON representation of the object.
-//
-// v:var
-//    Variable to convert.
-// [oParserStatus:Object]
-//    Internal data. Do not provide a value for this argument.
-// return:String
-//    JSON representation.
-//
+/** Returns a JSON representation of the object.
+
+v:var
+	Variable to convert.
+[oParserStatus:Object]
+	Internal data. Do not provide a value for this argument.
+return:String
+	JSON representation.
+*/
 function $Object$toJSONString(v, oParserStatus /*= undefined*/) {
 	Function.checkArgs($Object$toJSONString, arguments, Object.ANYTYPEOPT, [undefined, Object]);
 	// NOT 100% COMPATIBLE! Only use to diagnose special-case doubts.
@@ -1675,23 +1683,23 @@ Object.toJSONString = $Object$toJSONString;
 // RegExp
 
 
-/// Provides testing for a single digit.
+/** Provides testing for a single digit. */
 RegExp.DIGIT/*:RegExp*/ = /^\d$/;
-/// Whitespace characters. Conceptually the same as String.WHITESPACE.
+/** Whitespace characters. Conceptually the same as String.WHITESPACE. */
 RegExp.WHITESPACE_s/*:String*/ = " \n\r\t\f\x0b\u00a0\u2000-\u200b\u2028\u2029\u3000";
-/// Provides testing for a single whitespace character.
+/** Provides testing for a single whitespace character. */
 RegExp.WHITESPACE/*:RegExp*/ = new RegExp("^[" + RegExp.WHITESPACE_s + "]$");
-/// Provides testing for a single zero digit.
+/** Provides testing for a single zero digit. */
 RegExp.ZERO/*:RegExp*/ = /^0$/;
 
 
-/// Converts a string into a RegExp fragment, escaping any special characters.
-//
-// s:String
-//    String to be escaped.
-// return:String
-//    Escaped string.
-//
+/** Converts a string into a RegExp fragment, escaping any special characters.
+
+s:String
+	String to be escaped.
+return:String
+	Escaped string.
+*/
 function $RegExp$escape(s) {
 	Function.checkArgs($RegExp$escape, arguments, String);
 	return s.replace(/([$()*+.\/?[\\\]^{|}])/g, "\\$1");
@@ -1699,14 +1707,14 @@ function $RegExp$escape(s) {
 RegExp.escape = $RegExp$escape;
 
 
-/// Converts a string into a RegExp fragment, escaping any special characters but ? and *, which are
-// converted to their corresponding RegExp character sequences.
-//
-// s:String
-//    String to be escaped.
-// return:String
-//    Escaped string.
-//
+/** Converts a string into a RegExp fragment, escaping any special characters but ? and *, which are
+converted to their corresponding RegExp character sequences.
+
+s:String
+	String to be escaped.
+return:String
+	Escaped string.
+*/
 function $RegExp$escapeWithWildcards(s) {
 	Function.checkArgs($RegExp$escapeWithWildcards, arguments, String);
 	return s.replace(/([$()+.\/[\\\]^{|}])/g, "\\$1").replacePairs({
@@ -1717,12 +1725,12 @@ function $RegExp$escapeWithWildcards(s) {
 RegExp.escapeWithWildcards = $RegExp$escapeWithWildcards;
 
 
-/// Determine whether the regular expression is little more than a string comparison.
-//
-// return:bool
-//    true if the regular expression does not contain any special characters other than ^ and $, or
-//    false otherwise.
-//
+/** Determine whether the regular expression is little more than a string comparison.
+
+return:bool
+	true if the regular expression does not contain any special characters other than ^ and $, or
+	false otherwise.
+*/
 function $RegExp$isSimple() {
 	Function.checkArgs($RegExp$isSimple, arguments);
 	if (this.ignoreCase) {
@@ -1734,8 +1742,8 @@ function $RegExp$isSimple() {
 RegExp.prototype.isSimple = $RegExp$isSimple;
 
 
-/// See Object.toJSONString().
-//
+/** See Object.toJSONString().
+*/
 function $RegExp$toJSONString(oParserStatus /*= undefined*/) {
 	Function.checkArgs($RegExp$toJSONString, arguments, [undefined, Object]);
 	var arrMatch = this.toString().match(/^\/(.*)\/([A-Za-z]*)$/);
@@ -1746,13 +1754,13 @@ function $RegExp$toJSONString(oParserStatus /*= undefined*/) {
 RegExp.prototype.toJSONString = $RegExp$toJSONString;
 
 
-/// Converts a RegExp fragment into a String, interpreting any PCRE escaped characters.
-//
-// s:String
-//    String with excaped sequences.
-// return:String
-//    String with PCRE sequences.
-//
+/** Converts a RegExp fragment into a String, interpreting any PCRE escaped characters.
+
+s:String
+	String with excaped sequences.
+return:String
+	String with PCRE sequences.
+*/
 function $RegExp$unescape(s) {
 	Function.checkArgs($RegExp$unescape, arguments, String);
 	return s.replace(/\\(.)/g, "$1");
@@ -1763,46 +1771,46 @@ RegExp.unescape = $RegExp$unescape;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Sorting
-//
-// Functions to sort unsorted collections, and keep them sorted. They are as generic as possible, by
-// not handling data directly, but instead relying on getter/setter/comparer callbacks.
-//
+
+/** Functions to sort unsorted collections, and keep them sorted. They are as generic as possible,
+by not handling data directly, but instead relying on getter/setter/comparer callbacks.
+*/
 var Sorting = {};
 Sorting.toString = Function.createToStringMethod("Sorting");
 
 
-/// Default comparison function.
-//
-// v1:var
-//    First value.
-// v2:var
-//    Other value.
-// return:int
-//    Standard comparison result integer:
-//       > 0 if v1 > v2;
-//         0 if v1 == v2;
-//       < 0 if v1 < v2.
-//
+/** Default comparison function.
+
+v1:var
+	First value.
+v2:var
+	Other value.
+return:int
+	Standard comparison result integer:
+	•	> 0 if v1 > v2;
+	•	  0 if v1 == v2;
+	•	< 0 if v1 < v2.
+*/
 function $Sorting$defaultCompare(v1, v2) {
 	return v1 <= v2 ? v1 < v2 ? -1 : 0 : 1;
 }
 Sorting.defaultCompare = $Sorting$defaultCompare;
 
 
-/// Returns the index at which the specified item should be inserted while keeping the array sorted,
-// according to the provided sorting function.
-//
-// vValue:var
-//    Value to be inserted.
-// cItems:int
-//    Number of items in the collection.
-// fnGetItem:Function
-//    Callback which retrieves an item by index.
-// [fnCompare:Function]
-//    Callback which compares two items; defaults to using the standard comparison operators.
-// return:int
-//    Index at which the item should be inserted.
-//
+/** Returns the index at which the specified item should be inserted while keeping the array sorted,
+according to the provided sorting function.
+
+vValue:var
+	Value to be inserted.
+cItems:int
+	Number of items in the collection.
+fnGetItem:Function
+	Callback which retrieves an item by index.
+[fnCompare:Function]
+	Callback which compares two items; defaults to using the standard comparison operators.
+return:int
+	Index at which the item should be inserted.
+*/
 function $Sorting$insertionIndex(
 	vValue, cItems, fnGetItem, fnCompare /*= Sorting.defaultCompare*/
 ) {
@@ -1830,20 +1838,19 @@ function $Sorting$insertionIndex(
 Sorting.insertionIndex = $Sorting$insertionIndex;
 
 
-/// Sorts the items in a collection using a generally fast algorithm, using the default
-// Array.sort(). This might rearrange equal values, undoing any previous sorting (unstable sort);
-// see ECMAScript Language Specification at <http://www.ecma-international.org/publications/files/
-// ECMA-ST/Ecma-262.pdf>.
-//
-// cItems:int
-//    Number of items in the collection.
-// fnGetItem:Function
-//    Callback which retrieves an item by index.
-// fnSetItem:Function
-//    Callback which assigns a new value to an item.
-// [fnCompare:Function]
-//    Callback which compares two items; defaults to using the standard comparison operators.
-//
+/** Sorts the items in a collection using a generally fast algorithm, using the default
+Array.sort(). This may rearrange equal values, undoing any previous sorting (unstable sort); see
+ECMA-262 5.1 § 15.4.4.11 “Array.prototype.sort (comparefn)”.
+
+cItems:int
+	Number of items in the collection.
+fnGetItem:Function
+	Callback which retrieves an item by index.
+fnSetItem:Function
+	Callback which assigns a new value to an item.
+[fnCompare:Function]
+	Callback which compares two items; defaults to using the standard comparison operators.
+*/
 function $Sorting$sort(cItems, fnGetItem, fnSetItem, fnCompare /*= Sorting.defaultCompare*/) {
 	Function.checkArgs($Sorting$sort, arguments, Number, Function, Function, [undefined, Function]);
 	var arr = Array.fill(cItems, fnGetItem);
@@ -1854,18 +1861,18 @@ function $Sorting$sort(cItems, fnGetItem, fnSetItem, fnCompare /*= Sorting.defau
 Sorting.sort = $Sorting$sort;
 
 
-/// Sorts the items in a collection using a generally fast algorithm, while preserving the order of
-// equal items (stable sort).
-//
-// cItems:int
-//    Number of items in the collection.
-// fnGetItem:Function
-//    Callback which retrieves an item by index.
-// fnSetItem:Function
-//    Callback which assigns a new value to an item.
-// [fnCompare:Function]
-//    Callback which compares two items; defaults to using the standard comparison operators.
-//
+/** Sorts the items in a collection using a generally fast algorithm, while preserving the order of
+equal items (stable sort).
+
+cItems:int
+	Number of items in the collection.
+fnGetItem:Function
+	Callback which retrieves an item by index.
+fnSetItem:Function
+	Callback which assigns a new value to an item.
+[fnCompare:Function]
+	Callback which compares two items; defaults to using the standard comparison operators.
+*/
 function $Sorting$stableSort(cItems, fnGetItem, fnSetItem, fnCompare /*= Sorting.defaultCompare*/) {
 	Function.checkArgs(
 		$Sorting$stableSort, arguments, Number, Function, Function, [undefined, Function]
@@ -1930,22 +1937,24 @@ Sorting.stableSort = $Sorting$stableSort;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Perf
-//
+
+/** Performance measurement tools.
+*/
 var Perf = {};
 Perf.toString = Function.createToStringMethod("Perf");
 
 
-/// Runs a function multiple times, returning the average duration of the invocations.
-//
-// fn:Function
-//    Function to be timed.
-// oThis:Object
-//    Function’s this.
-// arrArgs:Array
-//    Function arguments.
-// return:float
-//    Average execution duration, in milliseconds.
-//
+/** Runs a function multiple times, returning the average duration of the invocations.
+
+fn:Function
+	Function to be timed.
+oThis:Object
+	Function’s this.
+arrArgs:Array
+	Function arguments.
+return:float
+	Average execution duration, in milliseconds.
+*/
 (function() {
 	var arrRunCounts = [10, 30, 100, 300, 1000, 3000, 10000, 300000, 1000000, 3000000];
 
@@ -1976,20 +1985,20 @@ Perf.toString = Function.createToStringMethod("Perf");
 // String
 
 
-/// Whitespace characters. Conceptually the same as RegExp.WHITESPACE_s.
+/** Whitespace characters. Conceptually the same as RegExp.WHITESPACE_s. */
 String.WHITESPACE/*:String*/ =
 	" \n\r\t\f\x0b\u00a0" +
 	"\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u2028\u2029\u3000";
 
 
-/// Uses the string as a format specifier for the provided arguments. Similar to a very simplified
-// sprintf().
-//
-// […:var*]
-//    Arguments to format.
-// return:String
-//    Resulting string.
-//
+/** Uses the string as a format specifier for the provided arguments. Similar to a very simplified
+sprintf().
+
+[…:var*]
+	Arguments to format.
+return:String
+	Resulting string.
+*/
 function $String$asFormat(/*…*/) {
 	var arrArgs = arguments,
 		 cUsedArgs = 0;
@@ -2017,8 +2026,8 @@ function $String$asFormat(/*…*/) {
 String.prototype.asFormat = $String$asFormat;
 
 
-/// See Object.clone().
-//
+/** See Object.clone().
+*/
 function $String$clone() {
 	Function.checkArgs($String$clone, arguments);
 	return "".concat(this);
@@ -2026,13 +2035,13 @@ function $String$clone() {
 String.prototype.clone = $String$clone;
 
 
-/// Truncates the string at the required length, adding ellipsis.
-//
-// cch:int
-//    Maximum length allowed for the string.
-// return:String
-//    Truncated string.
-//
+/** Truncates the string at the required length, adding ellipsis.
+
+cch:int
+	Maximum length allowed for the string.
+return:String
+	Truncated string.
+*/
 function $String$ellipsis(cch) {
 	Function.checkArgs($String$ellipsis, arguments, Number);
 	return this.length > cch && this.substr(0, cch - 1) + "…" || this;
@@ -2040,11 +2049,11 @@ function $String$ellipsis(cch) {
 String.prototype.ellipsis = $String$ellipsis;
 
 
-/// Determine whether the string is made up entirely by whitespace, or empty.
-//
-// return:bool
-//    false if the string contains any non-whitespace characters, or false otherwise.
-//
+/** Determine whether the string is made up entirely by whitespace, or empty.
+
+return:bool
+	false if the string contains any non-whitespace characters, or false otherwise.
+*/
 (function() {
 	var reWhitespace = new RegExp("[^" + RegExp.WHITESPACE_s + "]");
 
@@ -2056,11 +2065,11 @@ String.prototype.ellipsis = $String$ellipsis;
 })();
 
 
-/// Decodes a JSON string into a variabile.
-//
-// return:var
-//    Rendered value.
-//
+/** Decodes a JSON string into a variabile.
+
+return:var
+	Rendered value.
+*/
 function $String$jsonDecode() {
 	Function.checkArgs($String$jsonDecode, arguments);
 	if (!this) {
@@ -2078,8 +2087,8 @@ function $String$jsonDecode() {
 String.prototype.jsonDecode = $String$jsonDecode;
 
 
-/// See Object.toJSONString().
-//
+/** See Object.toJSONString().
+*/
 function $String$jsonEncode(v, oParserStatus /*= undefined*/) {
 	Function.checkArgs($String$jsonEncode, arguments, Object.ANYTYPEOPT, [undefined, Object]);
 	return Object.toJSONString(v, oParserStatus);
@@ -2087,24 +2096,25 @@ function $String$jsonEncode(v, oParserStatus /*= undefined*/) {
 String.jsonEncode = $String$jsonEncode;
 
 
-/// Compares the string to another, treating both as IETF language tags (see
-// <http://tools.ietf.org/html/bcp47>). The return value is nonzero if the longer string begins with
-// the shorter string followed by ‘-’, of if the strings are equal; the return value is 0 in any
-// other case. Examples:
-//    "it"      =1= "it"
-//    "it-IT"   =1= "it"
-//    "it-IT"   =2= "it-IT"
-//    "fr"       != "it"
-//    "en"      =1= "en-US"
-//    "en-UK"    != "en-US"
-//    "az"      =1= "az-Arab-IR"
-//    "az-Arab" =2= "az-Arab-IR"
-//
-// s2:String
-//    Other string.
-// return:int
-//    Degree of precision of the match, or 0 if the strings specify two different languages.
-//
+/** Compares the string to another, treating both as IETF language tags (see
+<http://tools.ietf.org/html/bcp47>). The return value is nonzero if the longer string begins with
+the shorter string followed by ‘-’, of if the strings are equal; the return value is 0 in any other
+case. Examples:
+
+•	"it"      =1= "it"
+•	"it-IT"   =1= "it"
+•	"it-IT"   =2= "it-IT"
+•	"fr"       != "it"
+•	"en"      =1= "en-US"
+•	"en-UK"    != "en-US"
+•	"az"      =1= "az-Arab-IR"
+•	"az-Arab" =2= "az-Arab-IR"
+
+s2:String
+	Other string.
+return:int
+	Degree of precision of the match, or 0 if the strings specify two different languages.
+*/
 function $String$languageTagCompare(s2) {
 	Function.checkArgs($String$languageTagCompare, arguments, String);
 	s2 = s2.toLowerCase();
@@ -2132,13 +2142,13 @@ function $String$languageTagCompare(s2) {
 String.prototype.languageTagCompare = $String$languageTagCompare;
 
 
-/// Performs a locale-dependant, case-insensitive string comparison.
-//
-// s2:String
-//    Right side of the comparison.
-// return:int
-//    Comparison result.
-//
+/** Performs a locale-dependent, case-insensitive string comparison.
+
+s2:String
+	Right side of the comparison.
+return:int
+	Comparison result.
+*/
 function $String$localeCompareNoCase(s2) {
 	Function.checkArgs($String$localeCompareNoCase, arguments, String);
 	return this.toLocaleUpperCase().localeCompare(s2.toLocaleUpperCase());
@@ -2146,14 +2156,14 @@ function $String$localeCompareNoCase(s2) {
 String.prototype.localeCompareNoCase = $String$localeCompareNoCase;
 
 
-/// Computes the string’s MD5 hash.
-//
-// Note: non-ASCII strings are converted to UTF-8 from UTF-16 (which seems to be the standard for
-// JavaScript). Non-BMP code points are fully supported.
-//
-// return:String
-//    MD5 hash.
-//
+/** Computes the string’s MD5 hash.
+
+Note: non-ASCII strings are converted to UTF-8 from UTF-16 (which seems to be the standard for
+JavaScript). Non-BMP code points are fully supported.
+
+return:String
+	MD5 hash.
+*/
 (function() {
 	// Greatest string padding.
 	var c_sPadding = "\x80\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" +
@@ -2304,59 +2314,61 @@ String.prototype.localeCompareNoCase = $String$localeCompareNoCase;
 })();
 
 
-/// Compares the string to another, using a natural order algorithm:
-// •  numbers have the same precedence as in regular sorting, but are grouped (i.e. digits have no
-//    individual weight);
-// •  differences in whitespace are ignored, but will be used to break a tie;
-// •  leading zeroes in numbers can make two otherwise identical numbers different, but are
-//    otherwise ignored, and less important than whitespace anyway (because they appear later in the
-//    string).
-//
-// The algorithm was developed after this table:
-//    Ws = whitespace characters
-//    0s = zeroes
-//    Num = sort order, from any numbers in the string
-//    Str = sort order, from any non-whitespace non-digit in the string
-//    Len = sort order, according to length (whitespace and digits excluded)
-//
-//           Ws 0s Num Str Len
-//    "a"     0  -   -  1   1
-//    "a "    1  -   -  1   1
-//    "a  "   2  -   -  1   1
-//    "a0"    0  1   0  1   1
-//    "a00"   0  2   0  1   1
-//    "a 0"   1  1   0  1   1
-//    "a  0"  2  1   0  1   1
-//    "a1"    0  0   1  1   2
-//    "a01"   0  1   1  1   2
-//    "a 1"   1  0   1  1   2
-//    "a  1"  2  0   1  1   2
-//    "a2"    0  0   2  1   2
-//    "a02"   0  1   2  1   2
-//    "a 2"   1  0   2  1   2
-//    "a  2"  2  0   2  1   2
-//    "a11"   0  0  11  1   2
-//    "a011"  0  1  11  1   2
-//    "a 11"  1  0  11  1   2
-//    "aa"    0  -   -  2   2
-//    "a a"   1  -   -  2   2
-//    "a  a"  2  -   -  2   2
-//    "a aa"  1  -   -  3   3
-//    "a ab"  1  -   -  4   3
-//    "a b"   1  -   -  5   2
-//    "a  b"  2  -   -  5   2
-//
-// s2:String
-//    Other string.
-// [bNoCase:bool]
-//    If true, case differences in the two strings will be ignored; i.e. the comparison will be
-//    case-insensitive. Defaults to false.
-// return:int
-//    Standard comparison result integer:
-//       > 0 if this > s2;
-//         0 if this == s2;
-//       < 0 if this < s2.
-//
+/** Compares the string to another, using a natural order algorithm:
+•	Numbers have the same precedence as in regular sorting, but are grouped (i.e. digits have no
+	individual weight);
+•	Differences in whitespace are ignored, but will be used to break a tie;
+•	Leading zeroes in numbers can make two otherwise identical numbers different, but are otherwise
+	ignored, and less important than whitespace anyway (because they appear later in the string).
+
+The algorithm was developed after this table:
+•	Ws = whitespace characters
+•	0s = zeroes
+•	Num = sort order, from any numbers in the string
+•	Str = sort order, from any non-whitespace non-digit in the string
+•	Len = sort order, according to length (whitespace and digits excluded)
+
+         ┌────┬────┬─────┬─────┬─────┐
+         │ Ws │ 0s │ Num │ Str │ Len │
+┌────────┼────┼────┼─────┼─────┼─────┤
+│ “a”    │  0 │  - │  -  │  1  │  1  │
+│ “a ”   │  1 │  - │  -  │  1  │  1  │
+│ “a  ”  │  2 │  - │  -  │  1  │  1  │
+│ “a0”   │  0 │  1 │  0  │  1  │  1  │
+│ “a00”  │  0 │  2 │  0  │  1  │  1  │
+│ “a 0”  │  1 │  1 │  0  │  1  │  1  │
+│ “a  0” │  2 │  1 │  0  │  1  │  1  │
+│ “a1”   │  0 │  0 │  1  │  1  │  2  │
+│ “a01”  │  0 │  1 │  1  │  1  │  2  │
+│ “a 1”  │  1 │  0 │  1  │  1  │  2  │
+│ “a  1” │  2 │  0 │  1  │  1  │  2  │
+│ “a2”   │  0 │  0 │  2  │  1  │  2  │
+│ “a02”  │  0 │  1 │  2  │  1  │  2  │
+│ “a 2”  │  1 │  0 │  2  │  1  │  2  │
+│ “a  2” │  2 │  0 │  2  │  1  │  2  │
+│ “a11”  │  0 │  0 │ 11  │  1  │  2  │
+│ “a011” │  0 │  1 │ 11  │  1  │  2  │
+│ “a 11” │  1 │  0 │ 11  │  1  │  2  │
+│ “aa”   │  0 │  - │  -  │  2  │  2  │
+│ “a a”  │  1 │  - │  -  │  2  │  2  │
+│ “a  a” │  2 │  - │  -  │  2  │  2  │
+│ “a aa” │  1 │  - │  -  │  3  │  3  │
+│ “a ab” │  1 │  - │  -  │  4  │  3  │
+│ “a b”  │  1 │  - │  -  │  5  │  2  │
+│ “a  b” │  2 │  - │  -  │  5  │  2  │
+└────────┴────┴────┴─────┴─────┴─────┘
+
+s2:String
+	Other string.
+[bNoCase:bool]
+	If true, case differences in the two strings will be ignored; i.e. the comparison will be case-
+	insensitive. Defaults to false.
+return:int
+	Standard comparison result integer:
+	•	> 0 if this > s2;
+	•	  0 if this == s2;
+	•	< 0 if this < s2.
+*/
 function $String$natCompare(s2, bNoCase /*= false*/) {
 	Function.checkArgs($String$natCompare, arguments, String, [undefined, Boolean]);
 	var s1 = this, sCompareMethod = (bNoCase && "localeCompareNoCase" || "localeCompare");
@@ -2438,16 +2450,16 @@ function $String$natCompare(s2, bNoCase /*= false*/) {
 String.prototype.natCompare = $String$natCompare;
 
 
-/// Case-insensitive version of String.natCompare().
-//
-// s2:String
-//    Other string.
-// return:int
-//    Standard comparison result integer:
-//       > 0 if this > s2;
-//         0 if this == s2;
-//       < 0 if this < s2.
-//
+/** Case-insensitive version of String.natCompare().
+
+s2:String
+	Other string.
+return:int
+	Standard comparison result integer:
+	•	> 0 if this > s2;
+	•	  0 if this == s2;
+	•	< 0 if this < s2.
+*/
 function $String$natCompareNoCase(s2) {
 	Function.checkArgs($String$natCompareNoCase, arguments, String);
 	return this.natCompare(s2, true);
@@ -2455,22 +2467,22 @@ function $String$natCompareNoCase(s2) {
 String.prototype.natCompareNoCase = $String$natCompareNoCase;
 
 
-/// Ensures the string is of a certain length, padding it as necessary.
-//
-// cchPad:int
-//    Number of desired total characters.
-// sPadder:String
-//    String to be used as padding.
-// iDir:int
-//    Side of the string which should be padded if necessary:
-//       < 0 turns “nopad” into “    nopad”;
-//         0 turns “nopad” into “  nopad  ”;
-//       > 0 turns “nopad” into “nopad    ”.
-//    It may help to think of the original string as the origin, and iDir as a point relative to it,
-//    where the padding will be applied.
-// return:String
-//    Padded string.
-//
+/** Ensures the string is of a certain length, padding it as necessary.
+
+cchPad:int
+	Number of desired total characters.
+sPadder:String
+	String to be used as padding.
+iDir:int
+	Side of the string which should be padded if necessary:
+	•	< 0 turns “nopad” into “    nopad”;
+	•	  0 turns “nopad” into “  nopad  ”;
+	•	> 0 turns “nopad” into “nopad    ”.
+	It may help to think of the original string as the origin, and iDir as a point relative to it,
+	where the padding will be applied.
+return:String
+	Padded string.
+*/
 function $String$pad(cchPad, sPadder, iDir) {
 	Function.checkArgs($String$pad, arguments, Number, String, Number);
 	var s;
@@ -2495,13 +2507,13 @@ function $String$pad(cchPad, sPadder, iDir) {
 String.prototype.pad = $String$pad;
 
 
-/// Returns this string, repeated as many times as specified.
-//
-// iMult:int
-//    Number of repetitions desired.
-// return:String
-//    Repeated string.
-//
+/** Returns this string, repeated as many times as specified.
+
+iMult:int
+	Number of repetitions desired.
+return:String
+	Repeated string.
+*/
 function $String$repeat(iMult) {
 	Function.checkArgs($String$repeat, arguments, Number);
 	var s = "";
@@ -2513,11 +2525,11 @@ function $String$repeat(iMult) {
 String.prototype.repeat = $String$repeat;
 
 
-/// Returns the string, backwards.
-//
-// return:String
-//    Reversed string.
-//
+/** Returns the string, backwards.
+
+return:String
+	Reversed string.
+*/
 function $String$reverse() {
 	Function.checkArgs($String$reverse, arguments);
 	var s = "";
@@ -2529,15 +2541,15 @@ function $String$reverse() {
 String.prototype.reverse = $String$reverse;
 
 
-/// Replaces a set of substrings according to the provided replacement map.
-//
-// map:Object(var*)
-//    Maps each source string to each destination string. If a RegExp is to be used for the search,
-//    the corresponding item will have a number as key, and the item will be an array with the pair
-//    (search RegExp, substitution) instead of a string.
-// return:String
-//    Resulting string.
-//
+/** Replaces a set of substrings according to the provided replacement map.
+
+map:Object(var*)
+	Maps each source string to each destination string. If a RegExp is to be used for the search, the
+	corresponding item will have a number as key, and the item will be an array with the pair (search
+	RegExp, substitution) instead of a string.
+return:String
+	Resulting string.
+*/
 function $String$replacePairs(map) {
 	Function.checkArgs($String$replacePairs, arguments, Object);
 	var s = this.clone();
@@ -2556,7 +2568,7 @@ String.prototype.replacePairs = $String$replacePairs;
 
 if ("ab".substr(-1) != "b")
 	// IE5.5 bug, IE6 bug, IE7 bug, IE8 bug: their substr() doesn’t accept a negative starting index,
-	// so they must be adjusted.
+	// so it must be fixed.
 	(function() {
 		var fnOverridden = String.prototype.substr;
 
@@ -2577,13 +2589,13 @@ if ("ab".substr(-1) != "b")
 	})();
 
 
-/// Counts the occurrences of the specified string into this one.
-//
-// v:(String|RegExp)
-//    String or RegExp of which to count occurrences.
-// return:int
-//    Number of occurrences.
-//
+/** Counts the occurrences of the specified string into this one.
+
+v:(String|RegExp)
+	String or RegExp of which to count occurrences.
+return:int
+	Number of occurrences.
+*/
 function $String$substrCount(v) {
 	Function.checkArgs($String$substrCount, arguments, [String, RegExp]);
 	return (this.match(v instanceof RegExp && v || new RegExp(RegExp.escape(v), "g")) || []).length;
@@ -2591,11 +2603,11 @@ function $String$substrCount(v) {
 String.prototype.substrCount = $String$substrCount;
 
 
-/// Converts “some-dashed-text” to “someDashedText”.
-//
-// return:String
-//    Converted string.
-//
+/** Converts “some-dashed-text” to “someDashedText”.
+
+return:String
+	Converted string.
+*/
 (function() {
 
 	function camelizer($0, ich, s) {
@@ -2611,9 +2623,9 @@ String.prototype.substrCount = $String$substrCount;
 })();
 
 
-/// See Object.toJSONString().
-//
-(function() {
+/** See Object.toJSONString().
+*/
+String.prototype.toJSONString = (function() {
 	var mapEscapeSeqs = {
 		"\\"  : "\\\\",
 		"\""  : "\\\"",
@@ -2624,8 +2636,8 @@ String.prototype.substrCount = $String$substrCount;
 		"\x0d": "\\r"
 	};
 
-	/// Converts C0 control characters in \uxxxx escape sequences.
-	//
+	/** Converts C0 control characters in \uxxxx escape sequences.
+	*/
 	function ctlToEscapeSeq($0, ich, s) {
 		var s = "";
 		for (var ich = 0, cch = $0.length; ich < cch; ++ich) {
@@ -2641,13 +2653,13 @@ String.prototype.substrCount = $String$substrCount;
 		s = s.replace(/[\x00-\x1f]+/g, ctlToEscapeSeq);
 		return "\"" + s + "\"";
 	}
-	String.prototype.toJSONString = $String$toJSONString;
+	return $String$toJSONString;
 })();
 
 
-/// Defined in ECMAScript 5 and JavaScript 1.8.1. Versions here are optimized for longer strings
-// with fewer trimmable spaces.
-//
+/** Defined in ECMAScript 5 and JavaScript 1.8.1. Versions here are optimized for longer strings
+with fewer trimmable spaces.
+*/
 if (!String.prototype.trim) {
 	if (Browser.isIE) {
 		// This seems to exploit some optimizations in IE5.5/IE6/IE7/IE8’s RegExp compiler.
@@ -2686,9 +2698,9 @@ if (!String.prototype.trim) {
 }
 
 
-/// Defined in JavaScript 1.8.1. Versions here are optimized for longer strings with fewer trimmable
-// spaces.
-//
+/** Defined in JavaScript 1.8.1. Versions here are optimized for longer strings with fewer trimmable
+spaces.
+*/
 if (!String.prototype.trimLeft) {
 	if (Browser.isIE || (Browser.isOpera && Browser.version >= 105000)) {
 		// This works best with interpreters featuring a better RegExp engine.
@@ -2718,9 +2730,9 @@ if (!String.prototype.trimLeft) {
 }
 
 
-/// Defined in JavaScript 1.8.1. Versions here are optimized for longer strings with fewer trimmable
-// spaces.
-//
+/** Defined in JavaScript 1.8.1. Versions here are optimized for longer strings with fewer trimmable
+spaces.
+*/
 if (!String.prototype.trimRight) {
 	if (Browser.isOpera && Browser.version >= 105000) {
 		// This works best with interpreters sporting a more optimized RegExp engine.
@@ -2755,11 +2767,11 @@ if (!String.prototype.trimRight) {
 // Url
 
 
-/// Constructor.
-//
-// [s:String]
-//    String used to initialize the URL components.
-//
+/** URL string.
+
+[s:String]
+	String used to initialize the URL components.
+*/
 function $Url(s /*= undefined*/) {
 	if (arguments[0] === Function.PROTOTYPING) {
 		return;
@@ -2783,14 +2795,15 @@ Url.prototype.query/*:Object(String*)*/ = null;
 Url.prototype.fragment/*:String*/ = null;
 
 
-/// Splits an URL into its components. The URL must be in this format:
-//    http://[user[:pass]@]{[[…]www.]example.com|123.45.67.89}[:80][/dir/path/][?query][#fragment]
-//
-// s:String
-//    URL to parse.
-// return:Url
-//    this.
-//
+/** Splits an URL into its components. The URL must be in this format:
+
+http://[user[:pass]@]{[[…]www.]example.com|123.45.67.89}[:80][/dir/path/][?query][#fragment]
+
+s:String
+	URL to parse.
+return:Url
+	this.
+*/
 function $Url$fromString(s) {
 	Function.checkArgs($Url$fromString, arguments, String);
 	this.scheme = null;
@@ -2878,13 +2891,13 @@ function $Url$fromString(s) {
 Url.prototype.fromString = $Url$fromString;
 
 
-/// Encodes a string, making it a legal URL.
-//
-// s:String
-//    String to be encoded.
-// return:String
-//    Resulting URL.
-//
+/** Encodes a string, making it a legal URL.
+
+s:String
+	String to be encoded.
+return:String
+	Resulting URL.
+*/
 function $Url$encode(s) {
 	Function.checkArgs($Url$encode, arguments, String);
 	return encodeURI(s);
@@ -2892,13 +2905,13 @@ function $Url$encode(s) {
 Url.encode = $Url$encode;
 
 
-/// Encodes a string, making it a legal URL query component.
-//
-// s:String
-//    String to be encoded.
-// return:String
-//    Resulting URL.
-//
+/** Encodes a string, making it a legal URL query component.
+
+s:String
+	String to be encoded.
+return:String
+	Resulting URL.
+*/
 function $Url$encodeComponent(s) {
 	Function.checkArgs($Url$encodeComponent, arguments, String);
 	return encodeURIComponent(s);
@@ -2906,13 +2919,13 @@ function $Url$encodeComponent(s) {
 Url.encodeComponent = $Url$encodeComponent;
 
 
-/// Encodes a map of query arguments into their string form.
-//
-// mapArgs:Object(String*)
-//    Query arguments.
-// return:String
-//    Query string.
-//
+/** Encodes a map of query arguments into their string form.
+
+mapArgs:Object(String*)
+	Query arguments.
+return:String
+	Query string.
+*/
 function $Url$encodeQuery(mapArgs) {
 	Function.checkArgs($Url$encodeQuery, arguments, Object);
 	var s = "";
@@ -2924,14 +2937,14 @@ function $Url$encodeQuery(mapArgs) {
 Url.encodeQuery = $Url$encodeQuery;
 
 
-/// Strips from a string any characters which could be ambiguous were it to be used as the path part
-// of an URI.
-//
-// s:String
-//    String to be cleaned.
-// return:String
-//    String only consisting of valid URI characters.
-//
+/** Strips from a string any characters which could be ambiguous were it to be used as the path part
+of an URI.
+
+s:String
+	String to be cleaned.
+return:String
+	String only consisting of valid URI characters.
+*/
 function $Url$sanitizePath(s) {
 	Function.checkArgs($Url$sanitizePath, arguments, String);
 	return s.replace(/[ "#%&<>?_]+/g, "_");
@@ -2939,14 +2952,14 @@ function $Url$sanitizePath(s) {
 Url.sanitizePath = $Url$sanitizePath;
 
 
-/// Returns the last path component in a full file path; inspired by the SUS basename(1) command. It
-// does NOT process full URLs.
-//
-// s:String
-//    Full path to be stripped.
-// return:String
-//    Last path component in the source string (i.e. the file name).
-//
+/** Returns the last path component in a full file path; inspired by the SUS basename(1) command. It
+does NOT process full URLs.
+
+s:String
+	Full path to be stripped.
+return:String
+	Last path component in the source string (i.e. the file name).
+*/
 function $Url$stripPath(s) {
 	Function.checkArgs($Url$stripPath, arguments, String);
 	return s.replace(/^(?:.*\/)?([^\/]+)\/?$/, "$1");
@@ -2954,11 +2967,11 @@ function $Url$stripPath(s) {
 Url.stripPath = $Url$stripPath;
 
 
-/// See Object.toString().
-//
-// Note: this is not exactly the inverse of Url.fromString(), since it won’t generate empty query
-// strings (“…?”) or empty fragments (“…#”).
-//
+/** See Object.toString().
+
+Note: this is not exactly the inverse of Url.fromString(), since it won’t generate empty query
+strings (“…?”) or empty fragments (“…#”).
+*/
 function $Url$toString() {
 	Function.checkArgs($Url$toString, arguments);
 	var s = this.scheme + "://";

@@ -17,19 +17,17 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-// Fixes specific to MS Internet Explorer.
-// Implementation of some necessary parts of W3C standards, and much more.
-// See [HACK#0003 JS: IE fixes].
+/** Fixes specific to MS Internet Explorer: implementation of some necessary parts of W3C standards,
+and much more. See [HACK#0003 JS: IE fixes]. */
 
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Early corrections (setup)
 
-
-// Rationale: IE5.5/IE6/IE7/IE8 always add 1 to the line numbers passed to the onerror handler, but
-// only if the script was not external.
-//
+/* Rationale: IE5.5/IE6/IE7/IE8 always add 1 to the line numbers passed to the onerror handler, but
+only if the script was not external.
+*/
 Ql._onError = (function() {
 	var fnOverridden = Ql._onError;
 
@@ -46,24 +44,23 @@ window.onerror = Ql._onError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Additional Quearl initialization code
-//
-// Replica of the DOM-compliant initialization code, altered to work in IE5.5/IE6/IE7/IE8.
 
-
+/* Replica of the DOM-compliant initialization code, altered to work in IE5.5/IE6/IE7/IE8.
+*/
 if (Browser.version < 90000) {
 
 	(function() {
 
-		/// Receives a load event, and de-registers itself.
-		//
+		/** Receives a load event, and de-registers itself.
+		*/
 		function onInit_eventListener_l_IE55() {
 			window.detachEvent("on" + window.event.type, onInit_eventListener_l_IE55);
 			Ql._onInit(window.event.type);
 		};
 
 
-		/// Receives a readystatechange event, and de-registers itself.
-		//
+		/** Receives a readystatechange event, and de-registers itself.
+		*/
 		function onInit_eventListener_rsc_IE55() {
 			if (document.readyState == "complete") {
 				window.detachEvent("on" + window.event.type, onInit_eventListener_rsc_IE55);
@@ -72,17 +69,20 @@ if (Browser.version < 90000) {
 		};
 
 
-		/// Tries to invoke the doScroll() method, which is (was) documented to fail if the document
-		// is not completely loaded. Idea by Diego Perini, based on a remark in
-		// <http://msdn.microsoft.com/en-us/library/ms531426.aspx>:
-		//   «A few methods, such as doScroll, require the primary document to be completely loaded.
-		//   If these methods are part of an initialization function, they should be handled when the
-		//   ondocumentready event fires.»
-		// interpreted to mean that if doScroll does not throw an exception, the document has been
-		// completely loaded.
-		// Additionally, it also checks for document.body, which has been reported to be absent from
-		// fully loaded documents in some cases.
-		//
+		/** Tries to invoke the doScroll() method, which is (was) documented to fail if the document
+		is not completely loaded. Idea by Diego Perini, based on a remark in
+		<http://msdn.microsoft.com/en-us/library/ms531426.aspx>:
+
+			«A few methods, such as doScroll, require the primary document to be completely loaded. If
+			these methods are part of an initialization function, they should be handled when the
+			ondocumentready event fires.»
+
+		This is interpreted to mean that if doScroll does not throw an exception, the document has
+		been completely loaded.
+
+		Additionally, this also checks for document.body, which has been reported to be absent from
+		fully loaded documents in some cases.
+		*/
 		function onInit_doScroll_IE55() {
 			// Don’t try to scroll if the UI has already been manipulated, i.e. after window.onload.
 			if (!Ql._onInit._bEarlyInitDone) {
@@ -115,16 +115,16 @@ if (Browser.version < 90000) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Amendments to Ql.DOM - DOM1 and DOM2-Core
-//
-// IE5.5/IE6/IE7 have a poor implementation of DOM1, and their DOM2-Core lacks quite a lot. They
-// expect attribute names spelt in camelCase, making their implementation incompatible with the rest
-// of the browser world.
 
+/* IE5.5/IE6/IE7 have a poor implementation of DOM1, and their DOM2-Core lacks quite a lot. They
+expect attribute names spelt in camelCase, making their implementation incompatible with the rest of
+the browser world.
+*/
 
-// Rationale: IE5.5/IE6/IE7/IE8 have no Node global object, which is needed pretty much everywhere
-// for the constants it provides. Here’s a non-implementation of DOM1.Node (mostly for nodeType) to
-// fix at least that.
-//
+/* Rationale: IE5.5/IE6/IE7/IE8 have no Node global object, which is needed pretty much everywhere
+for the constants it provides. Here’s a non-implementation of DOM1.Node (mostly for nodeType) to fix
+at least that.
+*/
 if (Browser.version < 90000) {
 
 	window.Node = {};
@@ -146,16 +146,17 @@ if (Browser.version < 90000) {
 }
 
 
-// Rationale: IE5.5/IE6/IE7 map element attributes to object properties. This causes some properties
-// to have altered names, due to conflicts with JS reserved words (e.g. class changed to className),
-// and some more to have a camelCased style (e.g. rowspan changed to rowSpan); either way, this
-// requires a mapping table, and the redefinition of all attribute-related methods/getters.
-//
+/* Rationale: IE5.5/IE6/IE7 map element attributes to object properties. This causes some properties
+to have altered names, due to conflicts with JS reserved words (e.g. class changed to className),
+and some more to have a camelCased style (e.g. rowspan changed to rowSpan); either way, this
+requires a mapping table, and the redefinition of all attribute-related methods/getters.
+*/
 if (Browser.version < 80000) {
 
 	(function() {
-		// Translation table between attribute names and the (pretty arbitrary) names IE5.5/IE6/IE7
-		// give them.
+
+		/** Translation table between attribute names and the (pretty arbitrary) names IE5.5/IE6/IE7
+		give them. */
 		var mapJsAttrNames = {
 			"accesskey":  "accessKey",
 			"checked":    "defaultChecked",
@@ -190,7 +191,6 @@ if (Browser.version < 80000) {
 
 
 		// IE5.5/IE6 have no support for DOM2-Core entirely, so they don’t have this at all.
-		//
 		function $Ql$DOM$_hasAttribute_IE55(elt, sName) {
 			if (sName in mapJsAttrNames) {
 				sName = mapJsAttrNames[sName];
@@ -222,8 +222,8 @@ if (Browser.version < 80000) {
 }
 
 
-// Rationale: IE5.5 doesn’t understand getElementsByTagName("*"), but provides the “all collection”.
-//
+/* Rationale: IE5.5 doesn’t understand getElementsByTagName("*"), but provides the “all collection”.
+*/
 if (Browser.version < 60000) {
 
 	Ql.DOM.Document.prototype._sm_mapBuiltinLists = Object.merge({
@@ -236,16 +236,15 @@ if (Browser.version < 60000) {
 }
 
 
-// Rationale: IE5.5 is very wildly off-standard regarding DOM documents, and requires quite a lot of
-// working around it. Look at [HACK#0007 JS: IE fixes: IE5.5 documents] to see just how bad it is.
-//
+/* Rationale: IE5.5 is very wildly off-standard regarding DOM documents, and requires quite a lot of
+working around it. Look at [HACK#0007 JS: IE fixes: IE5.5 documents] to see just how bad it is.
+*/
 if (Browser.version < 60000) {
 
 	// Other than documents lacking the nodeType property, and pseudo-Documents trying to pass as
 	// documents, this has to face the fact that in IE5.5, comment nodes are reported as elements
 	// with nodeName “!” - coherently with its bug where a comment is delimited by <! … > instead of
 	// <!-- … -->, hence making it look like an omit-closing ! element.
-	//
 	function $Ql$DOM$_getNodeType_IE55(nd) {
 		if ("nodeType" in nd) {
 			return nd.nodeName == "!" ? Node.COMMENT_NODE : nd.nodeType;
@@ -260,7 +259,6 @@ if (Browser.version < 60000) {
 
 	// Uses the Ql data member set by Ql.DOM.Document._createElement() in case the node is currently
 	// unlinked.
-	//
 	function $Ql$DOM$_getOwnerDocument_IE55(nd) {
 		if (nd.document.URL != "about:blank") {
 			// The document property is an actual document: use that.
@@ -285,7 +283,6 @@ if (Browser.version < 60000) {
 	// The incorrect hierarchy makes it impossible to climb, in a loop, all the way up from a node to
 	// its own document by using .parentNode, and simply using .parentNode || .document will cause
 	// infinite loops because in IE5.5 a document is always owned by itself.
-	//
 	function $Ql$DOM$_getParentNode_IE55(nd) {
 		if ("nodeType" in nd) {
 			// nd is an actual node, so return its document (if root) or parentNode (if non-root).
@@ -300,7 +297,6 @@ if (Browser.version < 60000) {
 	// This is the same as the non-IEfix version, except here the getters Ql.DOM._getNodeName() and
 	// Ql.DOM._getOwnerDocument() are used, while for performance reasons the non-IEfix version uses
 	// the properties directly. This way, only IE5.5 is affected.
-	//
 	function $Ql$DOM$_isHtml_IE55(nd) {
 		var doc;
 		if (Ql.DOM._getNodeType(nd) == Node.DOCUMENT_NODE) {
@@ -321,7 +317,6 @@ if (Browser.version < 60000) {
 
 	// Necessary to make Ql.DOM._getOwnerDocument() work.
 	// TODO: do the same for every Node, not just Elements?
-	//
 	(function() {
 		var fnOverridden = Ql.DOM.Document.prototype._createElement;
 
@@ -336,11 +331,11 @@ if (Browser.version < 60000) {
 }
 
 
-// Rationale: in IE5.5/IE6/IE7/IE8, frames need to appear in the document.frames collection in order
-// to be used as targets for forms; this requies some cooperation from Ql.DOM.Node.appendChild() and
-// Ql.DOM.Node.insertBefore(). Read [HACK#0008 JS: AsyncRequest: IFrame quirks] to find out why this
-// can’t be any less ugly than it is.
-//
+/* Rationale: in IE5.5/IE6/IE7/IE8, frames need to appear in the document.frames collection in order
+to be used as targets for forms; this requies some cooperation from Ql.DOM.Node.appendChild() and
+Ql.DOM.Node.insertBefore(). Read [HACK#0008 JS: AsyncRequest: IFrame quirks] to find out why this
+can’t be any less ugly than it is.
+*/
 if (Browser.version < 90000) {
 
 	(function() {
@@ -392,18 +387,18 @@ if (Browser.version < 90000) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Event classes and amendments to Ql.EventTarget and Ql.DOM.Document - DOM2-Events
-//
-// IE5.5/IE6/IE7/IE8 have a vastly insufficient event handling model; see [HACK#0006 JS: IE fixes:
-// Events] for details.
-//
-// Also, these browsers don’t even define any of the event classes (and their constants), save IE8
-// which does define Event as a class with no members.
 
+/* IE5.5/IE6/IE7/IE8 have a vastly insufficient event handling model; see [HACK#0006 JS: IE fixes:
+Events] for details.
+
+Also, these browsers don’t even define any of the event classes (and their constants), save IE8
+which does define Event as a class with no members.
+*/
 
 if (Browser.version < 90000) {
 
-	// Implementation of DOM2-Events.Event.
-	//
+	/** Implementation of DOM2-Events.Event.
+	*/
 	function $Event_IE55() {
 		if (arguments[0] === Function.PROTOTYPING) {
 			return;
@@ -476,8 +471,8 @@ if (Browser.version < 90000) {
 	MutationEvent.prototype.initMutationEvent = $MutationEvent_IE55$initMutationEvent;
 
 
-	// Implementation of DOM2-Events.UIEvent.
-	//
+	/** Implementation of DOM2-Events.UIEvent.
+	*/
 	function $UIEvent_IE55() {
 		if (arguments[0] === Function.PROTOTYPING) {
 			return;
@@ -499,8 +494,8 @@ if (Browser.version < 90000) {
 	UIEvent.prototype.initUIEvent = $UIEvent_IE55$initUIEvent;
 
 
-	// Implementation of DOM2-Events.MouseEvent.
-	//
+	/** Implementation of DOM2-Events.MouseEvent.
+	*/
 	function $MouseEvent() {
 		if (arguments[0] === Function.PROTOTYPING) {
 			return;
@@ -535,8 +530,8 @@ if (Browser.version < 90000) {
 	MouseEvent.prototype.initMouseEvent = $MouseEvent$initMouseEvent;
 
 
-	// Implementation of DOM2-Events.HTMLEvent.
-	//
+	/** Implementation of DOM2-Events.HTMLEvent.
+	*/
 	function $HTMLEvent_IE55() {
 		if (arguments[0] === Function.PROTOTYPING) {
 			return;
@@ -549,7 +544,6 @@ if (Browser.version < 90000) {
 
 	// Creates an Event using document.createEventObject(), and then patches it to look like the real
 	// thing (DOM2-Events.Event).
-	//
 	function $Ql$DOM$Document$createEvent_IE55(sEventGroup) {
 		Function.checkArgs($Ql$DOM$Document$createEvent_IE55, arguments, String);
 		var arrMatch = sEventGroup.match(/^((?:Mouse|UI|Mutation|HTML)?Event)s$/);
@@ -568,7 +562,6 @@ if (Browser.version < 90000) {
 
 	// Uses DOM0 or attachEvent() to register a special callback, which will invoke all the
 	// registered listeners with the proper context.
-	//
 	function $Ql$EventTarget$_addNewEvL_IE55(arrEvLs, sEventType, bCapture) {
 		var sOnEvent = "on" + sEventType;
 		// If we already registered a DOM0 handler, or the event type doesn’t require attachEvent(),
@@ -609,10 +602,10 @@ if (Browser.version < 90000) {
 	Ql.EventTarget._dispatchEvent = $Ql$EventTarget$_dispatchEvent_IE55;
 
 
-	// Manual alternative to fireEvent(), to dispatch events (e.g. custom ones) that the native
-	// method will refuse to. Since it directly invokes Ql.EventTarget._executeListeners(), it
-	// requires a sanitized event.
-	//
+	/** Manual alternative to fireEvent(), to dispatch events (e.g. custom ones) that the native
+	method will refuse to. Since it directly invokes Ql.EventTarget._executeListeners(), it requires
+	a sanitized event.
+	*/
 	function $Ql$EventTarget$_dispatchEventByHand_IE55(e, bCapturing, bAtTarget, bBubbling) {
 		var sProp, arrAncestors;
 		if ((bCapturing || bBubbling) && e.bubbles) {
@@ -663,9 +656,9 @@ if (Browser.version < 90000) {
 	Ql.EventTarget._dispatchEventByHand_IE55 = $Ql$EventTarget$_dispatchEventByHand_IE55;
 
 
-	// Handles an event like Ql.EventTarget._eventHandler_IE55(), also making it capturable and
-	// bubbling.
-	//
+	/** Handles an event like Ql.EventTarget._eventHandler_IE55(), also making it capturable and
+	bubbling.
+	*/
 	function $Ql$EventTarget$_dispatchingEventHandler_IE55(e) {
 		if (!e) {
 			e = window.event;
@@ -678,20 +671,20 @@ if (Browser.version < 90000) {
 	Ql.EventTarget._dispatchingEventHandler_IE55 = $Ql$EventTarget$_dispatchingEventHandler_IE55;
 
 
-	// Installs Ql.EventTarget._eventDispatchingHandler_IE55() to handle and standardize the behavior
-	// of the specified type of event. Supposed to be invoked in the _wrap() method of a
-	// Ql.DOM.Element-derived class.
-	//
+	/** Installs Ql.EventTarget._eventDispatchingHandler_IE55() to handle and standardize the
+	behavior of the specified type of event. Supposed to be invoked in the _wrap() method of a
+	Ql.DOM.Element-derived class.
+	*/
 	function $Ql$EventTarget$_enableDispatchingHandler_IE55(sEventType) {
 		this._["on" + sEventType] = Ql.EventTarget._dispatchingEventHandler_IE55;
 	}
 	Ql.EventTarget._enableDispatchingHandler_IE55 = $Ql$EventTarget$_enableDispatchingHandler_IE55;
 
 
-	// Handles an IE5.5/IE6/IE7/IE8 event, converting it in a DOM2-Events.Event if needed (i.e. if
-	// generated by IE itself, without Quearl intervention), and passes it to
-	// Ql.EventTarget._eventListener().
-	//
+	/** Handles an IE5.5/IE6/IE7/IE8 event, converting it in a DOM2-Events.Event if needed (i.e. if
+	generated by IE itself, without Quearl intervention), and passes it to
+	Ql.EventTarget._eventListener().
+	*/
 	function $Ql$EventTarget$_eventHandler_IE55(e) {
 		if (!e) {
 			e = window.event;
@@ -708,7 +701,6 @@ if (Browser.version < 90000) {
 
 
 	// Undoes what Ql.EventTarget._addNewEvL() in this file does.
-	//
 	function $Ql$EventTarget$_removeLastEvL_IE55(arrEvLs, sEventType, bCapture) {
 		var sOnEvent = "on" + sEventType;
 		if (arrEvLs._bDOM0Handler) {
@@ -720,8 +712,9 @@ if (Browser.version < 90000) {
 	Ql.EventTarget._removeLastEvL = $Ql$EventTarget$_removeLastEvL_IE55;
 
 
-	// Molds an IE5.5/IE6/IE7/IE8 EventObject into in a DOM2-Events, and returns a fixed this object.
-	//
+	/** Molds an IE5.5/IE6/IE7/IE8 EventObject into in a DOM2-Events, and returns a fixed this
+	object.
+	*/
 	function $Ql$EventTarget$_sanitizeEventObject_IE55(e) {
 		// Quearl doesn’t allow for event listeners to be registered on window, so if this === window,
 		// this handler has been registered with attachEvent(). Quearl only does that on the same
@@ -751,15 +744,14 @@ if (Browser.version < 90000) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Amendments to Ql.DOM.Document
-//
-// Redefine some methods to make up for monstrous holes in IE5.5/IE6/IE7/IE8’s DOM compliance.
 
+/* Redefine some methods to make up for monstrous holes in IE5.5/IE6/IE7/IE8’s DOM compliance.
+*/
 
 if (Browser.version < 90000) {
 
 	// IE5.5 only has createElement() and createTextNode(), IE6/IE7/IE8 also have createAttribute()
 	// and createComment(); everything they can’t create, will be dropped.
-	//
 	function $Ql$DOM$Document$_importNode_IE55(nd, bAllChildren) {
 		switch (Ql.DOM._getNodeType(nd)) {
 			case Node.ELEMENT_NODE:
@@ -804,9 +796,9 @@ if (Browser.version < 90000) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Amendments to Ql.DOM.Element
-//
-// Redefine some methods to take advantage of IE5.5/IE6/IE7/IE8’s DOM non-compliance.
 
+/* Redefine some methods to take advantage of IE5.5/IE6/IE7/IE8’s DOM non-compliance.
+*/
 
 if (Browser.version >= 70000 && Browser.version < 90000) {
 
@@ -814,7 +806,6 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 	// independent from its container: .offsetParent is null as it should, but the .offset* values
 	// are relative to what .offsetParent would be if position: absolute was specified, instead of
 	// being absolute.
-	//
 	function $Ql$DOM$Element$getOffsetRect_IE7(eltRelTo /*= null*/) {
 		Function.checkArgs(
 			$Ql$DOM$Element$getOffsetRect_IE7, arguments, [undefined, null, Ql.DOM.Element]
@@ -866,29 +857,30 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Amendments to Ql.DOM.Element - DOM2-Style
-//
-// Redefine some of the improved methods to fit IE5.5/IE6/IE7/IE8 models.
-//
-// Note: a cleaner way to improve .style would be to add methods to it, but that has proved to
-// trigger incredible bugs in (at least) IE6, such as methods (Functions) being irreversibly turned
-// into Strings!
 
+/* Redefine some of the improved methods to fit IE5.5/IE6/IE7/IE8 models.
+
+Note: a cleaner way to improve .style would be to add methods to it, but that has proved to trigger
+incredible bugs in (at least) IE6, such as methods (Functions) being irreversibly turned into
+Strings!
+*/
 
 (function() {
-	/// Translation table between CSS property names and the (pretty arbitrary) names
-	// IE5.5/IE6/IE7/IE8 give them. Some are camelCased, some are just different.
+
+	/** Translation table between CSS property names and the (pretty arbitrary) names
+	IE5.5/IE6/IE7/IE8 give them. Some are camelCased, some are just different. */
 	var mapCssPropNames = {
 		"float": "styleFloat"
 	};
 
 
-	/// Resolves both property names’ camelCasedness and inconsistencies.
-	//
-	// String sName
-	//   CSS property name to fix.
-	// String return
-	//   Fixed name.
-	//
+	/** Resolves both property names’ camelCasedness and inconsistencies.
+
+	String sName
+		CSS property name to fix.
+	String return
+		Fixed name.
+	*/
 	function fixCssPropName(sName) {
 		return mapCssPropNames[sName] || sName.toCamelCase();
 	}
@@ -897,7 +889,6 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 	// IE5.5/IE6/IE7/IE8 don’t have document.defaultView.getComputedStyle(), but they provide a
 	// currentStyle attribute, although with different semantics (it’s the cascaded style, not the
 	// computed style) but works just as well here. camelCase applies here, too.
-	//
 	function $Ql$DOM$Element$copyStylesFrom_IE55(eltSrc, bForce, arrStyles) {
 		Function.checkArgs(
 			$Ql$DOM$Element$copyStylesFrom_IE55, arguments, Ql.DOM.Element, Boolean, Array
@@ -916,7 +907,6 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 
 	// IE5.5/IE6/IE7/IE8 have nothing that returns the computed style, but in a few cases it’s
 	// possible to work around this problem by calculating the property value on the fly.
-	//
 	function $Ql$DOM$Element$getComputedStyle_IE55(sName) {
 		Function.checkArgs($Ql$DOM$Element$getComputedStyle_IE55, arguments, String);
 		var sValue = this._.currentStyle[fixCssPropName(sName)] || "";
@@ -943,9 +933,9 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 	Ql.DOM.Element.prototype.getComputedStyle = $Ql$DOM$Element$getComputedStyle_IE55;
 
 
-	// Rationale: IE5.5/IE6/IE7/IE8 completely ignore CSS2’s opacity attribute, but they have a
-	// rather cumbersome alternative to it. camelCase rulez.
-	//
+	/* Rationale: IE5.5/IE6/IE7/IE8 completely ignore CSS2’s opacity attribute, but they have a
+	rather cumbersome alternative to it. camelCase rulez.
+	*/
 	if (Browser.version < 90000) {
 
 		function $Ql$DOM$Element$getStyle_IE55(sName) {
@@ -1108,14 +1098,14 @@ if (Browser.version >= 70000 && Browser.version < 90000) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Amendments to Ql.DOM.Element-derived classes
-//
-// Redefine some methods to take advantage of/work around IE5.5/IE6/IE7’s DOM non-compliance.
 
+/* Redefine some methods to take advantage of/work around IE5.5/IE6/IE7’s DOM non-compliance.
+*/
 
-// Rationale: in IE5.5/IE6/IE7, IFrames have a non-standard property (implemented everywhere else,
-// though), contentWindow, which offers a document property, so the lack of
-// DOM2-HTML.HTMLIFrame.contentDocument can be worked around.
-//
+/* Rationale: in IE5.5/IE6/IE7, IFrames have a non-standard property (implemented everywhere else,
+though), contentWindow, which offers a document property, so the lack of
+DOM2-HTML.HTMLIFrame.contentDocument can be worked around.
+*/
 if (Browser.version < 80000) {
 
 	function $Ql$DOM$IFrame$getContentDocument_IE55() {
@@ -1128,11 +1118,11 @@ if (Browser.version < 80000) {
 }
 
 
-// Rationale: in IE5.5/IE6/IE7/IE8, HTMLFormElement-specific event types (submit, reset) do not
-// bubble, while they should (<http://www.w3.org/TR/DOM-Level-2-Events/events.html
-// #Events-eventgroupings-htmlevents>). This must be worked around by always having a listener on
-// these event types, which will manually dispatch the events.
-//
+/* Rationale: in IE5.5/IE6/IE7/IE8, HTMLFormElement-specific event types (submit, reset) do not
+bubble, while they should (<http://www.w3.org/TR/DOM-Level-2-Events/events.html
+#Events-eventgroupings-htmlevents>). This must be worked around by always having a listener on these
+event types, which will manually dispatch the events.
+*/
 if (Browser.version < 90000) {
 
 	(function() {
@@ -1155,12 +1145,13 @@ if (Browser.version < 90000) {
 // Amendments to other classes
 
 
-// IE5.5/IE6 have XMLHttpRequest available as an COM class; IE7/IE8 have a native XMLHttpRequest,
-// but it may be disabled per policy settings, so the ActiveX alternative should always be tried.
-//
+/* IE5.5/IE6 have XMLHttpRequest available as an COM class; IE7/IE8 have a native XMLHttpRequest,
+but it may be disabled per policy settings, so the ActiveX alternative should always be tried.
+*/
 (function() {
-	// See [HACK#0009 JS: AsyncRequest: XMLHTTP ActiveX] to understand why only these ProgIDs are
-	// here.
+
+	/** See [HACK#0009 JS: AsyncRequest: XMLHTTP ActiveX] to understand why only these ProgIDs are
+	here. */
 	var arrProgIDs = ["MSXML2.XMLHTTP.6.0", "MSXML2.XMLHTTP.3.0", "Microsoft.XMLHTTP"];
 
 
@@ -1187,7 +1178,6 @@ if (Browser.version < 90000) {
 
 	// IE5.5/IE6/IE7/IE8 do have an XML parser, but it’s an ActiveX object instead of the global de
 	// facto standard DOMParser.
-	//
 	function $Ql$AsyncRequest$_parseXml_IE55(s, sMimeType) {
 		var xd;
 		try {
@@ -1207,19 +1197,20 @@ if (Browser.version < 90000) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // PNG fix for IE5.5/IE6
-//
-// IE5.5/IE6 can’t handle alpha colors in PNG images, instead blending non-opaque colors with the
-// background color of the image. This can be only be fixed in <img> elements in a very complicated
-// way, and only in Windows.
-//
-// TODO: FIXME
+
+/* IE5.5/IE6 can’t handle alpha colors in PNG images, instead blending non-opaque colors with the
+background color of the image. This can be only be fixed in <img> elements in a very complicated
+way, and only in Windows.
+
+TODO: FIXME
+*/
 if (false && Browser.version < 70000 && navigator.platform == "Win32") {
 
-	/// Applies or undoes the fix.
-	//
-	// [bool bActivate]
-	//    true if the fix should be applied, false otherwise. Defaults to true.
-	//
+	/** Applies or undoes the fix.
+
+	[bActivate:bool]
+		true if the fix should be applied, false otherwise. Defaults to true.
+	*/
 	$._aaElemMethods["img"]._pngFix_IE55 = function $Ql$HTMLImage$_pngFix_IE55(bActivate /*= true*/) {
 		// This whole function seems to fail randomly, mostly aroung the playing with styles part.
 		try {
@@ -1270,16 +1261,16 @@ if (false && Browser.version < 70000 && navigator.platform == "Win32") {
 	};
 
 
-	/// Adds a new initializer for <img> elements.
-	//
+	/** Adds a new initializer for <img> elements.
+	*/
 	function $Ql$HTMLImage$$_pngFix_IE55() {
 		this.addEventListener("load", this._pngFix_IE55, false);
 	};
 	Object.overrideMethod($._aaElemInits, "img", $Ql$HTMLImage$$_pngFix_IE55);
 
 
-	/// Fixes every image, as soon as the document has been created.
-	//
+	/** Fixes every image, as soon as the document has been created.
+	*/
 	document.addEventListener("earlyload", function $Ql$HTMLImage$_pngFixAll_IE55(e) {
 		var arrImgs = document.select("img");
 		for (var i = 0; i < arrImgs.length; ++i) {
@@ -1301,8 +1292,8 @@ if (false && Browser.version < 70000 && navigator.platform == "Win32") {
 // Functions
 
 
-/// Enables Quearl functionality for the page.
-//
+/** Enables Quearl functionality for the page.
+*/
 function $Ql$modules$core_iefix$init() {
 	// Wrap all server-generated form elements.
 	this.select("form");
