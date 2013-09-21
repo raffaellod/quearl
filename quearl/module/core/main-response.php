@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-// Markup generators.
+/** HTTP response and response entity (body) classes. */
 
 
 define('QUEARL_CORE_MAIN_RESPONSE_INCLUDED', true);
@@ -89,24 +89,24 @@ define('HTTP_STATUS_NETWORK_AUTHENTICATION_REQUIRED', 511); # RFC 6585.
 # Classes
 
 
-## Generates a valid HTTP response header and entity.
-#
-# TODO: support sending “Cache-Control: public” to allow for shared proxy caching.
-#
+/** Generates a valid HTTP response header and entity.
+
+TODO: support sending “Cache-Control: public” to allow for shared proxy caching.
+*/
 class QlResponse {
 
-	## HTTP response code (HTTP_STATUS_*).
+	/** HTTP response code (HTTP_STATUS_*). */
 	private /*int*/ $m_iCode;
-	## Description for m_iCode.
+	/** Description for m_iCode. */
 	private /*string*/ $m_sCodeDescription;
-	## Map of header field names => values.
+	/** Map of header field names => values. */
 	private /*array<string => mixed>*/ $m_arrHeaderFields;
-	## true if the header has been sent.
+	/** true if the header has been sent. */
 	private /*bool*/ $m_bHeaderSent;
 
 
-	## Constructor.
-	#
+	/** Constructor.
+	*/
 	public function __construct() {
 		$this->set_http_status(HTTP_STATUS_OK);
 		$this->m_arrHeaderFields = array();
@@ -134,28 +134,28 @@ class QlResponse {
 	}
 
 
-	## Returns true if the HTTP response header has already been sent to the remote client.
-	#
-	# bool return
-	#    true if the HTTP header has been sent, or false otherwise.
-	#
+	/** Returns true if the HTTP response header has already been sent to the remote client.
+
+	bool return
+		true if the HTTP header has been sent, or false otherwise.
+	*/
 	public function header_sent() {
 		return $this->m_bHeaderSent;
 	}
 
 
-	## Initiates an HTTP redirection by adding a Location header field pointing to the specified URI,
-	# and returns a null response entity.
-	#
-	# string $sUri
-	#    URI to redirect the remote client to.
-	# [int $iHttpStatusCode]
-	#    HTTP status code; defaults to HTTP_STATUS_SEE_OTHER.
-	# [string $sHttpStatusCodeDescription]
-	#    Description for the status code; defaults to a standard description of $iCode.
-	# QlNullResponseEntity return
-	#    Null response entity.
-	#
+	/** Initiates an HTTP redirection by adding a Location header field pointing to the specified
+	URI, and returns a null response entity.
+
+	string $sUri
+		URI to redirect the remote client to.
+	[int $iHttpStatusCode]
+		HTTP status code; defaults to HTTP_STATUS_SEE_OTHER.
+	[string $sHttpStatusCodeDescription]
+		Description for the status code; defaults to a standard description of $iCode.
+	QlNullResponseEntity return
+		Null response entity.
+	*/
 	public function redirect(
 		$sUri, $iHttpStatusCode = HTTP_STATUS_SEE_OTHER, $sHttpStatusCodeDescription = null
 	) {
@@ -175,12 +175,12 @@ class QlResponse {
 	}
 
 
-	## Sends a chunk of data to the remote client, also sending the header first if it hasn’t
-	# already been sent.
-	#
-	# string $s
-	#    Data to be sent.
-	#
+	/** Sends a chunk of data to the remote client, also sending the header first if it hasn’t
+	already been sent.
+
+	string $s
+		Data to be sent.
+	*/
 	public function send_data($s) {
 		# Make sure we sent the header.
 		if (!$this->m_bHeaderSent) {
@@ -193,12 +193,12 @@ class QlResponse {
 	}
 
 
-	## Sends the contents of a file to the remote client, also sending the header first if it hasn’t
-	# already been sent.
-	#
-	# string $sFileName
-	#    File to be sent.
-	#
+	/** Sends the contents of a file to the remote client, also sending the header first if it hasn’t
+	already been sent.
+
+	string $sFileName
+		File to be sent.
+	*/
 	public function send_file($sFileName) {
 		# Make sure we sent the header.
 		if (!$this->m_bHeaderSent) {
@@ -216,8 +216,8 @@ class QlResponse {
 	}
 
 
-	## Sends to the remote client any HTTP header fields accumulated to this point.
-	#
+	/** Sends to the remote client any HTTP header fields accumulated to this point.
+	*/
 	public function send_header() {
 		if ($this->m_bHeaderSent) {
 			trigger_error('HTTP response header has already been sent', E_USER_WARNING);
@@ -261,26 +261,26 @@ class QlResponse {
 	}
 
 
-	## Sets a header field for the response.
-	#
-	# string $sName
-	#    Header field name.
-	# mixed $mValue
-	#    Header field value. Providing an array here will result in multiple header fields with the
-	#    same name being sent, one for each item in the array.
-	#
+	/** Sets a header field for the response.
+
+	string $sName
+		Header field name.
+	mixed $mValue
+		Header field value. Providing an array here will result in multiple header fields with the
+		same name being sent, one for each item in the array.
+	*/
 	public function set_header_field($sName, $mValue) {
 		$this->m_arrHeaderFields[$sName] = $mValue;
 	}
 
 
-	## Assigns the response an HTTP status code, along with a description.
-	#
-	# int $iCode
-	#    HTTP status code.
-	# [string $sCodeDescription]
-	#    Description for the status code; defaults to a standard description of $iCode.
-	#
+	/** Assigns the response an HTTP status code, along with a description.
+
+	int $iCode
+		HTTP status code.
+	[string $sCodeDescription]
+		Description for the status code; defaults to a standard description of $iCode.
+	*/
 	public function set_http_status($iCode, $sCodeDescription = null) {
 		# If a description has not been provided, use the standard for the specified code.
 		if ($sCodeDescription === null) {
@@ -350,35 +350,34 @@ class QlResponse {
 	}
 
 
-	## Associates an entity tag (ETag) and/or a last-modified timestamp to the response, to be used
-	# for caching control; see RFC 2616 § 14.19 “ETag” and § 14.29 “Last-Modified”. It also allows to
-	# specify a time interval for which remote clients should consider their cache to be up-to-date
-	# without even sending a conditional request to the server; see RFC 2616 § 14.21 “Expires”.
-	#
-	# If the remote client provided an “If-None-Match” request header that matches $sETag, or if it
-	# provided a “If-Modified-Since” timestamp that’s not older than $mTS, this method will respond
-	# the current request with HTTP status 304 (Not Modified) and halt execution; otherwise the
-	# specified response metadata will be prepared to be sent to the remote client in the appropriate
-	# header fiels, along with the rest of the response.
-	#
-	# Regardless of the return value, this method set a few header fields as mandated by RFC 2616 §
-	# 10.3.5 “304 Not Modified”: “Date”, “ETag” (if $sETag is not null), “Expires” and
-	# “Cache-Control”.
-	#
-	# [mixed $mTS]
-	#    Date/time (timestamp) of the last modification to the entity. If omitted, the response will
-	#    not provide a last modification time.
-	# [string $sETag]
-	#    Tag for the entity that this response would provide. If omitted, the response will not
-	#    provide an ETag.
-	# [int $iExpiresAfter]
-	#    Time that the response will be valid for, in seconds. Before this interval has elapsed, no
-	#    requests for the same resource will be made by the remote client. If omitted, the response
-	#    will have no expiration date, and caching will be controlled only by the other arguments.
-	# bool return
-	#    true if the file has been setup for sending, or false if the remote client has a valid
-	#    cached copy of the file.
-	#
+	/** Associates an entity tag (ETag) and/or a last-modified timestamp to the response, to be used
+	for caching control; see RFC 2616 § 14.19 “ETag” and § 14.29 “Last-Modified”. It also allows to
+	specify a time interval for which remote clients should consider their cache to be up-to-date
+	without even sending a conditional request to the server; see RFC 2616 § 14.21 “Expires”.
+
+	If the remote client provided an “If-None-Match” request header that matches $sETag, or if it
+	provided a “If-Modified-Since” timestamp that’s not older than $mTS, this method will respond the
+	current request with HTTP status 304 (Not Modified) and halt execution; otherwise the specified
+	response metadata will be prepared to be sent to the remote client in the appropriate header
+	fields, along with the rest of the response.
+
+	Regardless of the return value, this method set a few header fields as mandated by RFC 2616 §
+	10.3.5 “304 Not Modified”: “Date”, “ETag” (if $sETag is not null), “Expires” and “Cache-Control”.
+
+	[mixed $mTS]
+		Date/time (timestamp) of the last modification to the entity. If omitted, the response will
+		not provide a last modification time.
+	[string $sETag]
+		Tag for the entity that this response would provide. If omitted, the response will not provide
+		an ETag.
+	[int $iExpiresAfter]
+		Time that the response will be valid for, in seconds. Before this interval has elapsed, no
+		requests for the same resource will be made by the remote client. If omitted, the response
+		will have no expiration date, and caching will be controlled only by the other arguments.
+	bool return
+		true if the file has been setup for sending, or false if the remote client has a valid cached
+		copy of the file.
+	*/
 	public function use_cache($mTS = null, $sETag = null, $iExpiresAfter = null) {
 		if ($sETag === null && $mTS === null) {
 			trigger_error('The arguments $sETag and $mTS cannot both be null', E_USER_WARNING);
@@ -457,42 +456,42 @@ class QlResponse {
 }
 
 
-## Generates an error response for issues detected very early during the initialization of Quearl or
-# one of its modules. The error page is a template, which will be sent as a response to the browser
-# along with any optional HTTP headers.
-#
-# This may be thrown before $ql_session or $ql_db are available, and will work even in case $ql_app
-# was defaulted.
-#
+/** Generates an error response for issues detected very early during the initialization of Quearl
+or one of its modules. The error page is a template, which will be sent as a response to the browser
+along with any optional HTTP headers.
+
+This may be thrown before $ql_session or $ql_db are available, and will work even in case $ql_app
+was defaulted.
+*/
 class QlErrorResponse extends Exception {
 
-	## HTTP status to report to the remote client.
+	/** HTTP status to report to the remote client. */
 	private /*int*/ $m_iHttpStatus;
-	## Subtitle of the page; should be a brief description of the error.
+	/** Subtitle of the page; should be a brief description of the error. */
 	private /*string*/ $m_sSubtitle;
-	## Name of the “page” template to be used.
+	/** Name of the “page” template to be used. */
 	private /*string*/ $m_sTemplateName;
-	## Array or array-of-arrays; either way, the leaf elements maps substitution variables with their
-	# names. Localization constants can only be sourced from the core module.
+	/** Array or array-of-arrays; either way, the leaf elements maps substitution variables with
+	their names. Localization constants can only be sourced from the core module. */
 	private /*array<mixed>*/ $m_arrVars;
-	## HTTP header fields (name => value) to be sent as part of the response.
+	/** HTTP header fields (name => value) to be sent as part of the response. */
 	private /*array<string => mixed>*/ $m_arrHeaderFields;
 
 
-	## Constructor.
-	#
-	# int $iHttpStatus
-	#    HTTP status to report to the remote client.
-	# string $sSubtitle
-	#    Subtitle of the page; should be a brief description of the error.
-	# string $sTemplateName
-	#    Name of the “page” template to be used.
-	# [array<mixed> $arrVars]
-	#    Array or array-of-arrays; either way, the leaf elements maps substitution variables with
-	#    their names. Localization constants can only be sourced from the core module.
-	# [array<string => mixed> $arrHeaderFields]
-	#    Map of HTTP header fields (name => value) to be sent as part of the response.
-	#
+	/** Constructor.
+
+	int $iHttpStatus
+		HTTP status to report to the remote client.
+	string $sSubtitle
+		Subtitle of the page; should be a brief description of the error.
+	string $sTemplateName
+		Name of the “page” template to be used.
+	[array<mixed> $arrVars]
+		Array or array-of-arrays; either way, the leaf elements maps substitution variables with their
+		names. Localization constants can only be sourced from the core module.
+	[array<string => mixed> $arrHeaderFields]
+		Map of HTTP header fields (name => value) to be sent as part of the response.
+	*/
 	public function __construct(
 		$iHttpStatus, $sSubtitle, $sTemplateName, array $arrVars = array(),
 		array $arrHeaderFields = array()
@@ -505,11 +504,11 @@ class QlErrorResponse extends Exception {
 	}
 
 
-	## Generates a response entity to inform the user about the error.
-	#
-	# QlResponse $response
-	#    Response the entity will be part of.
-	#
+	/** Generates a response entity to inform the user about the error.
+
+	QlResponse $response
+		Response the entity will be part of.
+	*/
 	public function create_entity(QlResponse $response) {
 		# Prepare the response.
 		$response->set_http_status($this->m_iHttpStatus);
@@ -529,36 +528,36 @@ class QlErrorResponse extends Exception {
 };
 
 
-## Base class for a response entity.
-#
+/** Base class for a response entity.
+*/
 abstract class QlResponseEntity {
 
-	## Response this entity is part of.
-	protected $m_response;
+	/** Response this entity is part of. */
+	protected /*QlResponse*/ $m_response;
 
 
-	## Constructor.
-	#
-	# QlResponse $response
-	#    Response this entity is part of.
-	#
+	/** Constructor.
+
+	QlResponse $response
+		Response this entity is part of.
+	*/
 	public function __construct(QlResponse $response) {
 		$this->m_response = $response;
 	}
 
 
-	## Sends any unsent response data.
-	#
+	/** Sends any unsent response data.
+	*/
 	public abstract function send_close();
 };
 
 
-## Null (zero-length) response entity.
-#
+/** Null (zero-length) response entity.
+*/
 class QlNullResponseEntity extends QlResponseEntity {
 
-	## Constructor. See QlResponseEntity::__construct().
-	#
+	/** Constructor. See QlResponseEntity::__construct().
+	*/
 	public function __construct(QlResponse $response) {
 		parent::__construct($response);
 		$this->m_response->set_header_field('Content-Type',   'text/plain');
@@ -566,34 +565,34 @@ class QlNullResponseEntity extends QlResponseEntity {
 	}
 
 
-	## See QlResponseEntity::send_close().
-	#
+	/** See QlResponseEntity::send_close().
+	*/
 	public function send_close() {
 		$this->m_response->send_data('');
 	}
 };
 
 
-## Regular file sent as a response entity. Supports sending pre-generated compressed versions of the
-# file, if supported by the remote client.
-#
+/** Regular file sent as a response entity. Supports sending pre-generated compressed versions of
+the file, if supported by the remote client.
+*/
 class QlStaticResponseEntity extends QlResponseEntity {
 
-	## Name of the physical file that will be provided as the response entity.
-	protected $m_sFileName;
+	/** Name of the physical file that will be provided as the response entity. */
+	protected /*string*/ $m_sFileName;
 
 
-	## Assigns a physical file that will be provided as the response entity.
-	#
-	# string $sFileName
-	#    Name of the file.
-	# string $sContentType
-	#    MIME content type of the file.
-	# [bool $bHasCompressedVersion]
-	#    If true, the remote client can will be served with a compressed version of the file,
-	#    provided that the client accepts one of the supported compression encodings, and that such
-	#    version of the file exists.
-	#
+	/** Assigns a physical file that will be provided as the response entity.
+
+	string $sFileName
+		Name of the file.
+	string $sContentType
+		MIME content type of the file.
+	[bool $bHasCompressedVersion]
+		If true, the remote client can will be served with a compressed version of the file, provided
+		that the client accepts one of the supported compression encodings, and that such version of
+		the file exists.
+	*/
 	public function set_file($sFileName, $sContentType, $bHasCompressedVersion = false) {
 		if (!is_file($sFileName) || !is_readable($sFileName)) {
 			trigger_error('Invalid file name', E_USER_ERROR);
@@ -635,39 +634,39 @@ class QlStaticResponseEntity extends QlResponseEntity {
 	}
 
 
-	## See QlResponseEntity::send_close().
-	#
+	/** See QlResponseEntity::send_close().
+	*/
 	public function send_close() {
 		$this->m_response->send_file($this->m_sFileName);
 	}
 };
 
 
-## XHTML document response entity.
-#
-# TODO: change to a use a real XHTML DOM which can be manipulated server-side.
-#
+/** XHTML document response entity.
+
+TODO: change to a use a real XHTML DOM which can be manipulated server-side.
+*/
 class QlXhtmlResponseEntity extends QlResponseEntity {
 
-	## Content of the <body> section.
+	/** Content of the <body> section. */
 	protected /*string*/ $m_sBody;
-	## Content of the <head> section.
+	/** Content of the <head> section. */
 	protected /*string*/ $m_sHead;
-	## true if the <head> has been sent.
+	/** true if the <head> has been sent. */
 	private /*bool*/ $m_bHeadSent;
-	## Document locale.
+	/** Document locale. */
 	protected /*string*/ $m_sLocale;
-	## Document subtitle (XHTML).
+	/** Document subtitle (XHTML). */
 	protected /*string*/ $m_sSubtitle;
-	## Document title (XHTML).
+	/** Document title (XHTML). */
 	protected /*string*/ $m_sTitle;
 
 
-	## Constructor.
-	#
-	# QlResponse $response
-	#    Response this entity is part of.
-	#
+	/** Constructor.
+
+	QlResponse $response
+		Response this entity is part of.
+	*/
 	public function __construct(QlResponse $response) {
 		parent::__construct($response);
 
@@ -720,34 +719,34 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	}
 
 
-	## Adds content to the document’s <body> element.
-	#
-	# string $s
-	#    Markup to be added.
-	#
+	/** Adds content to the document’s <body> element.
+
+	string $s
+		Markup to be added.
+	*/
 	public function add_body($s) {
 		$this->m_sBody .= $s;
 	}
 
 
-	## Adds content to the document’s <head> element.
-	#
-	# string $s
-	#    Markup to be added.
-	#
+	/** Adds content to the document’s <head> element.
+
+	string $s
+		Markup to be added.
+	*/
 	public function add_head($s) {
 		$this->m_sHead .= $s;
 	}
 
 
-	## Links a pre-processed JavaScript file from the document.
-	#
-	# string $sFileName
-	#    Script file name.
-	# [bool $bIEOnly]
-	#    If true, the script will only be loaded in Internet Explorer. Use this when the amount of
-	#    IE-only fixes in a JS file justifies splitting it in “all browsers” and “IE fixes”.
-	#
+	/** Links a pre-processed JavaScript file from the document.
+
+	string $sFileName
+		Script file name.
+	[bool $bIEOnly]
+		If true, the script will only be loaded in Internet Explorer. Use this when the amount of
+		IE-only fixes in a JS file justifies splitting it in “all browsers” and “IE fixes”.
+	*/
 	public function include_js($sFileName, $bIEOnly = false) {
 		global $_APP;
 		$s  = '<script type="text/javascript" charset="utf-8" src="' .
@@ -759,14 +758,14 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	}
 
 
-	## Links a pre-processed style sheet to the document.
-	#
-	# string $sFileName
-	#    Style sheet file name.
-	# [bool $bIEOnly]
-	#    If true, the style sheet will only be loaded in Internet Explorer. Use this when the amount
-	#    of IE-only fixes in a CSS file justifies splitting it in “all browsers” and “IE fixes”.
-	#
+	/** Links a pre-processed style sheet to the document.
+
+	string $sFileName
+		Style sheet file name.
+	[bool $bIEOnly]
+		If true, the style sheet will only be loaded in Internet Explorer. Use this when the amount of
+		IE-only fixes in a CSS file justifies splitting it in “all browsers” and “IE fixes”.
+	*/
 	public function include_css($sFileName, $bIEOnly = false) {
 		global $_APP;
 		$s  = '<link rel="stylesheet" type="text/css" href="' . make_static_url($sFileName) . '"/>';
@@ -777,12 +776,13 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	}
 
 
-	## Embeds an XHTML template in the document, for use by JavaScript code.
-	# TODO: finish implementation.
-	#
-	# string $sTemplateName
-	#    Template name. The type is implicitly “xhtml”.
-	#
+	/** Embeds an XHTML template in the document, for use by JavaScript code.
+
+	TODO: finish implementation.
+
+	string $sTemplateName
+		Template name. The type is implicitly “xhtml”.
+	*/
 	public function include_template($sTemplateName) {
 #		$s  = '<script type="text/javascript">/*<![CDATA[*/' .
 #					'Ql._mapXhtmlTemplates[' . ql_json_encode($sTemplateName) . '] = ' .
@@ -792,13 +792,13 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	}
 
 
-	## Generates a “static_root_rpath”-based path for the specified file name.
-	#
-	# string $sFileName
-	#    Local name of the file.
-	# string return
-	#    Absolute URL for the file using the static files path.
-	#
+	/** Generates a “static_root_rpath”-based path for the specified file name.
+
+	string $sFileName
+		Local name of the file.
+	string return
+		Absolute URL for the file using the static files path.
+	*/
 	protected static function make_static_url($sFileName) {
 		if ($_APP['core']['static_host'] == '') {
 			$sUrl = $_SERVER['HTTP_PROTOCOL'] . $_APP['core']['static_host'];
@@ -810,8 +810,8 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	}
 
 
-	## Sends the <body> section of the response document to the remote client.
-	#
+	/** Sends the <body> section of the response document to the remote client.
+	*/
 	public function send_body() {
 		# Yes, it is ugly. But it’s the only way to do it without remote or local scripts or user
 		# agent sniffing.
@@ -827,8 +827,8 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	}
 
 
-	## See QlResponseEntity::send_close().
-	#
+	/** See QlResponseEntity::send_close().
+	*/
 	public function send_close() {
 		if (!$this->m_bHeadSent) {
 			$this->send_head();
@@ -837,8 +837,8 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	}
 
 
-	## Sends the <head> section of the response document to the remote client.
-	#
+	/** Sends the <head> section of the response document to the remote client.
+	*/
 	public function send_head() {
 		$s  = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" ' .
 					'"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">' . NL .
@@ -854,23 +854,23 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	}
 
 
-	## Sets a title for the page. The string is XHTML, which means that it must be escaped
-	# appropriately, and it may include tags.
-	#
-	# string $sSubtitle
-	#    New page subtitle.
-	#
+	/** Sets a title for the page. The string is XHTML, which means that it must be escaped
+	appropriately, and it may include tags.
+
+	string $sSubtitle
+		New page subtitle.
+	*/
 	public function set_subtitle($sSubtitle) {
 		$this->m_sSubtitle = $sSubtitle;
 	}
 
 
-	## Sets a title for the page. The string is XHTML, which means that it must be escaped
-	# appropriately, and it may include tags.
-	#
-	# string $sTitle
-	#    New page title.
-	#
+	/** Sets a title for the page. The string is XHTML, which means that it must be escaped
+	appropriately, and it may include tags.
+
+	string $sTitle
+		New page title.
+	*/
 	public function set_title($sTitle) {
 		$this->m_sTitle = $sTitle;
 	}

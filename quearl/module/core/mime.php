@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-# MIME type detection.
+/** MIME type detection. */
 
 
 define('QUEARL_CORE_MIME_INCLUDED', true);
@@ -30,13 +30,13 @@ require_once 'main.php';
 # Functions
 
 
-## Returns the MIME type for the specified file.
-#
-# string $sFileName
-#    Name of the file to analyze.
-# string return
-#    MIME type.
-#
+/** Returns the MIME type for the specified file.
+
+string $sFileName
+	Name of the file to analyze.
+string return
+	MIME type.
+*/
 function ql_mime_get_file_type($sFileName) {
 	if (!($file = fopen($sFileName, 'rb'))) {
 		return 'application/x-unknown-content-type';
@@ -49,18 +49,18 @@ function ql_mime_get_file_type($sFileName) {
 }
 
 
-## Returns the MIME type for the specified string.
-#
-# string $s
-#    Data to analyze.
-# [bool $bReturnDb]
-#    If true, the function will return the entire MIME database. Useful for debugging purposes.
-# string return
-#    MIME type.
-#
+/** Returns the MIME type for the specified string.
+
+string $s
+	Data to analyze.
+[bool $bReturnDb]
+	If true, the function will return the entire MIME database. Useful for debugging purposes.
+string return
+	MIME type.
+*/
 function ql_mime_get_str_type($s, $bReturnDb = false) {
 	# Entires tagged with /*S*/ had to be moved out of sort order to avoid being overridden by more
-	# generic entries which happened to be defined earlied in the sort order (e.g. “^BZ” would also
+	# generic entries which happened to be defined earlier in the sort order (e.g. “^BZ” would also
 	# match “^BZh”).
 	static $arrMimeCTDefs = array(
 		'application/compress'              => array("\x1f\x9d" => 0),
@@ -211,10 +211,10 @@ function ql_mime_get_str_type($s, $bReturnDb = false) {
 }
 
 
-## Searches for conflicts in the MIME type pattern strings in ql_mime_get_str_type()’s
-# $arrMimeCTDefs. The nesting of loops might look scary, but it’s really just
-# ql_mime_get_str_type()’s foreach double-loop applied to itself.
-#
+/** Searches for conflicts in the MIME type pattern strings in ql_mime_get_str_type()’s
+$arrMimeCTDefs. The nesting of loops might look scary, but it’s really just ql_mime_get_str_type()’s
+foreach double-loop applied to itself.
+*/
 function ql_mime__check() {
 	$arrMimeCTDefs = ql_mime_get_str_type('', true);
 	echo '<h1>Checking for MIME pattern conflicts…</h1>' . NL;

@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-# Basic image manipulation.
+/** Basic image manipulation. */
 
 
 define('QUEARL_CORE_IMAGE_INCLUDED', true);
@@ -28,29 +28,29 @@ define('QUEARL_CORE_IMAGE_INCLUDED', true);
 # Functions
 
 
-## Resizes an image into a new file, whose name is returned. The aspect ration is unaffected, which
-# means that the resulting image may be smaller than requested in either width or height, but not
-# both (unless the source image was smaller than the requested size).
-#
-# string $sSrcFileName
-#    Name of the source image file.
-# string $sDstFileName (string)
-#    Name of the destination image file; an appropriate extension will be added automatically.
-# int $iDstMaxW
-#    Maximum allowed width for the resulting image.
-# int $iDstMaxH
-#    Maximum allowed height for the resulting image.
-# [int $iSrcX]
-#    X-origin of the source image crop; defaults to 0.
-# [int $iSrcY]
-#    Y-origin of the source image crop; defaults to 0.
-# [int $iSrcW]
-#    Width of the source image crop; defaults to using the entire image width.
-# [int $iSrcH]
-#    Height of the source image crop; defaults to using the entire image height.
-# string return
-#    Name of the generated image file, or false if an error occurred.
-#
+/** Resizes an image into a new file, whose name is returned. The aspect ration is unaffected, which
+means that the resulting image may be smaller than requested in either width or height, but not both
+(unless the source image was smaller than the requested size).
+
+string $sSrcFileName
+	Name of the source image file.
+string $sDstFileName (string)
+	Name of the destination image file; an appropriate extension will be added automatically.
+int $iDstMaxW
+	Maximum allowed width for the resulting image.
+int $iDstMaxH
+	Maximum allowed height for the resulting image.
+[int $iSrcX]
+	X-origin of the source image crop; defaults to 0.
+[int $iSrcY]
+	Y-origin of the source image crop; defaults to 0.
+[int $iSrcW]
+	Width of the source image crop; defaults to using the entire image width.
+[int $iSrcH]
+	Height of the source image crop; defaults to using the entire image height.
+string return
+	Name of the generated image file, or false if an error occurred.
+*/
 function ql_image_copyresized(
 	$sSrcFileName, $sDstFileName,
 	$iDstMaxW, $iDstMaxH, $iSrcX = null, $iSrcY = null, $iSrcW = null, $iSrcH = null
@@ -62,27 +62,27 @@ function ql_image_copyresized(
 }
 
 
-## Resizes an image, returning the resulting image data. The aspect ration is unaffected, which
-# means that the resulting image may be smaller than requested in either width or height, but not
-# both (unless the source image was smaller than the requested size).
-#
-# string $sFileName
-#    Name of the source image file.
-# int $iDstMaxW
-#    Maximum allowed width for the resulting image.
-# int $iDstMaxH
-#    Maximum allowed height for the resulting image.
-# [int $iSrcX]
-#    X-origin of the source image crop; defaults to 0.
-# [int $iSrcY]
-#    Y-origin of the source image crop; defaults to 0.
-# [int $iSrcW]
-#    Width of the source image crop; defaults to using the entire image width.
-# [int $iSrcH]
-#    Height of the source image crop; defaults to using the entire image height.
-# string return
-#    Data of the generated image, or false if an error occurred.
-#
+/** Resizes an image, returning the resulting image data. The aspect ration is unaffected, which
+means that the resulting image may be smaller than requested in either width or height, but not both
+(unless the source image was smaller than the requested size).
+
+string $sFileName
+	Name of the source image file.
+int $iDstMaxW
+	Maximum allowed width for the resulting image.
+int $iDstMaxH
+	Maximum allowed height for the resulting image.
+[int $iSrcX]
+	X-origin of the source image crop; defaults to 0.
+[int $iSrcY]
+	Y-origin of the source image crop; defaults to 0.
+[int $iSrcW]
+	Width of the source image crop; defaults to using the entire image width.
+[int $iSrcH]
+	Height of the source image crop; defaults to using the entire image height.
+string return
+	Data of the generated image, or false if an error occurred.
+*/
 function ql_image_resize(
 	$sFileName,
 	$iDstMaxW, $iDstMaxH, $iSrcX = null, $iSrcY = null, $iSrcW = null, $iSrcH = null

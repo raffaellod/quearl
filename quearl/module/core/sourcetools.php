@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-# Language syntax highlighting.
+/** Language syntax highlighting. */
 
 
 define('QUEARL_CORE_SOURCETOOLS_INCLUDED', true);
@@ -52,19 +52,19 @@ define('QL_SYHL_SUBLANG',  0x0000100);
 # Functions
 
 
-## Applies HTML-based syntax highlighting to a string, according to the specified language.
-#
-# string $s
-#    Source code whose syntax should be highlighted.
-# string $sLanguage
-#    Programming language name.
-# [array<string => mixed> $arrOptions]
-#    Formatting options:
-#    [int 'maxstringlen']
-#       Trim comments exceeding this length.
-#    [int 'maxcommentlen']
-#       Trim strings exceeding this length.
-#
+/** Applies HTML-based syntax highlighting to a string, according to the specified language.
+
+string $s
+	Source code whose syntax should be highlighted.
+string $sLanguage
+	Programming language name.
+[array<string => mixed> $arrOptions]
+	Formatting options:
+	[int 'maxstringlen']
+		Trim comments exceeding this length.
+	[int 'maxcommentlen']
+		Trim strings exceeding this length.
+*/
 function ql_str_syntaxhighlight($s, $sLanguage, array $arrOptions = array()) {
 	# Available colors.
 	# TODO: use CSS to reduce output size.

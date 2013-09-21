@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-# UTF-8-string handling and conversion from/to other encodings.
+/** UTF-8-string handling and conversion from/to other encodings. */
 
 
 define('QUEARL_CORE_UNICODE_INCLUDED', true);
@@ -32,21 +32,22 @@ require_once 'main.php';
 # UTF-8 functions
 
 
-# Functions that are inherently UTF-8 compatible:
-#
-# explode()
-#    Works like strstr(), but the lack of an $offset parameter makes it behave with UTF-8.
+/* Functions that are inherently UTF-8 compatible:
 
+explode()
+	Works like strstr(), but the lack of an $offset parameter makes it behave with UTF-8.
+*/
 
-## Returns the UTF-8 character at the specified (byte) offset position, and moves the index past it.
-#
-# string $s
-#    UTF-8 string to be parsed.
-# int& $ib
-#    Byte offset of the desired character.
-# string return
-#    The UTF-8 character following the specified index.
-#
+/** Returns the UTF-8 character at the specified (byte) offset position, and moves the index past
+it.
+
+string $s
+	UTF-8 string to be parsed.
+int& $ib
+	Byte offset of the desired character.
+string return
+	The UTF-8 character following the specified index.
+*/
 function utf8_charnext($s, &$ib) {
 	$cb = strlen($s);
 	if ($ib === null || $ib < 0) {
@@ -97,16 +98,16 @@ function utf8_charnext($s, &$ib) {
 }
 
 
-## Returns the UTF-8 character preceding the specified (byte) offset position, and moves the index
-# to its starting byte.
-#
-# string $s
-#    UTF-8 string to be parsed.
-# int& $ib
-#    Byte offset of the desired character.
-# string return
-#    The UTF-8 character preceding the specified index.
-#
+/** Returns the UTF-8 character preceding the specified (byte) offset position, and moves the index
+to its starting byte.
+
+string $s
+	UTF-8 string to be parsed.
+int& $ib
+	Byte offset of the desired character.
+string return
+	The UTF-8 character preceding the specified index.
+*/
 function utf8_charprev($s, &$ib) {
 	$cb = strlen($s);
 	if ($ib === null || $ib > $cb) {
@@ -177,19 +178,24 @@ function utf8_charprev($s, &$ib) {
 }
 
 
-## Replaces or deletes any invalid UTF-8 sequence. See also: <http://www.w3.org/International/
-# questions/qa-forms-utf-8>
-#
-# string $s
-#    String to fix.
-# [string $sReplace]
-#    Replacement character/string. Defaults to an empty string.
-# string return
-#    Proper UTF-8 string.
-#
+/** Replaces or deletes any invalid UTF-8 sequence. See also: <http://www.w3.org/International/
+questions/qa-forms-utf-8>
+
+string $s
+	String to fix.
+[string $sReplace]
+	Replacement character/string. Defaults to an empty string.
+string return
+	Proper UTF-8 string.
+*/
 function utf8_fix($s, $sReplace = '') {
 	# Match either an allowed sequence ($arrMatch[0]) or an invalid symbol ($arrMatch[1]).
-	static $sInvalidCharPattern = '/(?:[\x00-\x7f]|[\xc2-\xdf][\x80-\xbf]|\xe0[\xa0-\xbf][\x80-\xbf]|[\xe1-\xec\xee\xef][\x80-\xbf]{2}|\xed[\x80-\x9f][\x80-\xbf]|\xf0[\x90-\xbf][\x80-\xbf]{2}|[\xf1-\xf3][\x80-\xbf]{3}|\xf4[\x80-\x8f][\x80-\xbf]{2}|(.))/S';
+	static $sInvalidCharPattern = null;
+	if ($sInvalidCharPattern === null) {
+		$sInvalidCharPattern = '/(?:[\x00-\x7f]|[\xc2-\xdf][\x80-\xbf]|\xe0[\xa0-\xbf][\x80-\xbf]|' .
+			'[\xe1-\xec\xee\xef][\x80-\xbf]{2}|\xed[\x80-\x9f][\x80-\xbf]|\xf0[\x90-\xbf]' .
+			'[\x80-\xbf]{2}|[\xf1-\xf3][\x80-\xbf]{3}|\xf4[\x80-\x8f][\x80-\xbf]{2}|(.))/S';
+	}
 	$sRet = '';
 	for (
 		$ich = 0;
@@ -202,14 +208,14 @@ function utf8_fix($s, $sReplace = '') {
 }
 
 
-## Deletes or converts in entity any UTF-8 character not allowed in XML. Improved version of PHP’s
-# htmlspecialchars(). See also: <http://www.w3.org/TR/REC-xml/#charsets>
-#
-# string $s
-#    String to fix.
-# string return
-#    String ready to be embedded in an XML document.
-#
+/** Deletes or converts in entity any UTF-8 character not allowed in XML. Improved version of PHP’s
+htmlspecialchars(). See also: <http://www.w3.org/TR/REC-xml/#charsets>
+
+string $s
+	String to fix.
+string return
+	String ready to be embedded in an XML document.
+*/
 function utf8_xmlenc($s) {
 	static $arrEntities = array(
 		'&' => '&amp;',
@@ -225,13 +231,13 @@ function utf8_xmlenc($s) {
 }
 
 
-## Converts sequences of digits in any alphabet in ASCII numbers.
-#
-# string $s
-#    UTF-8 string from which to collect numbers.
-# string return
-#    UTF-8 string with ASCII-only numbers.
-#
+/** Converts sequences of digits in any alphabet in ASCII numbers.
+
+string $s
+	UTF-8 string from which to collect numbers.
+string return
+	UTF-8 string with ASCII-only numbers.
+*/
 function utf8_gathernumbers($s) {
 	static $arrToAsciiNumbers = null;
 	if ($arrToAsciiNumbers === null) {
@@ -253,9 +259,9 @@ function utf8_gathernumbers($s) {
 }
 
 
-## Helper class for utf8_gathernumbers(), to store (instance) data between invocations by
-# preg_replace_callback(). Closures would make this much simpler…
-#
+/** Helper class for utf8_gathernumbers(), to store (instance) data between invocations by
+preg_replace_callback(). Closures would make this much simpler…
+*/
 class Ql__utf8_gathernumbers_converter {
 
 	private /*array(array)&*/ $m_arrSet;
@@ -282,16 +288,16 @@ class Ql__utf8_gathernumbers_converter {
 }
 
 
-## Returns a series of alternatives (|-separated) for a PCRE matching UTF-8 whitespace characters.
-#
-# [string $sSet]
-#    Each letter in this string will cause one of those to be returned:
-#    B Breaking characters.
-#    L Line-break characters.
-#    N Non-breaking characters.
-# string return
-#    UTF-8 whitespace PCRE alternatives.
-#
+/** Returns a series of alternatives (|-separated) for a PCRE matching UTF-8 whitespace characters.
+
+[string $sSet]
+	Each letter in this string will cause one of those to be returned:
+	“B” Breaking characters.
+	“L” Line-break characters.
+	“N” Non-breaking characters.
+string return
+	UTF-8 whitespace PCRE alternatives.
+*/
 function utf8_getws($sSet = 'BL') {
 	static $arrWhitespace = null;
 	if ($arrWhitespace === null) {
@@ -300,20 +306,26 @@ function utf8_getws($sSet = 'BL') {
 		);
 	}
 	$s = '';
-	if (strpos($sSet, 'B') !== false) $s .= $arrWhitespace['B'];
-	if (strpos($sSet, 'L') !== false) $s .= $arrWhitespace['L'];
-	if (strpos($sSet, 'N') !== false) $s .= $arrWhitespace['N'];
+	if (strpos($sSet, 'B') !== false) {
+		$s .= $arrWhitespace['B'];
+	}
+	if (strpos($sSet, 'L') !== false) {
+		$s .= $arrWhitespace['L'];
+	}
+	if (strpos($sSet, 'N') !== false) {
+		$s .= $arrWhitespace['N'];
+	}
 	return substr($s, 0, -1);
 }
 
 
-## UTF-8 version of ltrim().
-#
-# string $s
-#    UTF-8 string.
-# string return
-#    The input string, without UTF-8 whitespace characters on the left.
-#
+/** UTF-8 version of ltrim().
+
+string $s
+	UTF-8 string.
+string return
+	The input string, without UTF-8 whitespace characters on the left.
+*/
 function utf8_ltrim($s) {
 	static $sPattern = null;
 	if ($sPattern === null) {
@@ -323,13 +335,13 @@ function utf8_ltrim($s) {
 }
 
 
-## UTF-8 version of rtrim().
-#
-# string $s
-#    UTF-8 string.
-# string return
-#    The input string, without UTF-8 whitespace characters on the right.
-#
+/** UTF-8 version of rtrim().
+
+string $s
+	UTF-8 string.
+string return
+	The input string, without UTF-8 whitespace characters on the right.
+*/
 function utf8_rtrim($s) {
 	static $sPattern = null;
 	if ($sPattern === null) {
@@ -339,29 +351,29 @@ function utf8_rtrim($s) {
 }
 
 
-## UTF-8 version of strlen().
-#
-# string $s
-#    UTF-8 string whose length is to be measured.
-# int return
-#    Length of the string, in UTF-8 characters.
-#
+/** UTF-8 version of strlen().
+
+string $s
+	UTF-8 string whose length is to be measured.
+int return
+	Length of the string, in UTF-8 characters.
+*/
 function utf8_strlen($s) {
 	return strlen(utf8_decode($s));
 }
 
 
-## UTF-8 version of strpos().
-#
-# string $sHayStack
-#    UTF-8 string to search in.
-# string $sNeedle
-#    UTF-8 string to search for.
-# [int $ichOffset]
-#    Number of UTF-8 characters to skip, from the beginning of the string. Defaults to 0.
-# int return
-#    Offset of the first occurrence of $sNeedle in $sHayStack, or false if $sNeedle was not found.
-#
+/** UTF-8 version of strpos().
+
+string $sHayStack
+	UTF-8 string to search in.
+string $sNeedle
+	UTF-8 string to search for.
+[int $ichOffset]
+	Number of UTF-8 characters to skip, from the beginning of the string. Defaults to 0.
+int return
+	Offset of the first occurrence of $sNeedle in $sHayStack, or false if $sNeedle was not found.
+*/
 function utf8_strpos($sHayStack, $sNeedle, $ichOffset = 0) {
 	if ($ichOffset) {
 		# Adjust the offset from characters to bytes. From utf8_substr().
@@ -382,18 +394,18 @@ function utf8_strpos($sHayStack, $sNeedle, $ichOffset = 0) {
 }
 
 
-## UTF-8 version of strstr().
-#
-# string $sHayStack
-#    UTF-8 string to search in.
-# string $sNeedle
-#    UTF-8 string to search for.
-# [int $ichOffset]
-#    Number of UTF-8 characters to skip, from the beginning of the string. Defaults to 0.
-# string return
-#    First occurrence of $sNeedle in $sHayStack plus any trailing characters, or false if $sNeedle
-#    was not found.
-#
+/** UTF-8 version of strstr().
+
+string $sHayStack
+	UTF-8 string to search in.
+string $sNeedle
+	UTF-8 string to search for.
+[int $ichOffset]
+	Number of UTF-8 characters to skip, from the beginning of the string. Defaults to 0.
+string return
+	First occurrence of $sNeedle in $sHayStack plus any trailing characters, or false if $sNeedle was
+	not found.
+*/
 function utf8_strstr($sHayStack, $sNeedle, $ichOffset = 0) {
 	if ($ichOffset) {
 		# Adjust the offset from characters to bytes. From utf8_substr().
@@ -412,13 +424,13 @@ function utf8_strstr($sHayStack, $sNeedle, $ichOffset = 0) {
 }
 
 
-## Transliterates any non-ASCII UTF-8 character.
-#
-# string $s
-#    UTF-8 string.
-# string return
-#    ASCII-only transliteration of the input string.
-#
+/** Transliterates any non-ASCII UTF-8 character.
+
+string $s
+	UTF-8 string.
+string return
+	ASCII-only transliteration of the input string.
+*/
 function utf8_strtoascii($s) {
 	static $arrAsciiTranslit = null;
 	if ($arrAsciiTranslit === null) {
@@ -433,13 +445,13 @@ function utf8_strtoascii($s) {
 }
 
 
-## UTF-8 version of strtolower().
-#
-# string $s
-#    UTF-8 string.
-# string return
-#    Lowercase version of the input string.
-#
+/** UTF-8 version of strtolower().
+
+string $s
+	UTF-8 string.
+string return
+	Lowercase version of the input string.
+*/
 function utf8_strtolower($s) {
 	static $arrToLower = null;
 	if ($arrToLower === null)
@@ -450,13 +462,13 @@ function utf8_strtolower($s) {
 }
 
 
-## UTF-8 version of strtoupper().
-#
-# string $s
-#    UTF-8 string.
-# string return
-#    Uppercase version of the input string.
-#
+/** UTF-8 version of strtoupper().
+
+string $s
+	UTF-8 string.
+string return
+	Uppercase version of the input string.
+*/
 function utf8_strtoupper($s) {
 	static $arrToUpper = null;
 	if ($arrToUpper === null) {
@@ -468,17 +480,17 @@ function utf8_strtoupper($s) {
 }
 
 
-## UTF-8 version of substr().
-#
-# string $s
-#    UTF-8 string whose substring is to be extracted.
-# int $ichOffset
-#    Offset of the first UTF-8 character to be returned.
-# [int $cch]
-#    Number of characters to be returned.
-# string return
-#    The specified portion of the input string.
-#
+/** UTF-8 version of substr().
+
+string $s
+	UTF-8 string whose substring is to be extracted.
+int $ichOffset
+	Offset of the first UTF-8 character to be returned.
+[int $cch]
+	Number of characters to be returned.
+string return
+	The specified portion of the input string.
+*/
 function utf8_substr($s, $ichOffset, $cch = null) {
 	$ichOffset = (int)$ichOffset;
 	if ($cch !== null) {
@@ -535,25 +547,25 @@ function utf8_substr($s, $ichOffset, $cch = null) {
 }
 
 
-## UTF-8 version of trim().
-#
-# string $s
-#    UTF-8 string.
-# string return
-#    The input string, without UTF-8 whitespace characters on either ends.
-#
+/** UTF-8 version of trim().
+
+string $s
+	UTF-8 string.
+string return
+	The input string, without UTF-8 whitespace characters on either ends.
+*/
 function utf8_trim($s) {
 	return utf8_ltrim(utf8_rtrim($s));
 }
 
 
-## UTF-8 version of ucfirst().
-#
-# string $s
-#    UTF-8 string.
-# string return
-#    The input string, with the first character uppercase, and the rest lowercase.
-#
+/** UTF-8 version of ucfirst().
+
+string $s
+	UTF-8 string.
+string return
+	The input string, with the first character uppercase, and the rest lowercase.
+*/
 function utf8_ucfirst($s) {
 	static $arrToTitle = null;
 	if ($arrToTitle === null) {
@@ -565,26 +577,26 @@ function utf8_ucfirst($s) {
 }
 
 
-## UTF-8 version of ucwords().
-#
-# string $s
-#    UTF-8 string.
-# string return
-#    The input string, with each word turned lowercase with a capital letter.
-#
+/** UTF-8 version of ucwords().
+
+string $s
+	UTF-8 string.
+string return
+	The input string, with each word turned lowercase with a capital letter.
+*/
 function utf8_ucwords($s) {
 	# Fairly quick and clean.
 	return preg_replace_callback('/\pL+/u', 'utf8_ucfirst', $s);
 }
 
 
-## Checks the string to be a valid sequence of UTF-8 symbols.
-#
-# string $s
-#    String to check.
-# bool return
-#    true if the string is valid UTF-8, false otherwise.
-#
+/** Checks the string to be a valid sequence of UTF-8 symbols.
+
+string $s
+	String to check.
+bool return
+	true if the string is valid UTF-8, false otherwise.
+*/
 function utf8_validate($s) {
 	return utf8_fix($s) == $s;
 }
@@ -595,18 +607,18 @@ function utf8_validate($s) {
 # UTF-16 functions
 
 
-## Returns the UTF-16 character at the specified (byte) offset position, and moves the index past
-# it.
-#
-# string $s
-#    UTF-16 string to be parsed.
-# int& $ib
-#    Byte offset of the desired character.
-# bool $bBigEndian
-#    Assumes the string is UTF-16BE-encoded if true, UTF-16LE otherwise.
-# string return
-#    The UTF-16 character following the specified index.
-#
+/** Returns the UTF-16 character at the specified (byte) offset position, and moves the index past
+it.
+
+string $s
+	UTF-16 string to be parsed.
+int& $ib
+	Byte offset of the desired character.
+bool $bBigEndian
+	Assumes the string is UTF-16BE-encoded if true, UTF-16LE otherwise.
+string return
+	The UTF-16 character following the specified index.
+*/
 function utf16_charprev($s, &$ib, $bBigEndian) {
 	$cb = strlen($s);
 	if ($ib === null || $ib > $cb) {
@@ -628,18 +640,18 @@ function utf16_charprev($s, &$ib, $bBigEndian) {
 }
 
 
-## Returns the UTF-16 character preceding the specified (byte) offset position, and moves the index
-# to its starting byte.
-#
-# string $s
-#    UTF-16 string to be parsed.
-# int& $ib
-#    Byte offset of the desired character.
-# bool $bBigEndian
-#    Assumes the string is UTF-16BE-encoded if true, UTF-16LE otherwise.
-# string return
-#    The UTF-16 characters preceding the specified index.
-#
+/** Returns the UTF-16 character preceding the specified (byte) offset position, and moves the index
+to its starting byte.
+
+string $s
+	UTF-16 string to be parsed.
+int& $ib
+	Byte offset of the desired character.
+bool $bBigEndian
+	Assumes the string is UTF-16BE-encoded if true, UTF-16LE otherwise.
+string return
+	The UTF-16 characters preceding the specified index.
+*/
 function utf16_charnext($s, &$ib, $bBigEndian) {
 	if ($ib === null || $ib < 0) {
 		$ib = 0;
@@ -663,15 +675,15 @@ function utf16_charnext($s, &$ib, $bBigEndian) {
 }
 
 
-## UTF-16 version of strlen().
-#
-# string $s
-#    UTF-16 string whose length is to be measured.
-# bool $bBigEndian
-#    Assumes the string is UTF-16BE-encoded if true, UTF-16LE otherwise.
-# int return
-#    Length of the string, in UTF-16 characters.
-#
+/** UTF-16 version of strlen().
+
+string $s
+	UTF-16 string whose length is to be measured.
+bool $bBigEndian
+	Assumes the string is UTF-16BE-encoded if true, UTF-16LE otherwise.
+int return
+	Length of the string, in UTF-16 characters.
+*/
 function utf16_strlen($s, $bBigEndian) {
 	$cch = strlen($s) >> 1;
 	if (preg_match_all(
@@ -690,15 +702,15 @@ function utf16_strlen($s, $bBigEndian) {
 }
 
 
-## Checks the string to be a valid sequence of UTF-16 symbols.
-#
-# string $s
-#    String to check.
-# bool $bBigEndian
-#    Assumes the string is UTF-16BE-encoded if true, UTF-16LE otherwise.
-# bool return
-#    true if the string is valid UTF-16, false otherwise.
-#
+/** Checks the string to be a valid sequence of UTF-16 symbols.
+
+string $s
+	String to check.
+bool $bBigEndian
+	Assumes the string is UTF-16BE-encoded if true, UTF-16LE otherwise.
+bool return
+	true if the string is valid UTF-16, false otherwise.
+*/
 function utf16_validate($s, $bBigEndian) {
 	return (bool)preg_match(
 		$bBigEndian
@@ -714,18 +726,18 @@ function utf16_validate($s, $bBigEndian) {
 # Functions
 
 
-## Converts between Unicode and non-Unicode encodings.
-#
-# mixed $s
-#    String or character array to convert.
-# [string $sInEncoding]
-#    Source format. It can be determined automatically, if $s includes a BOM (Byte Order Mark).
-# [string $sOutEncoding]
-#    Destination format; a “+bom” suffix to the format name causes the returned string to include a
-#    BOM. Defaults to UTF-8.
-# mixed return
-#    Result of the conversion.
-#
+/** Converts between Unicode and non-Unicode encodings.
+
+mixed $s
+	String or character array to convert.
+[string $sInEncoding]
+	Source format. It can be determined automatically, if $s includes a BOM (Byte Order Mark).
+[string $sOutEncoding]
+	Destination format; a “+bom” suffix to the format name causes the returned string to include a
+	BOM. Defaults to UTF-8.
+mixed return
+	Result of the conversion.
+*/
 function ql_unicode_conv($s, $sInEncoding = null, $sOutEncoding = 'utf-8') {
 	if ($sInEncoding) {
 		# If an encoding was specified, check if it defines the byte order. Regardless, remove the BOM

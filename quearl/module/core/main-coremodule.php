@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-# Implementation of the “core” module.
+/** Implementation of the “core” module. */
 
 
 define('QUEARL_CORE_MAIN_COREMODULE_INCLUDED', true);
@@ -32,27 +32,27 @@ require_once 'main.php';
 
 class QlCoreModule extends QlModule {
 
-	## See QlModule::abbr().
-	#
+	/** See QlModule::abbr().
+	*/
 	public function abbr() {
 		return 'core';
 	}
 
 
-	## See QlModule::augment_response_body().
-	#
+	/** See QlModule::augment_response_body().
+	*/
 	public function augment_response_body($sUrl, QlResponse $response, QlXhtmlResponseEntity $ent) {
 	}
 
 
-	## See QlModule::augment_response_head().
-	#
+	/** See QlModule::augment_response_head().
+	*/
 	public function augment_response_head($sUrl, QlResponse $response, QlXhtmlResponseEntity $ent) {
 	}
 
 
-	## See QlModule::get_privilege_tokens().
-	#
+	/** See QlModule::get_privilege_tokens().
+	*/
 	public function get_privilege_tokens() {
 		return array(
 			'REG'  => array(QL_ACCLVL_USER,      'Registered user'),
@@ -63,8 +63,8 @@ class QlCoreModule extends QlModule {
 	}
 
 
-	## See QlModule::get_qlt().
-	#
+	/** See QlModule::get_qlt().
+	*/
 	public function get_qlt() {
 		return array(
 			'shortcuts' => array(
@@ -228,8 +228,8 @@ class QlCoreModule extends QlModule {
 	}
 
 
-	## See QlModule::get_robots_exclusions().
-	#
+	/** See QlModule::get_robots_exclusions().
+	*/
 	public function get_robots_exclusions() {
 		return array(
 			'/a_',
@@ -238,8 +238,8 @@ class QlCoreModule extends QlModule {
 	}
 
 
-	## See QlModule::_get_table_list_items_q().
-	#
+	/** See QlModule::_get_table_list_items_q().
+	*/
 	protected function _get_table_list_items_q($sTable, $sMatch) {
 		global $ql_db, $ql_session;
 		switch ($sTable) {
@@ -268,16 +268,16 @@ class QlCoreModule extends QlModule {
 	}
 
 
-	## See QlModule::handle_request().
-	#
+	/** See QlModule::handle_request().
+	*/
 	public function handle_request($sUrl, QlResponse $response) {
 		# TODO: implementation.
 	}
 
 
-	## See QlModule::handle_static_request(). Responds to requests for existent pre-processed
-	# JavaScript, CSS or localization JS files, for any module.
-	#
+	/** See QlModule::handle_static_request(). Responds to requests for existent pre-processed
+	JavaScript, CSS or localization JS files, for any module.
+	*/
 	public function handle_static_request($sUrl, QlResponse $response) {
 		# Validate the requested URL.
 		if (!preg_match(
@@ -332,8 +332,8 @@ class QlCoreModule extends QlModule {
 	}
 
 
-	## See QlModule::init().
-	#
+	/** See QlModule::init().
+	*/
 	protected function init() {
 		parent::init();
 		# The “core” $_APP section is always loaded by QlCoreModule::main_run() before this method is
@@ -341,9 +341,9 @@ class QlCoreModule extends QlModule {
 	}
 
 
-	## Initializes Quearl and processeses the request, generating and sending a response. Does not
-	# return.
-	#
+	/** Initializes Quearl and processeses the request, generating and sending a response. Does not
+	return.
+	*/
 	public static function main() {
 		self::main_init();
 		$ent = self::main_run();
@@ -352,11 +352,11 @@ class QlCoreModule extends QlModule {
 	}
 
 
-	# Initializes the environment for Quearl: enforces required PHP settings, figures out the
-	# installation’s directory structure, instantiates QlApplication (loading at least the bootstrap
-	# part of the “core” section, which provides more path information), and loads all the configured
-	# modules.
-	#
+	/** Initializes the environment for Quearl: enforces required PHP settings, figures out the
+	installation’s directory structure, instantiates QlApplication (loading at least the bootstrap
+	part of the “core” section, which provides more path information), and loads all the configured
+	modules.
+	*/
 	private static function main_init() {
 		# Required settings.
 
@@ -483,13 +483,13 @@ class QlCoreModule extends QlModule {
 	}
 
 
-	# Quearl execution stage: adds a few useful variables to $_SERVER, possibly responds to HTTP
-	# requests for static files; sets up a database connection, authenticates the user, initializes
-	# all modules, and responds the HTTP request.
-	#
-	# QlResponseEntity return
-	#    Generated response entity.
-	#
+	/** Quearl execution stage: adds a few useful variables to $_SERVER, possibly responds to HTTP
+	requests for static files; sets up a database connection, authenticates the user, initializes all
+	modules, and responds the HTTP request.
+
+	QlResponseEntity return
+		Generated response entity.
+	*/
 	private static function main_run() {
 		# Notice that this variable is a reference, so it will stay up-to-date.
 		$arrModules =& QlModule::get_loaded_modules();

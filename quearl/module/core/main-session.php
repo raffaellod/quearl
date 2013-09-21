@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-# Definition of the session classes. Same prerequisite constraints as main.php.
+/** Definition of the session classes. */
 
 
 define('QUEARL_CORE_MAIN_SESSION_INCLUDED', true);
@@ -42,9 +42,10 @@ define('QL_ACCLVL_ROOT',      0x2000);
 
 # Enumeration values for QlSession::m_iClientType.
 
-## Regular (remote) user.
+/** Regular (remote) user. */
 define('QL_CLIENTTYPE_USER',    0);
-## Bot (automated web crawler). Excluded from statistics counting and not counted as online user.
+/** Bot (automated web crawler). Excluded from statistics counting and not counted as on-line user.
+*/
 define('QL_CLIENTTYPE_CRAWLER', 1);
 
 
@@ -53,29 +54,29 @@ define('QL_CLIENTTYPE_CRAWLER', 1);
 # Classes
 
 
-## Implementation of a session tracking mechanism.
-#
-# Note: sessions are never saved for crawlers, nor are the session IDs propagated from one page to
-# another.
-#
+/** Implementation of a session tracking mechanism.
+
+Note: sessions are never saved for crawlers, nor are the session IDs propagated from one page to
+another.
+*/
 class QlSession {
 
-	## Session ID.
+	/** Session ID. */
 	private /*string*/ $m_sID;
-	## Subsession ID (if subsessions are enabled for this session).
+	/** Subsession ID (if subsessions are enabled for this session). */
 	private /*string*/ $m_sSubID;
-	## If true, write_and_close() needs to be called.
+	/** If true, write_and_close() needs to be called. */
 	private /*bool*/ $m_bLocked;
-	## Type of remote client for which this request is being processed (QL_CLIENTTYPE_*).
+	/** Type of remote client for which this request is being processed (QL_CLIENTTYPE_*). */
 	private /*int*/ $m_iClientType;
 
 
-	## Constructor. Upon the first time a session is created, propagation of its ID via query string
-	# and cookies is enabled; from the second time on, only the best propagation method is kept.
-	#
-	# QlResponse $response
-	#    Response to use to perform any redirections.
-	#
+	/** Constructor. Upon the first time a session is created, propagation of its ID via query string
+	and cookies is enabled; from the second time on, only the best propagation method is kept.
+
+	QlResponse $response
+		Response to use to perform any redirections.
+	*/
 	public function __construct($response) {
 		global $_APP, $ql_db, $ql_fScriptStart;
 		global $ql_debug_session_SID;
@@ -177,8 +178,8 @@ class QlSession {
 	}
 
 
-	## Destructor.
-	#
+	/** Destructor.
+	*/
 	public function __destruct() {
 		if ($this->m_bLocked) {
 			$this->write_and_close();
@@ -187,23 +188,23 @@ class QlSession {
 	}
 
 
-	## Check whether the user has the specified generic access level.
-	#
-	# int $iAccessLevel
-	#    Generic access level.
-	#
+	/** Check whether the user has the specified generic access level.
+
+	int $iAccessLevel
+		Generic access level.
+	*/
 	public function check_access_level($iAccessLevel) {
 		return $_SESSION['ql_user_acclvl'] >= $iAccessLevel;
 	}
 
 
-	## Checks whether the user has been granted the specified privileges.
-	#
-	# string+ …
-	#    Privileges to check for.
-	# return:bool
-	#    true if the user is privileged enough, false otherwise.
-	#
+	/** Checks whether the user has been granted the specified privileges.
+
+	string+ …
+		Privileges to check for.
+	bool return
+		true if the user is privileged enough, false otherwise.
+	*/
 	public function check_priv_tokens(/*…*/) {
 		foreach (func_get_args() as $sPrivToken) {
 			if (strpos($_SESSION['ql_user_privtokens'], ' ' . $sPrivToken . ' ') === false) {
@@ -214,13 +215,13 @@ class QlSession {
 	}
 
 
-	## Attempts to select a locale among those reported by the user agent as being preferred by the
-	# user. In case none of these locales is supported, or if no such preference is indicated, the
-	# site’s default locale is returned instead.
-	#
-	# string return
-	#    Detected locale.
-	#
+	/** Attempts to select a locale among those reported by the user agent as being preferred by the
+	user. In case none of these locales is supported, or if no such preference is indicated, the
+	site’s default locale is returned instead.
+
+	string return
+		Detected locale.
+	*/
 	public static function detect_locale() {
 		global $_APP;
 		# The user (if logged in at all) has no locale preference, and the URL they’re visiting
@@ -249,14 +250,14 @@ class QlSession {
 	}
 
 
-	## Enables distinguishing among parallel workflows performed on a single user session (e.g. on a
-	# single browser instance, maybe via multiple tabs) via an always-unique HTTP “ss” parameter.
-	# Subsession-specific data is accessible via $_SESSION['sub'].
-	#
-	# [bool $bKeepId]
-	#    If this is not true, the subsession ID will be changed, while preserving the subsession-
-	#    specific data.
-	#
+	/** Enables distinguishing among parallel workflows performed on a single user session (e.g. on a
+	single browser instance, maybe via multiple tabs) via an always-unique HTTP “ss” parameter.
+	Subsession-specific data is accessible via $_SESSION['sub'].
+
+	[bool $bKeepId]
+		If this is not true, the subsession ID will be changed, while preserving the subsession-
+		specific data.
+	*/
 	public function enable_subsessions($bKeepId = false) {
 		global $_APP, $ql_fScriptStart;
 		if ($this->m_iClientType == QL_CLIENTTYPE_CRAWLER) {
@@ -287,7 +288,7 @@ class QlSession {
 			# We have a valid subsession ID that we want to keep.
 			$this->m_sSubID = $sSSID;
 		} else {
-			# We don’t have a valid subsession ID, or we don’t wa to keep it: create a new ID.
+			# We don’t have a valid subsession ID, or we don’t want to keep it: create a new ID.
 			$sNewSSID = ql_str_uid(8, $ql_fScriptStart);
 			if ($sSSID !== null) {
 				# If we already have a subsession, replace its ID now, but keep its contents…
@@ -313,14 +314,14 @@ class QlSession {
 
 		# Make the data for the current subsession available via $_SESSION['sub'];
 		$_SESSION['sub'] =& $_SESSION['subs'][$this->m_sSubID];
-		# Ensure that the subsession ID is propabated.
+		# Ensure that the subsession ID is propagated.
 		define('SSID', 'ss=' . $this->m_sSubID);
 		$_SERVER['RFULLPATHQ'] = ql_url_addqs($_SERVER['RFULLPATHQ'], SSID);
 	}
 
 
-	## Collects and deletes expired sessions (garbage collector).
-	#
+	/** Collects and deletes expired sessions (garbage collector).
+	*/
 	public function gc() {
 		global $_APP, $ql_db, $ql_fScriptStart;
 		$ql_db->query('
@@ -336,53 +337,53 @@ class QlSession {
 	}
 
 
-	## Returns the type of remote client for which this request is being processed.
-	#
-	# int return
-	#    Client type (QL_CLIENTTYPE_*).
-	#
+	/** Returns the type of remote client for which this request is being processed.
+
+	int return
+		Client type (QL_CLIENTTYPE_*).
+	*/
 	public function get_client_type() {
 		return $this->m_iClientType;
 	}
 
 
-	## Returns the session identifier (SID).
-	#
-	# string return
-	#    Fixed-length identifier of the current session.
-	#
+	/** Returns the session identifier (SID).
+
+	string return
+		Fixed-length identifier of the current session.
+	*/
 	public function get_id() {
 		return $this->m_sID;
 	}
 
 
-	## Returns the session identifier (SID) as an URL argument.
-	#
-	# string return
-	#    URL argument containing the fixed-length identifier of the current session.
-	#
+	/** Returns the session identifier (SID) as an URL argument.
+
+	string return
+		URL argument containing the fixed-length identifier of the current session.
+	*/
 	public function get_id_url() {
 		return 's=' . $this->m_sID;
 	}
 
 
-	## Returns the subsession identifier (SSID), if any.
-	#
-	# string return
-	#    Fixed-length identifier of the current subsession, or an empty string.
-	#
+	/** Returns the subsession identifier (SSID), if any.
+
+	string return
+		Fixed-length identifier of the current subsession, or an empty string.
+	*/
 	public function get_subid() {
 		return $this->m_sSubID;
 	}
 
 
-	## Calculates the highest access level among the specified privileges.
-	#
-	# string $sPrivTokens
-	#    List of privilege tokens.
-	# int return
-	#    Highest access level granted by the tokens in $sPrivTokens.
-	#
+	/** Calculates the highest access level among the specified privileges.
+
+	string $sPrivTokens
+		List of privilege tokens.
+	int return
+		Highest access level granted by the tokens in $sPrivTokens.
+	*/
 	private static function get_user_access_level($sPrivTokens) {
 		$iAccessLevel = QL_ACCLVL_ANON;
 		$arrPrivTokens = array();
@@ -400,8 +401,8 @@ class QlSession {
 	}
 
 
-	## Resets user-related session information to that of an anonymous user.
-	#
+	/** Resets user-related session information to that of an anonymous user.
+	*/
 	private function init_anonymous_user() {
 		$_SESSION = array(
 			'ql_user_acclvl'     => QL_ACCLVL_ANON,
@@ -415,13 +416,13 @@ class QlSession {
 	}
 
 
-	## Attempts to load and lock the session associated to the SID provided by the user agent, if
-	# any.
-	#
-	# bool return
-	#    true if a session (whose ID is now in $this->m_sID) was loaded (and locked), or false in any
-	#    other case.
-	#
+	/** Attempts to load and lock the session associated to the SID provided by the user agent, if
+	any.
+
+	bool return
+		true if a session (whose ID is now in $this->m_sID) was loaded (and locked), or false in all
+		other cases.
+	*/
 	private function load() {
 		global $ql_db, $ql_fScriptStart;
 		global $ql_debug_session_SID;
@@ -446,7 +447,7 @@ class QlSession {
 		}
 
 		# Ensure that the session really exists. To ensure it won’t be garbage-collected between this
-		# check and the locking below, also update its lasthit.
+		# check and the locking below, also update its last hit.
 		$ql_db->query('
 			UPDATE sessions
 			SET lasthit = ' . (int)$ql_fScriptStart . '
@@ -524,17 +525,17 @@ class QlSession {
 	}
 
 
-	## Attempts to log the specified user in.
-	#
-	# string $sUserName
-	#    User name.
-	# string $sPassword
-	#    Clear-text password.
-	# bool $bSetCookie
-	#    If true, and the login succeededs, the provided login data is saved to a cookie.
-	# bool return
-	#    true if the login was successful, or false otherwise.
-	#
+	/** Attempts to log the specified user in.
+
+	string $sUserName
+		User name.
+	string $sPassword
+		Clear-text password.
+	bool $bSetCookie
+		If true, and the login succeeded, the provided login data is saved to a cookie.
+	bool return
+		true if the login was successful, or false otherwise.
+	*/
 	public function login($sUserName, $sPassword, $bSetCookie) {
 		global $_APP, $ql_db, $ql_fScriptStart;
 		$_SESSION = $ql_db->query_assoc('
@@ -593,31 +594,31 @@ class QlSession {
 	}
 
 
-	## Logs the active user off, by resetting the session to that of an anonymous user.
-	#
+	/** Logs the active user off, by resetting the session to that of an anonymous user.
+	*/
 	public function logout() {
 		$this->init_anonymous_user();
 		setcookie('al', '', null, $_SERVER['RROOTDIR']);
 	}
 
 
-	## (DEPRECATED) Add a message to be displayed when the page is loaded.
-	#
-	# string $s
-	#    Message to be displayed.
-	#
+	/** (DEPRECATED) Add a message to be displayed when the page is loaded.
+
+	string $s
+		Message to be displayed.
+	*/
 	public function onload_msg($s) {
 		$_SESSION['ql_onload_msg'][] = $s;
 	}
 
 
-	## (DEPRECATED) Sets an UI element to receive focus when the page is loaded.
-	#
-	# string $sID
-	#    ID of the element to receive focus.
-	# [bool $bForce]
-	#    If true, this call will override any previous calls to this same method.
-	#
+	/** (DEPRECATED) Sets an UI element to receive focus when the page is loaded.
+
+	string $sID
+		ID of the element to receive focus.
+	[bool $bForce]
+		If true, this call will override any previous calls to this same method.
+	*/
 	public function onload_focus($sID, $bForce = true) {
 		if (!isset($_SESSION['ql_onload_focus']) || $bForce) {
 			$_SESSION['ql_onload_focus'] = $sID;
@@ -625,27 +626,27 @@ class QlSession {
 	}
 
 
-	## Logs the current user back in, possibly also recreating the auto-login cookie.
-	#
-	# string $sPassword
-	#    Non-hashed password; it’s not extracted from the auto-login cookie even if the latter is
-	#    available.
-	# bool return
-	#    true if successful, or false if something went wrong during the login. In either case, the
-	#    user will still be logged in, i.e. a failure doesn’t mean that the user is logged out.
-	#
+	/** Logs the current user back in, possibly also recreating the auto-login cookie.
+
+	string $sPassword
+		Non-hashed password; it’s not extracted from the auto-login cookie even if the latter is
+		available.
+	bool return
+		true if successful, or false if something went wrong during the login. In either case, the
+		user will still be logged in, i.e. a failure doesn’t mean that the user is logged out.
+	*/
 	public function relogin($sPassword) {
 		return $this->login($_SESSION['ql_user_name'], $sPassword, isset($_COOKIE['al']));
 	}
 
 
-	## Verifies that the user has all the privileges passed as arguments; if that’s not the case, the
-	# page generation is interrupted, resulting in an “access denied” error message instead. Can be
-	# used for both UI and UI-less (asynchronous) checks. Does not return.
-	#
-	# string+ …
-	#    Privileges to check for.
-	#
+	/** Verifies that the user has all the privileges passed as arguments; if that’s not the case,
+	the page generation is interrupted, resulting in an “access denied” error message instead. Can be
+	used for both UI and UI-less (asynchronous) checks. Does not return.
+
+	string+ …
+		Privileges to check for.
+	*/
 	public function require_priv_tokens(/*…*/) {
 		global $ql_sAction;
 		$arrTokens = func_get_args();
@@ -672,8 +673,8 @@ class QlSession {
 	}
 
 
-	## Initializes a new session, either from an auto-login or from scratch.
-	#
+	/** Initializes a new session, either from an auto-login or from scratch.
+	*/
 	private function start() {
 		global $_APP;
 
@@ -717,31 +718,31 @@ class QlSession {
 	}
 
 
-	## Creates a hash code for the specified user, optionally also returning the values used to
-	# generate it.
-	#
-	# string $sName
-	#    User name. If any of the remaining arguments is omitted, this name will be used to retrieve
-	#    the missing information from the database.
-	# [mixed $sPwHash]
-	#    Current password’s MD5 hash. If true, the current password hash will be retrieved and saved
-	#    in the returned array.
-	# [mixed $sEmail]
-	#    Current e-mail address. If true, the current e-mail address will be retrieved and saved in
-	#    the returned array.
-	# [mixed $iID]
-	#    User ID. If true, the ID will be retrieved and saved in the returned array.
-	# array<string => mixed> return
-	#    Array containing these keys:
-	#    “hash” => string
-	#       Computed hash for the user.
-	#    [“pwhash” => string]
-	#       MD5 hash of the user’s password.
-	#    [“email” => string]
-	#       User’s e-mail address.
-	#    [“id” => int]
-	#       User ID.
-	#
+	/** Creates a hash code for the specified user, optionally also returning the values used to
+	generate it.
+
+	string $sName
+		User name. If any of the remaining arguments is omitted, this name will be used to retrieve
+		the missing information from the database.
+	[mixed $sPwHash]
+		Current password’s MD5 hash. If true, the current password hash will be retrieved and saved in
+		the returned array.
+	[mixed $sEmail]
+		Current e-mail address. If true, the current e-mail address will be retrieved and saved in the
+		returned array.
+	[mixed $iID]
+		User ID. If true, the ID will be retrieved and saved in the returned array.
+	array<string => mixed> return
+		Array containing these keys:
+		“hash” => string
+			Computed hash for the user.
+		[“pwhash” => string]
+			MD5 hash of the user’s password.
+		[“email” => string]
+			User’s e-mail address.
+		[“id” => int]
+			User ID.
+	*/
 	public static function user_hash($sName, $sPwHash = null, $sEmail = null, $iID = null) {
 		global $ql_db;
 		if (is_string($sPwHash) && is_string($sEmail) && is_numeric($iID)) {
@@ -776,8 +777,8 @@ class QlSession {
 	}
 
 
-	## Saves the $_SESSION array to the database storage, then discards it.
-	#
+	/** Saves the $_SESSION array to the database storage, then discards it.
+	*/
 	public function write_and_close() {
 		if ($this->m_bLocked) {
 			# “sub” is merely a reference to an item in “subs”, so it shouldn’t be saved.

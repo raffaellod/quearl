@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-# Database connection classes.
+/** Database connection classes. */
 
 
 define('QUEARL_CORE_MAIN_DB_INCLUDED', true);
@@ -49,33 +49,33 @@ define('ER_EMPTY_QUERY', 1065);
 # Classes
 
 
-## Database connection.
-#
+/** Database connection.
+*/
 class QlDb {
 
-	## Database connection.
+	/** Database connection. */
 	private /*resource*/ $m_conn;
-	## true if there are any currently held locks.
+	/** true if there are any currently held locks. */
 	private /*int*/ $m_bPendingLocks;
-	## true if there are any pending transactions.
+	/** true if there are any pending transactions. */
 	private /*int*/ $m_bPendingTransactions;
-	## Execution time of the last query run.
+	/** Execution time of the last query run. */
 	private /*float*/ $m_fLastDuration;
-	## Cumulative execution time of every query run, in seconds.
+	/** Cumulative execution time of every query run, in seconds. */
 	private /*float*/ $m_fTotalDuration;
 	## Number of queries executed.
 	private /*int*/ $m_cQueries;
 
 
-	## Constructor.
-	#
-	# string $sHostName
-	#    Database host machine name.
-	# string $sUserName
-	#    User name to use to connect to the database.
-	# string $sPassword
-	#    Password for $sUserName.
-	#
+	/** Constructor.
+
+	string $sHostName
+		Database host machine name.
+	string $sUserName
+		User name to use to connect to the database.
+	string $sPassword
+		Password for $sUserName.
+	*/
 	public function __construct($sHostName, $sUserName, $sPassword) {
 		$this->m_conn = mysql_connect($sHostName, $sUserName, $sPassword);
 		if (!$this->m_conn) {
@@ -107,8 +107,8 @@ class QlDb {
 	}
 
 
-	## Destructor.
-	#
+	/** Destructor.
+	*/
 	public function __destruct() {
 		if ($this->m_conn) {
 			mysql_close($this->m_conn);
@@ -117,19 +117,19 @@ class QlDb {
 	}
 
 
-	## Limits concurrent access to the specified tables. For both (read/write and read-only) lists of
-	# tables, if aliases are to be used they should be specified provoding the alias as a key, and
-	# the actual table name as its associated value.
-	#
-	# TODO: currently this only always issues LOCK TABLE statements; in the future this should check
-	# if the table engine (SHOW TABLE STATUS) supports transactions, and if so begin a real
-	# transaction. This might require caching the results of SHOW TABLE STATUS.
-	#
-	# [array<string => string> $arrWriteLocks]
-	#    Tables to be locked for read/write access.
-	# [array<string => string> $arrReadLocks]
-	#    Tables to be locked for read-only access.
-	#
+	/** Limits concurrent access to the specified tables. For both (read/write and read-only) lists
+	of tables, if aliases are to be used they should be specified provoding the alias as a key, and
+	the actual table name as its associated value.
+
+	TODO: currently this only always issues LOCK TABLE statements; in the future this should check if
+	the table engine (SHOW TABLE STATUS) supports transactions, and if so begin a real transaction.
+	This might require caching the results of SHOW TABLE STATUS.
+
+	[array<string => string> $arrWriteLocks]
+		Tables to be locked for read/write access.
+	[array<string => string> $arrReadLocks]
+		Tables to be locked for read-only access.
+	*/
 	public function begin_transaction(
 		array $arrWriteLocks = array(), array $arrReadLocks = array()
 	) {
@@ -147,13 +147,13 @@ class QlDb {
 	}
 
 
-	## Translates a basic regular expression (BRE) into a LIKE expression.
-	#
-	# string $s
-	#    Basic regular expression to translate.
-	# string return
-	#    Resulting LIKE expression.
-	#
+	/** Translates a basic regular expression (BRE) into a LIKE expression.
+
+	string $s
+		Basic regular expression to translate.
+	string return
+		Resulting LIKE expression.
+	*/
 	public static function bre_to_like($s) {
 		return str_replace(
 			array( '%',  '_', '*', '?'),
@@ -163,13 +163,13 @@ class QlDb {
 	}
 
 
-	## Invokes a stored procedure. Use just like call_user_func().
-	#
-	# string $sProc
-	#    Stored procedure name.
-	# [mixed …]
-	#    Parameters to be passed to the stored procedure.
-	#
+	/** Invokes a stored procedure. Use just like call_user_func().
+
+	string $sProc
+		Stored procedure name.
+	[mixed …]
+		Parameters to be passed to the stored procedure.
+	*/
 	public function call_proc($sProc/*, …*/) {
 		$arrArgs = func_get_args();
 		# Remove $sProc from the arguments.
@@ -178,13 +178,13 @@ class QlDb {
 	}
 
 
-	## Invokes a stored procedure. Use just like call_user_func_array().
-	#
-	# string $sProc
-	#    Stored procedure name.
-	# array<mixed => mixed> $arrArgs
-	#    Array of parameters to be passed to the stored procedure.
-	#
+	/** Invokes a stored procedure. Use just like call_user_func_array().
+
+	string $sProc
+		Stored procedure name.
+	array<mixed => mixed> $arrArgs
+		Array of parameters to be passed to the stored procedure.
+	*/
 	public function call_proc_array($sProc, array $arrArgs) {
 		foreach ($arrArgs as $mKey => $m) {
 			$arrArgs[$mKey] = $this->convert_php_value($m);
@@ -194,9 +194,9 @@ class QlDb {
 	}
 
 
-	## Releases the concurrency limitations activated by begin_transaction(). In case of transaction
-	# support, it always issues a COMMIT statement (ROLLBACK is not supported).
-	#
+	/** Releases the concurrency limitations activated by begin_transaction(). In case of transaction
+	support, it always issues a COMMIT statement (ROLLBACK is not supported).
+	*/
 	public function end_transaction() {
 		# Don’t swap these two if blocks.
 		if ($this->m_bPendingTransactions) {
@@ -210,15 +210,15 @@ class QlDb {
 	}
 
 
-	## Escapes a string into a valid SQL string.
-	#
-	# string $s
-	#    String to escape.
-	# [bool $bEscapeLike]
-	#    If true, it also escapes characters that have a special meaning for the LIKE operator.
-	# string return
-	#    SQL-escaped string.
-	#
+	/** Escapes a string into a valid SQL string.
+
+	string $s
+		String to escape.
+	[bool $bEscapeLike]
+		If true, it also escapes characters that have a special meaning for the LIKE operator.
+	string return
+		SQL-escaped string.
+	*/
 	public function escape($s, $bEscapeLike = false) {
 		if ($bEscapeLike) {
 			$s = str_replace(
@@ -231,52 +231,52 @@ class QlDb {
 	}
 
 
-	## Returns the count of rows affected by the last statement executed.
-	#
-	# int return
-	#    Count of affected rows.
-	#
+	/** Returns the count of rows affected by the last statement executed.
+
+	int return
+		Count of affected rows.
+	*/
 	public function get_last_affected_rows() {
 		return mysql_affected_rows($this->m_conn);
 	}
 
 
-	## Returns the cumulative execution time of the last query run.
-	#
-	# float return
-	#    Execution time, in seconds.
-	#
+	/** Returns the cumulative execution time of the last query run.
+
+	float return
+		Execution time, in seconds.
+	*/
 	public function get_last_duration() {
 		return $this->m_fLastDuration;
 	}
 
 
-	## Returns the numeric code of the last error occurred.
-	#
-	# int return
-	#    Error code.
-	#
+	/** Returns the numeric code of the last error occurred.
+
+	int return
+		Error code.
+	*/
 	public function get_last_error() {
 		return mysql_errno($this->m_conn);
 	}
 
 
-	## Returns a description for the last error occurred.
-	#
-	# string return
-	#    Error description.
-	#
+	/** Returns a description for the last error occurred.
+
+	string return
+		Error description.
+	*/
 	public function get_last_error_info() {
 		return mysql_error($this->m_conn);
 	}
 
 
-	## Returns the total number of rows that matched the last SELECT statement executed, even if they
-	# were excluded from the result set due to a LIMIT statement.
-	#
-	# int return
-	#    Count of matching rows.
-	#
+	/** Returns the total number of rows that matched the last SELECT statement executed, even if
+	they were excluded from the result set due to a LIMIT statement.
+
+	int return
+		Count of matching rows.
+	*/
 	public function get_last_found_rows_count() {
 		return (int)mysql_result(mysql_query(
 			'SELECT FOUND_ROWS();',
@@ -285,70 +285,70 @@ class QlDb {
 	}
 
 
-	## Returns the auto-generated ID used in the last INSERT statement.
-	#
-	# int return
-	#    Last ID generated.
-	#
+	/** Returns the auto-generated ID used in the last INSERT statement.
+
+	int return
+		Last ID generated.
+	*/
 	public function get_last_inserted_id() {
 		return mysql_insert_id($this->m_conn);
 	}
 
 
-	## Returns the count of queries executed on this connection.
-	#
-	# int return
-	#    Count of queries executed.
-	#
+	/** Returns the count of queries executed on this connection.
+
+	int return
+		Count of queries executed.
+	*/
 	public function get_query_count() {
 		return $this->m_cQueries;
 	}
 
 
-	## Returns the cumulative execution time of every query run.
-	#
-	# float return
-	#    Cumulative execution time, in seconds.
-	#
+	/** Returns the cumulative execution time of every query run.
+
+	float return
+		Cumulative execution time, in seconds.
+	*/
 	public function get_total_duration() {
 		return $this->m_fTotalDuration;
 	}
 
 
-	## Returns the version of the MySQL Server.
-	#
-	# string return
-	#    Version number.
-	#
+	/** Returns the version of the MySQL Server.
+
+	string return
+		Version number.
+	*/
 	public function get_version() {
 		return 'MySQL Server ' . mysql_get_server_info($this->m_conn);
 	}
 
 
-	## Executes a query. If the executed statement returns a result set (e.g. SELECT), this will
-	# return a QlQueryResult instance which can be used to access the returned rows; otherwise the
-	# return value will be a boolean in case of success. For all statements, false will be returned
-	# in case of failure.
-	#
-	# string $sQuery
-	#    Query to run.
-	# mixed return
-	#    false in case of failure; otherwise QlQueryResult instance in case of result set, or true
-	#    for other queries.
-	#
+	/** Executes a query. If the executed statement returns a result set (e.g. SELECT), this will
+	return a QlQueryResult instance which can be used to access the returned rows; otherwise the
+	return value will be a boolean in case of success. For all statements, false will be returned in
+	case of failure.
+
+	string $sQuery
+		Query to run.
+	mixed return
+		false in case of failure; otherwise QlQueryResult instance in case of result set, or true for
+		other queries.
+	*/
 	public function query($sQuery) {
 		$mRet = $this->query_raw($sQuery);
 		return is_resource($mRet) ? new QlQueryResult($mRet) : $mRet;
 	}
 
 
-	## Returns the full result set of a query as a matrix.
-	#
-	# string $sQuery
-	#    SQL query.
-	# array<int => array<string => mixed>> return
-	#    Results of the query, records by columns.
-	#
+	/** Returns the full result set of a query as a matrix.
+
+	string $sQuery
+		SQL query.
+	array<int => array<string => mixed>> return
+		Results of the query, records by columns.
+	*/
 	public function & query_all($sQuery) {
 		$q = $this->query_raw($sQuery);
 		$arr = array();
@@ -360,15 +360,15 @@ class QlDb {
 	}
 
 
-	## Returns as an associative array a single row returned by a db query.
-	#
-	# string $sQuery
-	#    Query to execute.
-	# [int $iRow]
-	#    Row to return; defaults to 0 (the first).
-	# array<string => mixed> return
-	#    Returned row.
-	#
+	/** Returns as an associative array a single row returned by a db query.
+
+	string $sQuery
+		Query to execute.
+	[int $iRow]
+		Row to return; defaults to 0 (the first).
+	array<string => mixed> return
+		Returned row.
+	*/
 	public function query_assoc($sQuery, $iRow = 0) {
 		$q = $this->query_raw($sQuery);
 		if (!$q || mysql_num_rows($q) < 1) {
@@ -383,15 +383,15 @@ class QlDb {
 	}
 
 
-	## Returns a single column returned by a db query.
-	#
-	# string $sQuery
-	#    Query to execute.
-	# [int $iCol]
-	#    Column to return; defaults to 0 (the first).
-	# array<int => mixed> return
-	#    Returned field values.
-	#
+	/** Returns a single column returned by a db query.
+
+	string $sQuery
+		Query to execute.
+	[int $iCol]
+		Column to return; defaults to 0 (the first).
+	array<int => mixed> return
+		Returned field values.
+	*/
 	public function & query_column($sQuery, $iCol = 0) {
 		$q = $this->query_raw($sQuery);
 		$arr = array();
@@ -403,19 +403,19 @@ class QlDb {
 	}
 
 
-	## Returns a map obtained by executing a db query and using one of the returned columns as a set
-	# of keys, and another one as a set of values to be associated to the keys, acting similarly to
-	# array_combine().
-	#
-	# string $sQuery
-	#    Query to execute.
-	# [int $iKeysCol]
-	#    Index of the column to provide the keys; defaults to 0 (the first).
-	# [int $iValuesCol]
-	#    Index of the column to provide the values; defaults to 1 (the second).
-	# array<mixed => mixed> return
-	#    Returned pairs.
-	#
+	/** Returns a map obtained by executing a db query and using one of the returned columns as a set
+	of keys, and another one as a set of values to be associated to the keys, acting similarly to
+	array_combine().
+
+	string $sQuery
+		Query to execute.
+	[int $iKeysCol]
+		Index of the column to provide the keys; defaults to 0 (the first).
+	[int $iValuesCol]
+		Index of the column to provide the values; defaults to 1 (the second).
+	array<mixed => mixed> return
+		Returned pairs.
+	*/
 	public function & query_combine($sQuery, $iKeysCol = 0, $iValuesCol = 1) {
 		$q = $this->query_raw($sQuery);
 		$arr = array();
@@ -427,25 +427,24 @@ class QlDb {
 	}
 
 
-	## Executes a query for an item list, returning an array of arrays with two elements with keys
-	# “value” and “label”.
-	#
-	# array<string => mixed> $arrQ
-	#    Query components. Can include these values:
-	#    string “fields”
-	#       Fields to be returned, in SELECT syntax. The fields must include “ql_label” and
-	#       “ql_value”.
-	#    string “tables”
-	#       Tables to be used, in FROM syntax.
-	#    [string “where”]
-	#       WHERE clause conditions.
-	#    [array<string => int> “sort”]
-	#       Maps each field name with a sort mode (QL_DB_SORT_*).
-	#    [int “limit”]
-	#       Limits the number of returned rows to this number.
-	# array<int => array<string => mixed>> return
-	#    Item list.
-	#
+	/** Executes a query for an item list, returning an array of arrays with two elements with keys
+	“value” and “label”.
+
+	array<string => mixed> $arrQ
+		Query components. Can include these values:
+		string “fields”
+			Fields to be returned, in SELECT syntax. The fields must include “ql_label” and “ql_value”.
+		string “tables”
+			Tables to be used, in FROM syntax.
+		[string “where”]
+			WHERE clause conditions.
+		[array<string => int> “sort”]
+			Maps each field name with a sort mode (QL_DB_SORT_*).
+		[int “limit”]
+			Limits the number of returned rows to this number.
+	array<int => array<string => mixed>> return
+		Item list.
+	*/
 	public function query_item_list(array $arrQ) {
 		global $ql_debug_database_QueryItemList;
 		$s = 'SELECT ';
@@ -579,14 +578,14 @@ class QlDb {
 	}
 
 
-	## Implementation of the query*() methods.
-	#
-	# string $sQuery
-	#    SQL query to execute.
-	# mixed return
-	#    For statements returning rows (e.g. SELECT) this is the result set, or false on failure; for
-	#    other statement types, true on successful execution, or false otherwise.
-	#
+	/** Implementation of the query*() methods.
+
+	string $sQuery
+		SQL query to execute.
+	mixed return
+		For statements returning rows (e.g. SELECT) this is the result set, or false on failure; for
+		other statement types, true on successful execution, or false otherwise.
+	*/
 	private function query_raw($sQuery) {
 		global $ql_session;
 		global $ql_debug_database_Anonymous, $ql_debug_database_Errors;
@@ -663,15 +662,15 @@ class QlDb {
 	}
 
 
-	## Returns a single row returned by a db query.
-	#
-	# string $sQuery
-	#    Query to execute.
-	# [int $iRow]
-	#    Row to return; defaults to 0 (the first).
-	# array<int => mixed> return
-	#    Returned row.
-	#
+	/** Returns a single row returned by a db query.
+
+	string $sQuery
+		Query to execute.
+	[int $iRow]
+		Row to return; defaults to 0 (the first).
+	array<int => mixed> return
+		Returned row.
+	*/
 	public function query_row($sQuery, $iRow = 0) {
 		$q = $this->query_raw($sQuery);
 		if (!$q || mysql_num_rows($q) < 1) {
@@ -686,17 +685,17 @@ class QlDb {
 	}
 
 
-	## Returns a single field from a row returned by a db query.
-	#
-	# string $sQuery
-	#    Query to execute.
-	# [int $iRow]
-	#    Row to return; defaults to 0 (the first).
-	# [int $iCol]
-	#    Field to return; defaults to 0 (the first).
-	# mixed return
-	#    Returned field value.
-	#
+	/** Returns a single field from a row returned by a db query.
+
+	string $sQuery
+		Query to execute.
+	[int $iRow]
+		Row to return; defaults to 0 (the first).
+	[int $iCol]
+		Field to return; defaults to 0 (the first).
+	mixed return
+		Returned field value.
+	*/
 	public function query_value($sQuery, $iRow = 0, $iCol = 0) {
 		$q = $this->query_raw($sQuery);
 		if (!$q || mysql_num_rows($q) < 1) {
@@ -708,11 +707,11 @@ class QlDb {
 	}
 
 
-	## Selects a database to operate on.
-	#
-	# string $sDatabaseName
-	#    Name of the database.
-	#
+	/** Selects a database to operate on.
+
+	string $sDatabaseName
+		Name of the database.
+	*/
 	public function select_database($sDatabaseName) {
 		if (!mysql_select_db($sDatabaseName, $this->m_conn)) {
 			trigger_error('Unable to select database “' . $sDatabaseName . '”', E_USER_WARNING);
@@ -726,13 +725,13 @@ class QlDb {
 	}
 
 
-	## Generates a SQL string representation of the specified PHP scalar value.
-	#
-	# mixed $m
-	#   Value to translate.
-	# string return
-	#   SQL representation of $m.
-	#
+	/** Generates a SQL string representation of the specified PHP scalar value.
+
+	mixed $m
+		Value to translate.
+	string return
+		SQL representation of $m.
+	*/
 	public function sql_encode($m) {
 		switch (gettype($m)) {
 			default:
@@ -752,14 +751,14 @@ class QlDb {
 	}
 
 
-	## Generates a list of WHERE clause conditions.
-	#
-	# array<string => array<string, [mixed]>> $arrClauses
-	#    List of conditions: each item has the target field name as key, and an array of two items as
-	#    value; the first item is the operator to apply, the second is its right operand.
-	# string return
-	#    WHERE clause conditions.
-	#
+	/** Generates a list of WHERE clause conditions.
+
+	array<string => array<string, [mixed]>> $arrClauses
+		List of conditions: each item has the target field name as key, and an array of two items as
+		value; the first item is the operator to apply, the second is its right operand.
+	string return
+		WHERE clause conditions.
+	*/
 	public function where_clauses_to_string(array $arrClauses) {
 		$s = '';
 		foreach ($arrClauses as $sFieldName => $arrClause) {
@@ -813,30 +812,30 @@ class QlDb {
 }
 
 
-## Query result set. Do not instantiate manually.
-#
+/** Query result set. Do not instantiate manually.
+*/
 class QlQueryResult {
 
-	## Query result set.
+	/** Query result set. */
 	public /*resource*/ $m_qResult;
-	## Index of the current row.
+	/** Index of the current row. */
 	public /*int*/ $m_iSeek = 0;
-	## Column information for the result set.
+	/** Column information for the result set. */
 	public /*array<int => stdClass>*/ $m_arrColumns = null;
 
 
-	## Constructor.
-	#
-	# resource $qResult
-	#    Query result set to associate to the object.
-	#
+	/** Constructor.
+
+	resource $qResult
+		Query result set to associate to the object.
+	*/
 	public function __construct($qResult) {
 		$this->m_qResult = $qResult;
 	}
 
 
-	## Destructor.
-	#
+	/** Destructor.
+	*/
 	public function __destruct() {
 		if ($this->m_qResult) {
 			mysql_free_result($this->m_qResult);
@@ -844,42 +843,42 @@ class QlQueryResult {
 	}
 
 
-	## Returns the fields in the current row as an integer-indexed array.
-	#
-	# array<int => mixed> return
-	#    Row fields.
-	#
+	/** Returns the fields in the current row as an integer-indexed array.
+
+	array<int => mixed> return
+		Row fields.
+	*/
 	public function fetch_row() {
 		++$this->m_iSeek;
 		return mysql_fetch_row($this->m_qResult);
 	}
 
 
-	## Returns the fields in the current row as an associative array.
-	#
-	# array<string => mixed> return
-	#    Row fields.
-	#
+	/** Returns the fields in the current row as an associative array.
+
+	array<string => mixed> return
+		Row fields.
+	*/
 	public function fetch_assoc() {
 		++$this->m_iSeek;
 		return mysql_fetch_assoc($this->m_qResult);
 	}
 
 
-	## Releases any resources allocated by the object. After this, the object should no longer be
-	# used.
-	#
+	/** Releases any resources allocated by the object. After this, the object should no longer be
+	used.
+	*/
 	public function free() {
 		mysql_free_result($this->m_qResult);
 		$this->m_qResult = null;
 	}
 
 
-	## Returns an array of objects with information on the columns of the result set.
-	#
-	# array<int => stdclass>& return
-	#    Column information.
-	#
+	/** Returns an array of objects with information on the columns of the result set.
+
+	array<int => stdclass>& return
+		Column information.
+	*/
 	public function & get_columns() {
 		if ($this->m_arrColumns === null) {
 			# Populate the cache.
@@ -899,28 +898,28 @@ class QlQueryResult {
 	}
 
 
-	## Returns the count of rows in this result set.
-	#
-	# int return
-	#    Count of rows.
-	#
+	/** Returns the count of rows in this result set.
+
+	int return
+		Count of rows.
+	*/
 	public function row_count() {
 		return mysql_num_rows($this->m_qResult);
 	}
 
 
-	## Moves to a specific row number.
-	#
-	# int $i
-	#    0-based row index.
-	# [int $iWhence]
-	#    Like fseek(), this can be one of the following values:
-	#    SEEK_SET $i is the absolute row index (default).
-	#    SEEK_CUR $i is a delta from the current row index.
-	#    SEEK_END $i is the distance of the desired row from the end of the result set.
-	# int return
-	#    Resulting absolute row index.
-	#
+	/** Moves to a specific row number.
+
+	int $i
+		0-based row index.
+	[int $iWhence]
+		Like fseek(), this can be one of the following values:
+		SEEK_SET $i is the absolute row index (default).
+		SEEK_CUR $i is a delta from the current row index.
+		SEEK_END $i is the distance of the desired row from the end of the result set.
+	int return
+		Resulting absolute row index.
+	*/
 	public function seek($i, $iWhence = SEEK_SET) {
 		switch ($iWhence) {
 			case SEEK_SET:
@@ -941,11 +940,11 @@ class QlQueryResult {
 	}
 
 
-	## Returns the 0-based index of the current row.
-	#
-	# int return
-	#    Index of the current row.
-	#
+	/** Returns the 0-based index of the current row.
+
+	int return
+		Index of the current row.
+	*/
 	public function tell() {
 		return $this->m_iSeek;
 	}

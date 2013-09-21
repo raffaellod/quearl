@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-# Definition of the application class. Same prerequisite constraints as main.php.
+/** Definition of the application class. Same prerequisite constraints as main.php. */
 
 
 define('QUEARL_CORE_MAIN_APPLICATION_INCLUDED', true);
@@ -32,53 +32,54 @@ require_once 'main.php';
 # Classes
 
 
-## DESIGN_8261 QlApplication
-#
-# QlApplication stores any non-session-specific data, from the most essential (e.g. Quearl core
-# directories) to the most frivolous (e.g. color theme configuration).
-#
-# Every HTTP request requires QlApplication to be available in order to be handled, so the singleton
-# instance is made available as early as possible; QlApplication is instantiated even before
-# QlCoreModule.
-#
-# Due to the number of configuration files that need to be loaded and parsed for each module to set
-# up its own $_APP section, QlApplication is always persisted to disk, ready to be reloaded on every
-# HTTP request. The most typical code path (persisted status available and successfully loaded) must
-# read and process the smallest number of configuration files and entries as possible before the
-# persisted state is reloaded; this minimal subset of the “core” section is called bootstrap, and
-# it’s loaded from config/core/bootstrap.conf in QlApplication::__construct().
-#
-# If reloading from persistent state succeeds, the persisted data will replace everything, including
-# the bootstrapped “core” section, since that’s included in the persisted data anyway.
-#
-# In case of load failure (which includes every execution before the first request for a non-static
-# file is served), QlApplication will adjust the bootstrapped “core” section, and Quearl will
-# subsequently let each module (including the “core” module) load its own section, eventually
-# leading to a fully loaded QlApplication instance, which will then be persisted when the execution
-# of Quearl comes to an end.
+/** DESIGN_8261 QlApplication
 
-## Manages the application (cross-session) data, stored in $_APP.
-#
+QlApplication stores any non-session-specific data, from the most essential (e.g. Quearl core
+directories) to the most frivolous (e.g. color theme configuration).
+
+Every HTTP request requires QlApplication to be available in order to be handled, so the singleton
+instance is made available as early as possible; QlApplication is instantiated even before
+QlCoreModule.
+
+Due to the number of configuration files that need to be loaded and parsed for each module to set up
+its own $_APP section, QlApplication is always persisted to disk, ready to be reloaded on every HTTP
+request. The most typical code path (persisted status available and successfully loaded) must read
+and process the smallest number of configuration files and entries as possible before the persisted
+state is reloaded; this minimal subset of the “core” section is called bootstrap, and it’s loaded
+from config/core/bootstrap.conf in QlApplication::__construct().
+
+If reloading from persistent state succeeds, the persisted data will replace everything, including
+the bootstrapped “core” section, since that’s included in the persisted data anyway.
+
+In case of load failure (which includes every execution before the first request for a non-static
+file is served), QlApplication will adjust the bootstrapped “core” section, and Quearl will
+subsequently let each module (including the “core” module) load its own section, eventually leading
+to a fully loaded QlApplication instance, which will then be persisted when the execution of Quearl
+comes to an end.
+*/
+
+/** Manages the application (cross-session) data, stored in $_APP.
+*/
 class QlApplication {
 
-	## Persistent storage file name.
+	/** Persistent storage file name. */
 	private /*string*/ $m_sFileName;
-	## Name of the locking file.
+	/** Name of the locking file. */
 	private /*string*/ $m_sLockFileName;
-	## Handle to the locking file (if open).
+	/** Handle to the locking file (if open). */
 	private /*resource*/ $m_fileLock;
-	## Number of locks held by this instance.
+	/** Number of locks held by this instance. */
 	private /*int*/ $m_cLocks;
-	## Size of $_APP’s persistent storage.
+	/** Size of $_APP’s persistent storage. */
 	private /*int*/ $m_cb;
-	## CRC of $_APP’s persistent storage.
+	/** CRC of $_APP’s persistent storage. */
 	private /*int*/ $m_iCRC;
-	## true if reloading $_APP from persistent storage didn’t succeed.
+	/** true if reloading $_APP from persistent storage didn’t succeed. */
 	private /*int*/ $m_bDefaulted;
 
 
-	## Constructor.
-	#
+	/** Constructor.
+	*/
 	public function __construct() {
 		# Create a default $_APP array loading only bootstrap.conf, which is necessary to successfully
 		# call read().
@@ -114,8 +115,8 @@ class QlApplication {
 	}
 
 
-	## Destructor.
-	#
+	/** Destructor.
+	*/
 	public function __destruct() {
 		if ($this->m_cLocks > 0) {
 			ql_log(
@@ -130,23 +131,23 @@ class QlApplication {
 	}
 
 
-	## Loads a $_APP section from a config file.
-	#
-	# The caller can check the return value to perform any adjustments to the section. in case it was
-	# actually loaded; after that, the QlApplication instance must be unlocked.
-	#
-	# string $sSection
-	#    $_APP section to be loaded.
-	# string $sFileName
-	#    Path of the file to load.
-	# [bool $bForce]
-	#    If true, the section will be reloaded even if it hasn’t changed since the last loading.
-	# mixed return
-	#    false if loading the section was not necessary, or the section’s contents if it was really
-	#    loaded from the configuration file. In the latter case, the caller will need to merge the
-	#    new section passing it to QlApplication::merge_section() after making any necessary
-	#    adjustments to the section’s contents.
-	#
+	/** Loads a $_APP section from a config file.
+
+	The caller can check the return value to perform any adjustments to the section, in case it was
+	really loaded by the call; after that, the QlApplication instance must be unlocked.
+
+	string $sSection
+		$_APP section to be loaded.
+	string $sFileName
+		Path of the file to load.
+	[bool $bForce]
+		If true, the section will be reloaded even if it hasn’t changed since the last loading.
+	mixed return
+		false if loading the section was not necessary, or the section’s contents if it was really
+		loaded from the configuration file. In the latter case, the caller will need to merge the new
+		section passing it to QlApplication::merge_section() after making any necessary adjustments to
+		the section’s contents.
+	*/
 	public function & load_section($sSection, $sFileName = null, $bForce = false) {
 		if ($sFileName === null) {
 			# Default the file name for this section.
@@ -168,15 +169,15 @@ class QlApplication {
 	}
 
 
-	## Non-locking implementation of QlApplication::load_section().
-	#
-	# string $sSection
-	#    $_APP section to be loaded.
-	# string $sFileName
-	#    Path of the file to load.
-	# array<string => string> return
-	#    Contents of the newly-loaded section.
-	#
+	/** Non-locking implementation of QlApplication::load_section().
+
+	string $sSection
+		$_APP section to be loaded.
+	string $sFileName
+		Path of the file to load.
+	array<string => string> return
+		Contents of the newly-loaded section.
+	*/
 	private function & load_section_nolock($sSection, $sFileName) {
 		$sContents = file_get_contents($sFileName);
 		# Strip the UTF-8 BOM, if present.
@@ -197,8 +198,8 @@ class QlApplication {
 	}
 
 
-	## Serializes access to $_APP. Does not return on error.
-	#
+	/** Serializes access to $_APP. Does not return on error.
+	*/
 	public function lock() {
 		if ($this->m_cLocks == 0) {
 			$cRetries = 15;
@@ -217,30 +218,30 @@ class QlApplication {
 	}
 
 
-	## Merges a section loaded by QlApplication::load_section() into $_APP, then unlocks $_APP.
-	#
-	# If the section has been loaded before, this will overwrite any values with those specified in
-	# the file for each given key; keys assigned to null in the file will cause the corresponding key
-	# in the $_APP section to be deleted. Keys not present in $arrNewSection will remain unaffected.
-	#
-	# string $sSection
-	#    Name of the $_APP section.
-	# array<string => mixed>& $arrNewSection
-	#    Contents of the newly-loaded section.
-	#
+	/** Merges a section loaded by QlApplication::load_section() into $_APP, then unlocks $_APP.
+
+	If the section has been loaded before, this will overwrite any values with those specified in the
+	file for each given key; keys assigned to null in the file will cause the corresponding key in
+	the $_APP section to be deleted. Keys not present in $arrNewSection will remain unaffected.
+
+	string $sSection
+		Name of the $_APP section.
+	array<string => mixed>& $arrNewSection
+		Contents of the newly-loaded section.
+	*/
 	public function merge_section($sSection, &$arrNewSection) {
 		$this->merge_section_nounlock($sSection, $arrNewSection);
 		$this->unlock();
 	}
 
 
-	## Non-(un)locking implementation of QlApplication::merge_section().
-	#
-	# string $sSection
-	#    Name of the $_APP section.
-	# array<string => mixed>& $arrNewSection
-	#    Contents of the newly-loaded section.
-	#
+	/** Non-(un)locking implementation of QlApplication::merge_section().
+
+	string $sSection
+		Name of the $_APP section.
+	array<string => mixed>& $arrNewSection
+		Contents of the newly-loaded section.
+	*/
 	private function merge_section_nounlock($sSection, &$arrNewSection) {
 		global $_APP;
 		if (isset($_APP[$sSection])) {
@@ -264,14 +265,14 @@ class QlApplication {
 	}
 
 
-	## Reads $_APP from persistent storage. Other than being invoked when $ql_app is constructed, it
-	# can be called at any time to reload $_APP, which can be useful for scripts that need to make
-	# sure they’re using the latest $_APP after running for an extended amount of time.
-	#
-	# bool return
-	#    true if $_APP was loaded from persistent storage, or false if the latter was unavailable, in
-	#    which case $_APP is unaffected.
-	#
+	/** Reads $_APP from persistent storage. Other than being invoked when $ql_app is constructed, it
+	can be called at any time to reload $_APP, which can be useful for scripts that need to make sure
+	they’re using the latest $_APP after running for an extended amount of time.
+
+	bool return
+		true if $_APP was loaded from persistent storage, or false if the latter was unavailable, in
+		which case $_APP is unaffected.
+	*/
 	private function reload() {
 		# Try and read from persistent storage.
 		$sApp = @file_get_contents($this->m_sFileName);
@@ -301,8 +302,8 @@ class QlApplication {
 	}
 
 
-	## Leaves the serialized context started with QlApplication::lock().
-	#
+	/** Leaves the serialized context started with QlApplication::lock().
+	*/
 	public function unlock() {
 		if ($this->m_cLocks == 1) {
 			# Recalculate size and CRC of the serialized $_APP; if different, we’ll need to update the

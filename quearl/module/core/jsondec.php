@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public License along w
 see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
-# JSON decoding functions. JSON encoding functions are in Quearl.core.main.
+/** JSON decoding functions. JSON encoding functions are in Quearl.core.main. */
 
 
 define('QUEARL_CORE_JSONDEC_INCLUDED', true);
@@ -30,13 +30,13 @@ require_once 'main.php';
 # Functions
 
 
-## Parses a JSON data block.
-#
-# string $s
-#    JSON representation of an object.
-# mixed return
-#    The parsed object.
-#
+/** Parses a JSON data block.
+
+string $s
+	JSON representation of an object.
+mixed return
+	The parsed object.
+*/
 function ql_json_decode($s) {
 	$s = trim($s);
 
