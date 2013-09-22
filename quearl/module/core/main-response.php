@@ -520,7 +520,7 @@ class QlErrorResponse extends Exception {
 		$ent = new QlXhtmlResponseEntity($response);
 		$ent->set_subtitle(constant($this->m_sSubtitle));
 		$ent->add_body(
-			QlModule::get('core')->load_template('page', $this->m_sTemplateName, $this->m_arrVars)
+			QlModule::get('core')->load_template('xhtml', $this->m_sTemplateName, $this->m_arrVars)
 		);
 
 		return $ent;
