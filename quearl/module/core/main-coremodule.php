@@ -516,28 +516,6 @@ class QlCoreModule extends QlModule {
 			$_SERVER['HTTP_PROTOCOL'] = 'http://';
 		}
 
-		# REMOTE_REAL_ADDR will be the most local IP address that originated the request, excluding
-		# proxies and other middle tiers. Defaults to a fake address.
-		$_SERVER['REMOTE_REAL_ADDR'] = '0.0.0.255';
-		foreach (
-			array('HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP', 'HTTP_FROM', 'REMOTE_ADDR') as $sIPKey
-		) {
-			if (isset($_SERVER[$sIPKey])) {
-				$sIP = $_SERVER[$sIPKey];
-				// TODO: make this check IPv6 compatible or remove it altogether.
-				/*if (
-					preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/', $sIP) &&
-					$sIP != '127.0.0.1' &&
-					strncmp($sIP, '10.',      3) != 0 &&
-					strncmp($sIP, '172.16.',  7) != 0 &&
-					strncmp($sIP, '192.168.', 8) != 0
-				) {*/
-					$_SERVER['REMOTE_REAL_ADDR'] = $sIP;
-					break;
-				//}
-			}
-		}
-
 		# Make sure we do have an HTTP_USER_AGENT key; some code relies on it being a string.
 		if (!isset($_SERVER['HTTP_USER_AGENT'])) {
 			$_SERVER['HTTP_USER_AGENT'] = '';

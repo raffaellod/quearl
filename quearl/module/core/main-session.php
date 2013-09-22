@@ -77,12 +77,12 @@ class QlSession {
 		if ($request->get_client_type() == QL_CLIENTTYPE_CRAWLER) {
 			$bLoaded = false;
 		} else {
-			$bLoaded = $this->load();
+			$bLoaded = $this->load($request);
 			# If no session was loaded, create a new one.
 			if (!$bLoaded) {
 				# Create a new session ID, making sure it’s really new (i.e. not already in the db).
 				for (;;) {
-					$this->m_sID = ql_str_uid(32, $ql_fScriptStart, $_SERVER['REMOTE_REAL_ADDR']);
+					$this->m_sID = ql_str_uid(32, $ql_fScriptStart, $request->get_client_local_addr());
 					# Try with the freshly-generated ID. Notice that we create the session as locked.
 					$ql_db->query('
 						INSERT INTO sessions(id, locked, firsthit, lasthit)
@@ -408,11 +408,13 @@ class QlSession {
 	/** Attempts to load and lock the session associated to the SID provided by the user agent, if
 	any.
 
+	QlRequest $request
+		Request being processed.
 	bool return
 		true if a session (whose ID is now in $this->m_sID) was loaded (and locked), or false in all
 		other cases.
 	*/
-	private function load() {
+	private function load(QlRequest $request) {
 		global $ql_db, $ql_fScriptStart;
 		global $ql_debug_session_SID;
 		$sSID = null;
@@ -488,13 +490,13 @@ class QlSession {
 		}
 
 		# Validate access to this session.
-		if ($arrData['ql_ipaddr'] != $_SERVER['REMOTE_REAL_ADDR']) {
+		if ($arrData['ql_ipaddr'] != $request->get_client_local_addr()) {
 			# The session is valid, but it wasn’t started from the same IP address as the one
 			# originating this HTTP request: revoke the lock and pretend we didn’t see it; the only
 			# side effect will be that we updated its lasthit timestamp.
 			trigger_error(
 				'QlSession::load(): IP address mismatch for user session “' . $sSID . '”: was ' .
-					$arrData['ql_ipaddr'] . ', now accessed from ' . $_SERVER['REMOTE_REAL_ADDR'],
+					$arrData['ql_ipaddr'] . ', now accessed from ' . $request->get_client_local_addr(),
 				E_USER_NOTICE
 			);
 			$ql_db->query('
@@ -672,7 +674,7 @@ class QlSession {
 		unset($arrALCookie);
 
 		# Add connection-specific information.
-		$_SESSION['ql_ipaddr'] = $_SERVER['REMOTE_REAL_ADDR'];
+		$_SESSION['ql_ipaddr'] = $request->get_client_local_addr();
 		$_SESSION['ql_useragent'] = $_SERVER['HTTP_USER_AGENT'];
 		# Ignore absent/empty referrers, or our own pages.
 		# Note: a page of ours can actually be the referrer for a new session, when the previous one

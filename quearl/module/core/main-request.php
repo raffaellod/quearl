@@ -50,8 +50,11 @@ class QlRequest {
 
 	/** Map of header field names => values. */
 	private /*array<string => mixed>*/ $m_arrHeaderFields;
-	/** URL requested. */
+	/** Requested URL. */
 	private /*string*/ $m_sUrl;
+	/** Most local (non-public) IP address that originated the request, excluding proxies and other
+	middle tiers. */
+	private /*string*/ $m_sClientLocalAddr;
 	/** Type of remote client for which this request is being processed (QL_CLIENTTYPE_*). */
 	private /*int*/ $m_iClientType;
 
@@ -61,6 +64,26 @@ class QlRequest {
 	public function __construct() {
 		$this->m_arrHeaderFields = array();
 		$this->m_sUrl = $_SERVER['REQUEST_URI'];
+
+		$this->m_sClientLocalAddr = '0.0.0.255';
+		foreach (
+			array('HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP', 'HTTP_FROM', 'REMOTE_ADDR') as $sIPKey
+		) {
+			if (isset($_SERVER[$sIPKey])) {
+				$sIP = $_SERVER[$sIPKey];
+				// TODO: make this check IPv6 compatible or remove it altogether.
+				/*if (
+					preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/', $sIP) &&
+					$sIP != '127.0.0.1' &&
+					strncmp($sIP, '10.',      3) != 0 &&
+					strncmp($sIP, '172.16.',  7) != 0 &&
+					strncmp($sIP, '192.168.', 8) != 0
+				) {*/
+					$this->m_sClientLocalAddr = $sIP;
+					break;
+				//}
+			}
+		}
 
 		# Determine the type of client/user agent.
 		$this->m_iClientType = QL_CLIENTTYPE_USER;
@@ -83,6 +106,16 @@ class QlRequest {
 	*/
 	public function get_client_type() {
 		return $this->m_iClientType;
+	}
+
+
+	/** Returns the most local address of remote client.
+
+	string return
+		Non-public address of the client.
+	*/
+	public function get_client_local_addr() {
+		return $this->m_sClientLocalAddr;
 	}
 
 
