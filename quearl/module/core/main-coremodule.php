@@ -41,13 +41,17 @@ class QlCoreModule extends QlModule {
 
 	/** See QlModule::augment_response_body().
 	*/
-	public function augment_response_body($sUrl, QlResponse $response, QlXhtmlResponseEntity $ent) {
+	public function augment_response_body(
+		QlRequest $request, QlResponse $response, QlXhtmlResponseEntity $ent
+	) {
 	}
 
 
 	/** See QlModule::augment_response_head().
 	*/
-	public function augment_response_head($sUrl, QlResponse $response, QlXhtmlResponseEntity $ent) {
+	public function augment_response_head(
+		QlRequest $request, QlResponse $response, QlXhtmlResponseEntity $ent
+	) {
 	}
 
 
@@ -270,7 +274,7 @@ class QlCoreModule extends QlModule {
 
 	/** See QlModule::handle_request().
 	*/
-	public function handle_request($sUrl, QlResponse $response) {
+	public function handle_request(QlRequest $request, QlResponse $response) {
 		# TODO: implementation.
 	}
 
@@ -278,7 +282,7 @@ class QlCoreModule extends QlModule {
 	/** See QlModule::handle_static_request(). Responds to requests for existent pre-processed
 	JavaScript, CSS or localization JS files, for any module.
 	*/
-	public function handle_static_request($sUrl, QlResponse $response) {
+	public function handle_static_request(QlRequest $request, QlResponse $response) {
 		# Validate the requested URL.
 		if (!preg_match(
 			'/^
@@ -289,10 +293,12 @@ class QlCoreModule extends QlModule {
 				(?P<dir>l10n\/js|css|js)\/
 				# Match and capture the file name extension from a whitelist.
 				[^\/]+\.(?P<fnext>css|js)
-			$/ADx', $sUrl, $arrMatch
+			$/ADx', $request->get_url(), $arrMatch
 		)) {
 			# Don’t know how to serve this file.
-			trigger_error('Don’t know how to serve request for “' . $sUrl . '”', E_USER_NOTICE);
+			trigger_error(
+				'Don’t know how to serve request for “' . $request->get_url() . '”', E_USER_NOTICE
+			);
 			return null;
 		}
 		# Ensure that the file name extension is the same as the directory containing the file. This
@@ -302,11 +308,13 @@ class QlCoreModule extends QlModule {
 			$arrMatch['dir'] != $arrMatch['fnext'] &&
 			($arrMatch['dir'] == 'l10n/js' && $arrMatch['fnext'] != 'js')
 		) {
-			trigger_error('File name extension mismatch in “' . $sUrl . '”', E_USER_NOTICE);
+			trigger_error(
+				'File name extension mismatch in “' . $request->get_url() . '”', E_USER_NOTICE
+			);
 			return null;
 		}
 		global $_APP;
-		$sFileName = $_APP['core']['rodata_lpath'] . $sUrl;
+		$sFileName = $_APP['core']['rodata_lpath'] . $request->get_url();
 		# Check if the file exists before assuming we can respond this request.
 		if (!is_file($sFileName) || !is_readable($sFileName)) {
 			# Can’t serve this file.
@@ -322,10 +330,10 @@ class QlCoreModule extends QlModule {
 		# Respond to the request. First, check if the client already has a cached version of the file.
 		if ($response->use_cache(filemtime($sFileName))) {
 			# No need for a response entity.
-			$ent = new QlNullResponseEntity($response);
+			$ent = new QlNullResponseEntity($request, $response);
 		} else {
 			# Provide the file as the entity.
-			$ent = new QlStaticResponseEntity($response);
+			$ent = new QlStaticResponseEntity($request, $response);
 			$ent->set_file($sFileName, $arrMimeTypes[$arrMatch['fnext']], true);
 		}
 		return $ent;
@@ -548,7 +556,7 @@ class QlCoreModule extends QlModule {
 
 
 		# Initialize the response object.
-		$response = new QlResponse();
+		$response = new QlResponse($request);
 		$ent = QlSession::discard_get_sid_if_redundant($request, $response);
 		if ($ent) {
 			return $ent;
@@ -567,9 +575,11 @@ class QlCoreModule extends QlModule {
 				strlen($_APP['core']['static_root_rpath'])
 			) == 0) {
 				# …ask each module to serve this requested static file.
-				$sUrl = substr($_SERVER['REQUEST_URI'], strlen($_APP['core']['static_root_rpath']));
+				$request->set_url(substr(
+					$_SERVER['REQUEST_URI'], strlen($_APP['core']['static_root_rpath'])
+				));
 				foreach ($arrModules as $module) {
-					$ent = $module->handle_static_request($sUrl, $response);
+					$ent = $module->handle_static_request($request, $response);
 					# Unlike regular responses, static responses are handled in full by a single module,
 					# so if this module instantiated a response entity, stop now.
 					if ($ent) {
@@ -689,7 +699,7 @@ class QlCoreModule extends QlModule {
 			# loop, since QlCoreModule will always return an entity, acting as fall-back module.
 			$ent = null;
 			foreach ($arrModules as $module) {
-				$ent = $module->handle_request('???', $response);
+				$ent = $module->handle_request($request, $response);
 				# If the module instantiated a response entity, no need to iterate any further.
 				if ($ent) {
 					break;
@@ -701,14 +711,14 @@ class QlCoreModule extends QlModule {
 				# their scripts before their dependant modules, so iterate over $arrModules backwards.
 				$module = end($arrModules);
 				do {
-					$module->augment_response_head('', $response, $ent);
+					$module->augment_response_head($request, $response, $ent);
 				} while ($module = prev($arrModules));
 
 				# Let modules augment the response’s <body>. Iterate in the usual most-specialized-to-
 				# most-basic module order, allowing basic modules to provide defaults for what more
 				# specialized modules did not add.
 				foreach ($arrModules as $module) {
-					$module->augment_response_body('', $response, $ent);
+					$module->augment_response_body($request, $response, $ent);
 				}
 			}
 		} catch (QlErrorResponse $er) {
@@ -725,7 +735,7 @@ class QlCoreModule extends QlModule {
 			}
 
 			# Create the error response entity, replacing any other entity we might have generated.
-			$ent = $er->create_entity($response);
+			$ent = $er->create_entity($request, $response);
 		}
 
 		# Response entities can begin sending data during the loop above; for all other responses,

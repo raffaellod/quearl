@@ -95,6 +95,8 @@ TODO: support sending “Cache-Control: public” to allow for shared proxy cach
 */
 class QlResponse {
 
+	/** Request being processed. */
+	private /*QlRequest*/ $m_request;
 	/** HTTP response code (HTTP_STATUS_*). */
 	private /*int*/ $m_iCode;
 	/** Description for m_iCode. */
@@ -106,8 +108,12 @@ class QlResponse {
 
 
 	/** Constructor.
+
+	QlRequest $request
+		Request being processed.
 	*/
-	public function __construct() {
+	public function __construct(QlRequest $request) {
+		$this->m_request = $request;
 		$this->set_http_status(HTTP_STATUS_OK);
 		$this->m_arrHeaderFields = array();
 		$this->m_bHeaderSent = false;
@@ -171,7 +177,7 @@ class QlResponse {
 		$this->set_http_status($iHttpStatusCode, $sHttpStatusCodeDescription);
 		$this->set_header_field('Location', $sUri);
 		# Return a null response.
-		return new QlNullResponseEntity($this);
+		return new QlNullResponseEntity($this->m_request, $this);
 	}
 
 
@@ -506,10 +512,12 @@ class QlErrorResponse extends Exception {
 
 	/** Generates a response entity to inform the user about the error.
 
+	QlRequest $request
+		Request being processed.
 	QlResponse $response
 		Response the entity will be part of.
 	*/
-	public function create_entity(QlResponse $response) {
+	public function create_entity(QlRequest $request, QlResponse $response) {
 		# Prepare the response.
 		$response->set_http_status($this->m_iHttpStatus);
 		foreach ($this->m_arrHeaderFields as $sName => &$mValue) {
@@ -517,7 +525,7 @@ class QlErrorResponse extends Exception {
 		}
 
 		# Create and prepare the response entity.
-		$ent = new QlXhtmlResponseEntity($response);
+		$ent = new QlXhtmlResponseEntity($request, $response);
 		$ent->set_subtitle(constant($this->m_sSubtitle));
 		$ent->add_body(
 			QlModule::get('core')->load_template('xhtml', $this->m_sTemplateName, $this->m_arrVars)
@@ -532,6 +540,8 @@ class QlErrorResponse extends Exception {
 */
 abstract class QlResponseEntity {
 
+	/** Request being processed. */
+	protected /*QlRequest*/ $m_request;
 	/** Response this entity is part of. */
 	protected /*QlResponse*/ $m_response;
 
@@ -541,7 +551,8 @@ abstract class QlResponseEntity {
 	QlResponse $response
 		Response this entity is part of.
 	*/
-	public function __construct(QlResponse $response) {
+	public function __construct(QlRequest $request, QlResponse $response) {
+		$this->m_request = $request;
 		$this->m_response = $response;
 	}
 
@@ -558,8 +569,8 @@ class QlNullResponseEntity extends QlResponseEntity {
 
 	/** Constructor. See QlResponseEntity::__construct().
 	*/
-	public function __construct(QlResponse $response) {
-		parent::__construct($response);
+	public function __construct(QlRequest $request, QlResponse $response) {
+		parent::__construct($request, $response);
 		$this->m_response->set_header_field('Content-Type',   'text/plain');
 		$this->m_response->set_header_field('Content-Length', '0');
 	}
@@ -664,11 +675,13 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 
 	/** Constructor.
 
+	QlRequest $request
+		Request being processed.
 	QlResponse $response
 		Response this entity is part of.
 	*/
-	public function __construct(QlResponse $response) {
-		parent::__construct($response);
+	public function __construct(QlRequest $request, QlResponse $response) {
+		parent::__construct($request, $response);
 
 		# If this class is being instantiated, this request will get a visible page (as opposed to
 		# this being e.g. an asynchrnous request), so keep track of it.
@@ -750,7 +763,7 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	public function include_js($sFileName, $bIEOnly = false) {
 		global $_APP;
 		$s  = '<script type="text/javascript" charset="utf-8" src="' .
-					make_static_url($sFileName) . '"></script>';
+					$this->make_static_url($sFileName) . '"></script>';
 		if ($bIEOnly) {
 			$s = '<!--[if IE]>' . $s . '<![endif]-->';
 		}
@@ -768,7 +781,8 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	*/
 	public function include_css($sFileName, $bIEOnly = false) {
 		global $_APP;
-		$s  = '<link rel="stylesheet" type="text/css" href="' . make_static_url($sFileName) . '"/>';
+		$s  = '<link rel="stylesheet" type="text/css" href="' . $this->make_static_url($sFileName) .
+				'"/>';
 		if ($bIEOnly) {
 			$s = '<!--[if IE]>' . $s . '<![endif]-->';
 		}
@@ -799,7 +813,7 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	string return
 		Absolute URL for the file using the static files path.
 	*/
-	protected static function make_static_url($sFileName) {
+	protected function make_static_url($sFileName) {
 		if ($_APP['core']['static_host'] == '') {
 			$sUrl = $_SERVER['HTTP_PROTOCOL'] . $_APP['core']['static_host'];
 		} else {

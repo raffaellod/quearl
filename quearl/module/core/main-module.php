@@ -80,7 +80,7 @@ The path for static files is configured via two config/core/bootstrap.conf varia
 	Path at which static files can be accessed on the host specified by “static_host”; it must always
 	be an absolute remote path.
 
-When Quearl detects that the URL of the request being served falls within the “static_root_path”
+When Quearl detects that the URL of the request being processed falls within the “static_root_path”
 variable, it tries to process the request using the “fast-lane” code path: after each
 QlModule-derived class (“module”) has been instantiated, but before any of them is initialized (i.e.
 before their QlModule::init() method is called), each module is asked to generate a response for the
@@ -133,27 +133,31 @@ abstract class QlModule {
 
 	/** Gives the module the possibility to add data to a response.
 
-	string $sUrl
-		Request being handled.
+	QlRequest $request
+		Request being processed.
 	QlResponse $response
 		Response for the request.
 	QlXhtmlResponseEntity $ent
 		Instance of a QlResponseEntity-derived class being used to generate the response entity.
 	*/
-	public function augment_response_body($sUrl, QlResponse $response, QlXhtmlResponseEntity $ent) {
+	public function augment_response_body(
+		QlRequest $request, QlResponse $response, QlXhtmlResponseEntity $ent
+	) {
 	}
 
 
 	/** Gives the module the possibility to add data to a response.
 
-	string $sUrl
-		Request being handled.
+	QlRequest $request
+		Request being processed.
 	QlResponse $response
 		Response for the request.
 	QlXhtmlResponseEntity $ent
 		Instance of a QlResponseEntity-derived class being used to generate the response entity.
 	*/
-	public function augment_response_head($sUrl, QlResponse $response, QlXhtmlResponseEntity $ent) {
+	public function augment_response_head(
+		QlRequest $request, QlResponse $response, QlXhtmlResponseEntity $ent
+	) {
 	}
 
 
@@ -329,15 +333,15 @@ abstract class QlModule {
 	/** Gives the module the possibility to instantiate a response for the specified request. If the
 	module won’t handle the request, it must return null.
 
-	string $sUrl
-		Requested URL.
+	QlRequest $request
+		Request being processed.
 	QlResponse $response
 		Response for the request.
 	QlResponseEntity return
 		Instance of a QlResponseEntity-derived class to be used to generate the response entity, or
 		null if the module does not handle the specified request.
 	*/
-	public function handle_request($sUrl, QlResponse $response) {
+	public function handle_request(QlRequest $request, QlResponse $response) {
 		return null;
 	}
 
@@ -349,15 +353,15 @@ abstract class QlModule {
 	trying to access resources that are not yet available (e.g. QlDb, QlSession). See [DESIGN_5015
 	Static files] for more information.
 
-	string $sUrl
-		Requested URL.
+	QlRequest $request
+		Request being processed.
 	QlResponse $response
 		Response for the request.
 	QlResponseEntity return
 		Instance of a QlResponseEntity-derived class to be used to generate the response entity, or
 		null if the module does not handle the specified request.
 	*/
-	public function handle_static_request($sUrl, QlResponse $response) {
+	public function handle_static_request(QlRequest $request, QlResponse $response) {
 		return null;
 	}
 

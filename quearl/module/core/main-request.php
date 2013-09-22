@@ -50,6 +50,8 @@ class QlRequest {
 
 	/** Map of header field names => values. */
 	private /*array<string => mixed>*/ $m_arrHeaderFields;
+	/** URL requested. */
+	private /*string*/ $m_sUrl;
 	/** Type of remote client for which this request is being processed (QL_CLIENTTYPE_*). */
 	private /*int*/ $m_iClientType;
 
@@ -58,6 +60,7 @@ class QlRequest {
 	*/
 	public function __construct() {
 		$this->m_arrHeaderFields = array();
+		$this->m_sUrl = $_SERVER['REQUEST_URI'];
 
 		# Determine the type of client/user agent.
 		$this->m_iClientType = QL_CLIENTTYPE_USER;
@@ -73,13 +76,33 @@ class QlRequest {
 	}
 
 
-	/** Returns the type of remote client for which this request is being processed.
+	/** Returns the type of remote client.
 
 	int return
 		Client type (QL_CLIENTTYPE_*).
 	*/
 	public function get_client_type() {
 		return $this->m_iClientType;
+	}
+
+
+	/** Returns the URL requested by the client.
+
+	string return
+		URL.
+	*/
+	public function get_url() {
+		return $this->m_sUrl;
+	}
+
+
+	/** Alters the URL requested by the client.
+
+	string $sUrl
+		URL.
+	*/
+	public function set_url($sUrl) {
+		$this->m_sUrl = $sUrl;
 	}
 }
 
