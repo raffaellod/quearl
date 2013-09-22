@@ -40,15 +40,6 @@ define('QL_ACCLVL_ADMIN',     0x0200);
 define('QL_ACCLVL_ROOT',      0x2000);
 
 
-# Enumeration values for QlSession::m_iClientType.
-
-/** Regular (remote) user. */
-define('QL_CLIENTTYPE_USER',    0);
-/** Bot (automated web crawler). Excluded from statistics counting and not counted as on-line user.
-*/
-define('QL_CLIENTTYPE_CRAWLER', 1);
-
-
 
 ####################################################################################################
 # Classes
@@ -67,41 +58,23 @@ class QlSession {
 	private /*string*/ $m_sSubID;
 	/** If true, write_and_close() needs to be called. */
 	private /*bool*/ $m_bLocked;
-	/** Type of remote client for which this request is being processed (QL_CLIENTTYPE_*). */
-	private /*int*/ $m_iClientType;
 
 
 	/** Constructor. Upon the first time a session is created, propagation of its ID via query string
 	and cookies is enabled; from the second time on, only the best propagation method is kept.
 
+	QlRequest $request
+		Request being processed.
 	QlResponse $response
 		Response to use to perform any redirections.
 	*/
-	public function __construct($response) {
+	public function __construct(QlRequest $request, QlResponse $response) {
 		global $_APP, $ql_db, $ql_fScriptStart;
 		global $ql_debug_session_SID;
 		$iTS = (int)$ql_fScriptStart;
 
-		# Determine the type of client/user agent.
-		$this->m_iClientType = QL_CLIENTTYPE_USER;
-		if ($_SERVER['HTTP_USER_AGENT'] != '') {
-			# Detect search engine bots.
-			$sBotList = file_get_contents($_APP['core']['rodata_lpath'] . 'core/robotuseragents.txt');
-			if (strpos($sBotList, "\n" . $_SERVER['HTTP_USER_AGENT'] . "\n") !== false) {
-				$this->m_iClientType = QL_CLIENTTYPE_CRAWLER;
-				if (isset($_GET['s'])) {
-					# Bots should not be crawling with SIDs. Remove the SID and redirect the bot;
-					# hopefully it will then update its own cache, discarding the URL with SID.
-					$sUrl = $_SERVER['RFULLPATH'] . '?' .
-							  preg_replace('/(:?^s=[^&]&?|&?s=[^&])/', '', $_SERVER['QUERY_STRING']);
-					throw $response->redirect($sUrl, HTTP_STATUS_MOVED_PERMANENTLY);
-				}
-			}
-			unset($sBotList);
-		}
-
 		# Determine the session ID (SID) if provided by the user agent, and store it in $this->m_sID.
-		if ($this->m_iClientType == QL_CLIENTTYPE_CRAWLER) {
+		if ($request->get_client_type() == QL_CLIENTTYPE_CRAWLER) {
 			$bLoaded = false;
 		} else {
 			$bLoaded = $this->load();
@@ -134,7 +107,7 @@ class QlSession {
 
 		# If this is true, we need to create a new $_SESSION.
 		if (!$bLoaded) {
-			$this->start();
+			$this->start($request);
 		}
 
 		# Define the SID constant.
@@ -152,7 +125,7 @@ class QlSession {
 
 		# Update statistics on visits to the web site; exclude bots and power users.
 		if (
-			$this->m_iClientType == QL_CLIENTTYPE_USER &&
+			$request->get_client_type() == QL_CLIENTTYPE_USER &&
 			!$this->check_access_level(QL_ACCLVL_POWERUSER)
 		) {
 			$sTS = ql_format_timestamp('%Y%m%d%H', $iTS, 'UTC');
@@ -250,6 +223,32 @@ class QlSession {
 	}
 
 
+	/** If a GET “s” query parameter has been provided when unnecessary, this forces an HTTP redirect
+	to the same URL as the one being visited, but without the “s” query parameter.
+
+	QlRequest $request
+		Request being processed.
+	QlResponse $response
+		Response for the request being processed.
+	QlResponseEntity return
+		A redirection response, or null if no redirection is necessary.
+	*/
+	public static function discard_get_sid_if_redundant(QlRequest $request, QlResponse $response) {
+		# If this is a GET request and a “s” query parameter has been provided, but the client is a
+		# bot (bots should not be crawling with SIDs) or it also provided a “s” cookie, then…
+		if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['s']) && (
+			$request->get_client_type() == QL_CLIENTTYPE_CRAWLER || isset($_COOKIE['s'])
+		)) {
+			# …remove the SID and redirect to the same URL, but without the “s” parameter. In case of a
+			# bot, hopefully this will make it update its cache, discarding the URL with SID.
+			$sUrl = $_SERVER['RFULLPATH'] . '?' .
+					  preg_replace('/(:?^s=[^&]&?|&?s=[^&])/', '', $_SERVER['QUERY_STRING']);
+			return $response->redirect($sUrl, HTTP_STATUS_MOVED_PERMANENTLY);
+		}
+		return null;
+	}
+
+
 	/** Enables distinguishing among parallel workflows performed on a single user session (e.g. on a
 	single browser instance, maybe via multiple tabs) via an always-unique HTTP “ss” parameter.
 	Subsession-specific data is accessible via $_SESSION['sub'].
@@ -260,8 +259,8 @@ class QlSession {
 	*/
 	public function enable_subsessions($bKeepId = false) {
 		global $_APP, $ql_fScriptStart;
-		if ($this->m_iClientType == QL_CLIENTTYPE_CRAWLER) {
-			# Crawlers are banned from using sessions and subsessions.
+		if (SID == '') {
+			# If sessions are disabled, subsessions are too.
 			define('SSID', '');
 			return;
 		}
@@ -334,16 +333,6 @@ class QlSession {
 			'Deleted ' . $ql_db->get_last_affected_rows() . ' expired sessions',
 			'If this is occurring too often, decrease the gc rate; if too rarely, increase it.'
 		);
-	}
-
-
-	/** Returns the type of remote client for which this request is being processed.
-
-	int return
-		Client type (QL_CLIENTTYPE_*).
-	*/
-	public function get_client_type() {
-		return $this->m_iClientType;
 	}
 
 
@@ -659,8 +648,11 @@ class QlSession {
 
 
 	/** Initializes a new session, either from an auto-login or from scratch.
+
+	QlRequest $request
+		Request being processed.
 	*/
-	private function start() {
+	private function start($request) {
 		global $_APP;
 
 		# Attempt an auto-login.
@@ -694,7 +686,7 @@ class QlSession {
 
 		# If the login did not select a timezone, best-guess it - except for bots, who won’t care.
 		if (empty($_SESSION['ql_timezone'])) {
-			if ($this->m_iClientType == QL_CLIENTTYPE_USER) {
+			if ($request->get_client_type() == QL_CLIENTTYPE_USER) {
 				$_SESSION['ql_timezone'] = ql_timezone_from_ip($_SERVER['REMOTE_ADDR']);
 			} else {
 				$_SESSION['ql_timezone'] = $_APP['core']['default_timezone'];
