@@ -82,7 +82,7 @@ class QlDb {
 			throw new QlErrorResponse(
 				HTTP_STATUS_SERVICE_UNAVAILABLE,
 				'L10N_CORE_ERR_DBUNAVAIL_TITLE',
-				'error_database_unavailable'
+				'database_unavailable'
 			);
 		}
 
