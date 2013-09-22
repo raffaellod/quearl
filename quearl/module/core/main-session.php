@@ -641,34 +641,19 @@ class QlSession {
 
 
 	/** Verifies that the user has all the privileges passed as arguments; if that’s not the case,
-	the page generation is interrupted, resulting in an “access denied” error message instead. Can be
-	used for both UI and UI-less (asynchronous) checks. Does not return.
+	it throws a QlErrorResponse exception, resulting in an “access denied” HTTP status code.
 
 	string+ …
 		Privileges to check for.
 	*/
 	public function require_priv_tokens(/*…*/) {
-		global $ql_sAction;
 		$arrTokens = func_get_args();
 		if (!call_user_func_array(array($this, 'check_priv_tokens'), $arrTokens)) {
-			if (strncmp($ql_sAction, 'ar_', 3) == 0) {
-				# Make sure ql_async_response() is defined.
-				require_once 'async.php';
-
-				ql_async_response('application/json', array(
-					'error' => L10N_CORE_ERR_RESTRICTEDASYNC,
-				));
-			} else if (headers_sent()) {
-				# require_priv_tokens() is always called prior to any processing, so this should never
-				# happen. And yet, just in case…
-				$s  = '<h1>403 Access Denied</h1>' . NL .
-						'<p>' . L10N_CORE_ERR_RESTRICTEDPAGE . '</p>' . NL;
-				echo $s;
-				exit;
-			} else {
-				$this->onload_msg(L10N_CORE_ERR_RESTRICTEDPAGE);
-				ql_redirect($_SERVER['RROOTDIR'] . ql_loc_url(''));
-			}
+			throw new QlErrorResponse(
+				HTTP_STATUS_FORBIDDEN,
+				'L10N_CORE_ERR_ACCESSDENIED_TITLE',
+				'access_denied'
+			);
 		}
 	}
 
