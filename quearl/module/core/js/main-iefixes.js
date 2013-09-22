@@ -18,8 +18,37 @@ see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
 /** Fixes specific to MS Internet Explorer: implementation of some necessary parts of W3C standards,
-and much more. See [HACK#0003 JS: IE fixes]. */
+and much more. See [DESIGN_6350 JS: IE fixes]. */
 
+/** DESIGN_6350 JS: IE fixes
+
+Fixes for older versions of Internet Explorer are generally moved out of the main source files, to
+help separate “real code” from “workaround code”.
+
+In most cases, a specific operation which required a fix was wrapped in a Ql.DOM._*() static method,
+which has an alternate IE-friendly version in main-iefixes.js; this due to augmentation (see
+[MAN#0001 JS: Inheritance and augmentation]), which will copy methods from a base class into the
+derived class’s prototype, causing the redefinition (fix) of the base class’s methods to be
+ineffective (copied methods will stay unaffected).
+
+Bugs and inconsistencies related to DOM event handling proved to be particularly nasty; the fixes
+are well documented in the source file, with the most complicated ones featuring additional
+documentation here. Generally, they are all due to one or more of these reasons:
+
+•	IE5.5/IE6/IE7/IE8 have a vastly insufficient event handling model; see [DESIGN_6353 JS: IE fixes:
+	Events];
+
+•	IE5.5 features completely off-standard semantics for the Node.document property which, by the
+	way, should be ownerDocument; see [DESIGN_6351 JS: IE fixes: IE5.5 documents];
+
+•	IE5.5/IE6/IE7 have a very delicate memory management logic, and you can’t just use closures to
+	fix everything;
+
+•	IE5.5/IE6/IE7/IE8 have a very serious bug related to named function expressions, where the value
+	of the function identifier is an entirely different object than the one returned by the
+	expression, so using one and then looking for the other (e.g. add one and search for the other,
+	in an Array with indexOf) invariably and unexpectedly fails.
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -236,8 +265,63 @@ if (Browser.version < 60000) {
 }
 
 
+/** DESIGN_6351 JS: IE fixes: IE5.5 documents
+
+IE5.5 has serious issues with the Node.ownerDocument property, starting from the fact that it calls
+it just document.
+
+The main issue is that an unlinked node loses a reference to its real owner document; the .document
+property is, for unlinked nodes, set to some object of a class similar to a Document, but with
+several properties behaving like the document of the virtual “about:blank” page. Such class is
+referred to as pseudo-Document, within Quearl; due to its purpose of holding dangling nodes though,
+object of this class are mapped by Ql.DOM._getNodeType() to Node.DOCUMENT_FRAGMENT_NODE and,
+consequently, to Ql.DOM.DocumentFragment by Ql.DOM.wrap().
+
+These are the differences between a Document and a pseudo-Document:
+
+┌──────────────┬───────────────────────────┬────────────────────┐
+│ Property		│ Document						 │ Pseudo-Document	 │
+├──────────────┼───────────────────────────┼────────────────────┤
+│ frames			│ Object							 │ <throws on access> │
+│ location		│ "http://www.example.com/" | <throws on access> │
+│ readyState	│ "complete"					 │ "uninitialized"	 │
+│ URL				│ "http://www.example.com/" │ "about:blank"		 │
+│ URLUnencoded	│ "http://www.example.com/" │ "about:blank"		 │
+└──────────────┴───────────────────────────┴────────────────────┘
+
+To this, add the fact that the DOM tree has a structure different from the standard:
+
+	Topmost levels of the DOM tree, according to DOM1:
+
+	[HTMLDocument]				.ownerDocument = null;     .parentNode = null
+		[HTMLHtmlElement]		.ownerDocument = document; .parentNode = document
+			[HTMLBodyElement]	.ownerDocument = document; .parentNode = <html>
+
+	Topmost levels of the DOM tree, according to IE5.5:
+
+	[HTMLDocument]				.document = document; .parentNode = null
+		[HTMLHtmlElement]		.document = document; .parentNode = null
+			[HTMLBodyElement]	.document = document; .parentNode = <html>
+
+This alone makes it impossible to climb in a loop all the way up from a node to its own document by
+using .parentNode: simply using .parentNode || .document will cause infinite loops, since even a
+document has a non-null .document property (linking it to itself).
+
+Last but not least, in IE5.5 Document lacks a nodeType property, so whether or not an object is a
+Document must be inferred by examining typical (or less so) Document-only properties, while making
+sure to distinguish it from the above mentioned pseudo-Document (see the table above).
+
+These issues, combined, require getter functions for Node.nodeType, Node.ownerDocument,
+Node.parentNode. Also, a redefined Ql.DOM.Document._createElement() is necessary, to attach a
+document’s Quearl-generated identifier to every new Node, which Ql.DOM._getOwnerDocument() will use,
+in turn making it possible for Ql.DOM.wrap() to work. Ql.DOM._getOwnerDocument() interprets the lack
+of an attached document identifier as meaning that a Node was created from the original server-
+generated page; this is helpful when such node is unlinked, thereby losing its only way to track
+down its document (Node.document).
+*/
+
 /* Rationale: IE5.5 is very wildly off-standard regarding DOM documents, and requires quite a lot of
-working around it. Look at [HACK#0007 JS: IE fixes: IE5.5 documents] to see just how bad it is.
+working around it. See [DESIGN_6351 JS: IE fixes: IE5.5 documents] to see just how bad it is.
 */
 if (Browser.version < 60000) {
 
@@ -333,7 +417,7 @@ if (Browser.version < 60000) {
 
 /* Rationale: in IE5.5/IE6/IE7/IE8, frames need to appear in the document.frames collection in order
 to be used as targets for forms; this requies some cooperation from Ql.DOM.Node.appendChild() and
-Ql.DOM.Node.insertBefore(). Read [HACK#0008 JS: AsyncRequest: IFrame quirks] to find out why this
+Ql.DOM.Node.insertBefore(). Read [DESIGN_4780 JS: AsyncRequest: IFrame quirks] to find out why this
 can’t be any less ugly than it is.
 */
 if (Browser.version < 90000) {
@@ -388,11 +472,45 @@ if (Browser.version < 90000) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Event classes and amendments to Ql.EventTarget and Ql.DOM.Document - DOM2-Events
 
-/* IE5.5/IE6/IE7/IE8 have a vastly insufficient event handling model; see [HACK#0006 JS: IE fixes:
-Events] for details.
+/** DESIGN_6353 JS: IE fixes: Events
 
-Also, these browsers don’t even define any of the event classes (and their constants), save IE8
-which does define Event as a class with no members.
+Events handling in every version of IE before 9 is almost completely non-standard, meaning that it’s
+hard to find something standards-compliant in their implementation.
+
+A quick list of issues:
+
+•	No event capturing, only bubbling;
+
+•	Some events, such as submit, don’t bubble even though they should, according to DOM2-Events;
+
+•	No DOM2-Events.Event* classes (except the memberless Event in IE8), so no DOM2-Events.Event.*
+	constants;
+
+•	The fireEvent() method (alternative to DOM2-Events.EventTarget.dispatchEvent()) refuses to fire
+	events of types IE doesn’t know, throwing an exception instead.
+
+And now, bigger issues.
+
+An event handler (listener in DOM2-Events terms) registered with attachEvent() (alternative, and
+inferior, to DOM2-Events.EventTarget.addEventListener()) is invoked with this === window, instead of
+the object on which it was registered. To make this worse, the window.event object (alternative to
+the argument passed to a DOM2-Events listener) lacks a currentTarget property, making it impossible
+for a handler to access the element it was attached to. This makes attachEvent() useless for most
+cases, with one exception: handlers for load and unload events will only be invoked it registered
+using attachEvent(), as opposed to being attached via on* properties. This of course required
+special-casing them.
+
+For events which should bubble that IE doesn’t make behave so, a special handler,
+Ql.EventTarget._dispatchingEventHandler_IE55(), can be permanently installed in the _wrap() method
+of a Ql.DOM.Element-derived class using, for example:
+
+	Ql.EventTarget._enableDispatchingHandler_IE55.call(this, "submit")
+
+The special dispatching handler will manually propagate the event for the capturing, at-target and
+bubbling phases, thereby mimicking DOM2-Events. The regular Ql.EventTarget.addEventListener() and
+removeEventListener() will make sure not to touch the dispatching handler, and will avoid installing
+regular handlers on object that they know IE wont’t propagate the event to, relying entirely on the
+propagation by _dispatchingEventHandler_IE55().
 */
 
 if (Browser.version < 90000) {
@@ -1145,13 +1263,35 @@ if (Browser.version < 90000) {
 // Amendments to other classes
 
 
-/* IE5.5/IE6 have XMLHttpRequest available as an COM class; IE7/IE8 have a native XMLHttpRequest,
-but it may be disabled per policy settings, so the ActiveX alternative should always be tried.
-*/
-(function() {
+/** DESIGN_6352 JS: AsyncRequest: XMLHTTP ActiveX
 
-	/** See [HACK#0009 JS: AsyncRequest: XMLHTTP ActiveX] to understand why only these ProgIDs are
-	here. */
+The now-standard XMLHttpRequest originated as an ActiveX (COM) component named Microsoft.XMLHTTP,
+shipped with IE4 (nonetheless!). Over the years, Microsoft has updated the component many times;
+some of these updates brought incompatible changes, so they ended up having a list of recommended
+versions to use (see <http://blogs.msdn.com/b/xmlteam/archive/2006/10/23/
+using-the-right-version-of-msxml-in-internet-explorer.aspx>).
+
+Of course, it would be nice to just use the latest, but IE5.5 and IE6 (those who don’t offer a
+non-ActiveX XMLHttpRequest) did not (obviously) ship with the latest version (see
+<http://support.microsoft.com/kb/269238>):
+
+•	IE5.5 is reported (see above) to have shipped with MSXML2.XMLHTTP, which in later versions would
+	come to mean MSXML2.XMLHTTP.3.0; yet tests show that, at least on Windows Me, it only shipped
+	with the old Microsoft.XMLHTTP;
+
+•	IE6 shipped with MSXML2.XMLHTTP.3.0, which is the latest of its series;
+
+•	Several other Microsoft products (.NET Framework 3.0, Visual Studio 2005, SQL Server 2005)
+   install MSXML2.XMLHTTP.6.0, which can be used just as well in JavaScript.
+
+IE7/IE8 have a native XMLHttpRequest, but it may be disabled per policy settings, so the ActiveX
+alternative should always be tried.
+*/
+
+Ql.AsyncRequest.prototype._createXhr = (function() {
+
+	/** ProgIDs that we’ll try to instantiate. See [DESIGN_6352 JS: AsyncRequest: XMLHTTP ActiveX] to
+	understand why only these ProgIDs are here. */
 	var arrProgIDs = ["MSXML2.XMLHTTP.6.0", "MSXML2.XMLHTTP.3.0", "Microsoft.XMLHTTP"];
 
 
@@ -1170,7 +1310,7 @@ but it may be disabled per policy settings, so the ActiveX alternative should al
 		this._m_bForceIFrame = true;
 		return false;
 	}
-	Ql.AsyncRequest.prototype._createXhr = $Ql$AsyncRequest$_createXhr_IE55;
+	return $Ql$AsyncRequest$_createXhr_IE55;
 })();
 
 
