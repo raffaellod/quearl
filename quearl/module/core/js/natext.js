@@ -1053,8 +1053,65 @@ Date.prototype.toJSONString = $Date$toJSONString;
 // Function
 
 
+/** DESIGN_2632 JS: Inheritance and augmentation
+
+JavaScript only offers a built-in single inheritance mechanism; in some cases though, it would be
+nice for a class to just pack together functionality from more classes at once.
+
+Setting up the built-in single inheritance is a matter of more than a single instruction, and their
+meaning is not that intuitive (although, at a closer look, it does make sense). For this reason,
+natext.js offers a utility method built into each Function object (i.e. every class), inheritFrom(),
+which is used like this:
+
+	function BaseClass() {
+	}
+
+	function DerivedClass() {
+	}
+
+	DerivedClass.inheritFrom(BaseClass);
+
+This will create an instance of BaseClass, to be used as the prototype for DerivedClass; this might
+be an issue for classes with a non-empty constructor, since a new object will be instantiated, but
+the constructor should only ensure that the instance be complete in all its members, and avoid
+taking any further action.
+
+To allow a constructor to differentiate instantiations by inheritFrom() from regular instantiations,
+inheritFrom() will pass it exactly one argument, the object Function.PROTOTYPING; its detection
+should cause a constructor to just return immediately. The above example is therefore changed:
+
+	function BaseClass() {
+		if (arguments[0] === Function.PROTOTYPING) {
+			return;
+		}
+	}
+
+For good measure, every constructor should begin with the above two lines, so that no modifications
+or checks will be necessary before a new class can be derived from the class it constructs.
+
+
+Still one issue remains: the language does not support multiple inheritance, so if a class needs to
+inherit from two or more others, all but one must be merged into its prototype, so that their
+members will be also available to the derived class; in Quearl, this is called augmentation, and is
+easily applied by calling, e.g. for the above example:
+
+	DerivedClass.augmentWith(BaseClass2);
+	DerivedClass.augmentWith(BaseClass3);
+
+In this case, objects of BaseClass2 and BaseClass3 will not be instantiated; instead, members of
+their prototypes will be copied to the prototype of DerivedClass, save members already present in
+the latter.
+
+This mechanism is more of a hack, since is not explicitly supported by the language; nonetheless, it
+works, with the only drawback being that the instanceof operator is completely oblivious of the
+relationship implied by the semantics of augmentWith().
+
+Credits go to Gavin Kistner and Doug Crockford for the ideas behind this concept.
+*/
+
+
 /** Unique value that, if passed to a constructor, should cause it to skip the regular
-initialization of the object; see [MAN#0001 JS: Inheritance and augmentation]. */
+initialization of the object; see [DESIGN_2632 JS: Inheritance and augmentation]. */
 Function.PROTOTYPING/*:Object*/ = {};
 Function.PROTOTYPING.toString = Function.createToStringMethod("Function.PROTOTYPING");
 
@@ -1065,8 +1122,8 @@ Function.Abstract = null;
 
 
 /** Extends a class with the members of another class, thereby imitating multiple inheritance;
-members already present in the prototype will not be overwritten. See [MAN#0001 JS: Inheritance and
-augmentation].
+members already present in the prototype will not be overwritten. See [DESIGN_2632 JS: Inheritance
+and augmentation].
 
 vParent:(Function|Object)
 	The parent class (Function), or an Object to be used as prototype.
@@ -1254,7 +1311,7 @@ function $Function$Identity(v) {
 Function.Identity = $Function$Identity;
 
 
-/** Makes a class (Function) a descendant of the specified class or prototype. See [MAN#0001 JS:
+/** Makes a class (Function) a descendant of the specified class or prototype. See [DESIGN_2632 JS:
 Inheritance and augmentation] for more information.
 
 vParent:(Function|Object)

@@ -27,7 +27,7 @@ help separate “real code” from “workaround code”.
 
 In most cases, a specific operation which required a fix was wrapped in a Ql.DOM._*() static method,
 which has an alternate IE-friendly version in main-iefixes.js; this due to augmentation (see
-[MAN#0001 JS: Inheritance and augmentation]), which will copy methods from a base class into the
+[DESIGN_2632 JS: Inheritance and augmentation]), which will copy methods from a base class into the
 derived class’s prototype, causing the redefinition (fix) of the base class’s methods to be
 ineffective (copied methods will stay unaffected).
 
