@@ -108,6 +108,8 @@ Selectors 1 API. The allowed selectors are (see <http://www.w3.org/TR/css3-selec
 │ E + F						│ F immediately preceded by E																│
 │ E ~ F						│ F preceded by E																				│
 └───────────────────────┴──────────────────────────────────────────────────────────────────────────┘
+
+TODO: currently, namespaces are parsed, but do not take part in node matching. Make them matter.
 */
 
 /** Evaluates a selector-like expression.
