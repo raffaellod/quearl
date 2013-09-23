@@ -516,11 +516,6 @@ class QlCoreModule extends QlModule {
 			$_SERVER['HTTP_PROTOCOL'] = 'http://';
 		}
 
-		# Make sure we do have an HTTP_USER_AGENT key; some code relies on it being a string.
-		if (!isset($_SERVER['HTTP_USER_AGENT'])) {
-			$_SERVER['HTTP_USER_AGENT'] = '';
-		}
-
 		# Parse the compression methods accepted by the remote client; some code relies on this being
 		# an array.
 		if (isset($_SERVER['HTTP_ACCEPT_ENCODING'])) {

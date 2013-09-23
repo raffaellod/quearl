@@ -134,11 +134,11 @@ class QlSession {
 				VALUES (' . $sTS . ', 1)
 				ON DUPLICATE KEY UPDATE c = c + 1;
 			');
-			if ($_SERVER['HTTP_USER_AGENT'] != '') {
+			if ($request->get_user_agent() != '') {
 				$ql_db->query('
 					INSERT INTO stats_useragents(ua, ym, c)
 					VALUES (
-						\'' . $ql_db->escape($_SERVER['HTTP_USER_AGENT']) . '\',
+						\'' . $ql_db->escape($request->get_user_agent()) . '\',
 						' . substr($sTS, 0, 6) . ',
 						1
 					)
@@ -675,7 +675,7 @@ class QlSession {
 
 		# Add connection-specific information.
 		$_SESSION['ql_ipaddr'] = $request->get_client_local_addr();
-		$_SESSION['ql_useragent'] = $_SERVER['HTTP_USER_AGENT'];
+		$_SESSION['ql_useragent'] = $request->get_user_agent();
 		# Ignore absent/empty referrers, or our own pages.
 		# Note: a page of ours can actually be the referrer for a new session, when the previous one
 		# expired and the user clicked a link on a page from that session.

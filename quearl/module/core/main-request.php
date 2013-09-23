@@ -52,6 +52,8 @@ class QlRequest {
 	private /*array<string => mixed>*/ $m_arrHeaderFields;
 	/** Requested URL. */
 	private /*string*/ $m_sUrl;
+	/** User-Agent HTTP header field. */
+	private /*string*/ $m_sUserAgent;
 	/** Most local (non-public) IP address that originated the request, excluding proxies and other
 	middle tiers. */
 	private /*string*/ $m_sClientLocalAddr;
@@ -85,13 +87,15 @@ class QlRequest {
 			}
 		}
 
+		$this->m_sUserAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+
 		# Determine the type of client/user agent.
 		$this->m_iClientType = QL_CLIENTTYPE_USER;
-		if ($_SERVER['HTTP_USER_AGENT'] != '') {
+		if ($this->m_sUserAgent != '') {
 			# Detect search engine bots.
 			global $_APP;
 			$sBotList = file_get_contents($_APP['core']['rodata_lpath'] . 'core/robotuseragents.txt');
-			if (strpos($sBotList, "\n" . $_SERVER['HTTP_USER_AGENT'] . "\n") !== false) {
+			if (strpos($sBotList, "\n" . $this->m_sUserAgent . "\n") !== false) {
 				$this->m_iClientType = QL_CLIENTTYPE_CRAWLER;
 			}
 			unset($sBotList);
@@ -126,6 +130,16 @@ class QlRequest {
 	*/
 	public function get_url() {
 		return $this->m_sUrl;
+	}
+
+
+	/** Returns the User-Agent HTTP header field; if none was provided, this will be an empty string.
+
+	string return
+		User agent.
+	*/
+	public function get_user_agent() {
+		return $this->m_sUserAgent;
 	}
 
 
