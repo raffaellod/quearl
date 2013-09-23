@@ -404,6 +404,10 @@ abstract class QlModule {
 			if ($s === false) {
 				return false;
 			}
+			# Strip the UTF-8 BOM, if present.
+			if (substr($s, 0, 3) == "\xef\xbb\xbf") {
+				$s = substr($s, 3);
+			}
 			$arrLoadedTemplates[$sType][$sName] = $s;
 		}
 		if (!isset($arrVars[0]) || !is_array($arrVars[0])) {
