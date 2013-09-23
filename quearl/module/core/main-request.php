@@ -50,6 +50,11 @@ class QlRequest {
 
 	/** Associates each encoding accepted by the client with a grade of preference. */
 	private /*array<string => float>*/ $m_arrAcceptedEncodings;
+	/** Most local (non-public) IP address that originated the request, excluding proxies and other
+	middle tiers. */
+	private /*string*/ $m_sClientLocalAddr;
+	/** Type of remote client for which this request is being processed (QL_CLIENTTYPE_*). */
+	private /*int*/ $m_iClientType;
 	/** Map of header field names => values. */
 	private /*array<string => mixed>*/ $m_arrHeaderFields;
 	/** Requested URL. */
@@ -58,11 +63,6 @@ class QlRequest {
 	private /*string*/ $m_sUrlScheme;
 	/** User-Agent HTTP header field. */
 	private /*string*/ $m_sUserAgent;
-	/** Most local (non-public) IP address that originated the request, excluding proxies and other
-	middle tiers. */
-	private /*string*/ $m_sClientLocalAddr;
-	/** Type of remote client for which this request is being processed (QL_CLIENTTYPE_*). */
-	private /*int*/ $m_iClientType;
 
 
 	/** Constructor.
@@ -78,9 +78,6 @@ class QlRequest {
 			# that to the array.
 			$this->m_arrAcceptedEncodings = array();
 		}
-
-		$this->m_arrHeaderFields = array();
-		$this->m_sUrl = $_SERVER['REQUEST_URI'];
 
 		$this->m_sClientLocalAddr = '0.0.0.255';
 		foreach (
@@ -101,6 +98,10 @@ class QlRequest {
 				//}
 			}
 		}
+
+		$this->m_arrHeaderFields = array();
+
+		$this->m_sUrl = $_SERVER['REQUEST_URI'];
 
 		# Protocol through which this request was made (http or https).
 		if (
