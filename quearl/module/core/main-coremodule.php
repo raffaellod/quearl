@@ -503,21 +503,8 @@ class QlCoreModule extends QlModule {
 		$arrModules =& QlModule::get_loaded_modules();
 
 
-		# Initialize the request object.
+		# Initialize the request and response objects.
 		$request = new QlRequest();
-
-		# Protocol through which this request was made (http or https).
-		if (
-			isset($_SERVER['HTTPS']) &&
-			(strtolower($_SERVER['HTTPS']) == 'on' || $_SERVER['HTTPS'] == '1')
-		) {
-			$_SERVER['HTTP_PROTOCOL'] = 'https://';
-		} else {
-			$_SERVER['HTTP_PROTOCOL'] = 'http://';
-		}
-
-
-		# Initialize the response object.
 		$response = new QlResponse($request);
 		$ent = QlSession::discard_get_sid_if_redundant($request, $response);
 		if ($ent) {

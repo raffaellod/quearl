@@ -54,6 +54,8 @@ class QlRequest {
 	private /*array<string => mixed>*/ $m_arrHeaderFields;
 	/** Requested URL. */
 	private /*string*/ $m_sUrl;
+	/** Scheme component of the requested URL. */
+	private /*string*/ $m_sUrlScheme;
 	/** User-Agent HTTP header field. */
 	private /*string*/ $m_sUserAgent;
 	/** Most local (non-public) IP address that originated the request, excluding proxies and other
@@ -98,6 +100,16 @@ class QlRequest {
 					break;
 				//}
 			}
+		}
+
+		# Protocol through which this request was made (http or https).
+		if (
+			isset($_SERVER['HTTPS']) &&
+			(strtolower($_SERVER['HTTPS']) == 'on' || $_SERVER['HTTPS'] == '1')
+		) {
+			$this->m_sUrlScheme = 'https://';
+		} else {
+			$this->m_sUrlScheme = 'http://';
 		}
 
 		$this->m_sUserAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
@@ -154,6 +166,16 @@ class QlRequest {
 	*/
 	public function get_url() {
 		return $this->m_sUrl;
+	}
+
+
+	/** Returns the scheme component of the URL requested by the client.
+
+	string return
+		Scheme component of the URL.
+	*/
+	public function get_url_scheme() {
+		return $this->m_sUrlScheme;
 	}
 
 

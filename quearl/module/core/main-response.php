@@ -167,7 +167,7 @@ class QlResponse {
 	) {
 		if (strncmp($sUri, 'http://', 7) != 0 && strncmp($sUri, 'https://', 8) != 0) {
 			# If the URI does not specify an HTTP schema, assume it doesn’t specify a host either.
-			$sUri = $_SERVER['HTTP_PROTOCOL'] . $_SERVER['HTTP_HOST'] . $sUri;
+			$sUri = $this->m_request->get_url_scheme() . $_SERVER['HTTP_HOST'] . $sUri;
 			# If we have a session ID, add it, since we’re redirecting within this host.
 			if (defined('SID') && SID != '') {
 				$sUri = ql_url_addqs($sUri, SID);
@@ -719,7 +719,7 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 				'<script type="text/javascript">/*<![CDATA[*/' . NL .
 				'	location.SID = "' . (defined('SID') ? SID : '') . '";' . NL .
 				'	location.SSID = "' . (defined('SSID') ? SSID : '') . '";' . NL .
-				'	location.RROOTDIR = "' . $_SERVER['HTTP_PROTOCOL'] . $_SERVER['HTTP_HOST'] .
+				'	location.RROOTDIR = "' . $this->m_request->get_url_scheme() . $_SERVER['HTTP_HOST'] .
 						$_SERVER['RROOTDIR'] . '";' . NL .
 				'	var Ql = {};' . NL .
 				'	Ql._mapXhtmlTemplates = {};' . NL .
@@ -815,7 +815,7 @@ class QlXhtmlResponseEntity extends QlResponseEntity {
 	*/
 	protected function make_static_url($sFileName) {
 		if ($_APP['core']['static_host'] == '') {
-			$sUrl = $_SERVER['HTTP_PROTOCOL'] . $_APP['core']['static_host'];
+			$sUrl = $this->m_request->get_url_scheme() . $_APP['core']['static_host'];
 		} else {
 			$sUrl = '';
 		}
