@@ -322,8 +322,7 @@ function & ql_http_get(
 		'Cache-Control'   => 'no-cache',
 		'Connection'      => 'keep-alive',
 		'Pragma'          => 'no-cache',
-		# Spoof the client user agent.
-		'User-Agent'      => $_SERVER['HTTP_USER_AGENT'],
+		'User-Agent'      => 'Quearl',
 	);
 	$cRedirects = 0;
 	# $arrSetCookies holds all the cookies the caller provided; $arrCookies will hold these and any
@@ -730,7 +729,7 @@ function ql_http_get_multi(array $arrUrls, $fnCallback) {
 								$arrTarget['host'] . ':' . $arrTarget['port'] . $arrTarget['path'] .
 								" HTTP/1.1\r\n" .
 					'Host: ' . $arrTarget['host'] . ':' . $arrTarget['port'] . "\r\n" .
-					'User-Agent: ' . $_SERVER['HTTP_USER_AGENT'] . "\r\n" .
+					"User-Agent: Quearl\r\n" .
 					"Accept: */*\r\n" .
 					"Accept-Charset: utf-8;q=1,utf-16le;q=0.7,utf-16be;q=0.7,iso-8859-1;q=0.5\r\n" .
 					"Pragma: no-cache\r\n" .
