@@ -48,6 +48,8 @@ define('QL_CLIENTTYPE_CRAWLER', 1);
 */
 class QlRequest {
 
+	/** Associates each encoding accepted by the client with a grade of preference. */
+	private /*array<string => float>*/ $m_arrAcceptedEncodings;
 	/** Map of header field names => values. */
 	private /*array<string => mixed>*/ $m_arrHeaderFields;
 	/** Requested URL. */
@@ -64,6 +66,17 @@ class QlRequest {
 	/** Constructor.
 	*/
 	public function __construct() {
+		# Parse the compression methods accepted by the remote client.
+		if (isset($_SERVER['HTTP_ACCEPT_ENCODING'])) {
+			$this->m_arrAcceptedEncodings =& ql_parse_rfc2616_accept_field(
+				$_SERVER['HTTP_ACCEPT_ENCODING']
+			);
+		} else {
+			# Only “identity” is acceptable, but since that’s always acceptable, don’t bother adding
+			# that to the array.
+			$this->m_arrAcceptedEncodings = array();
+		}
+
 		$this->m_arrHeaderFields = array();
 		$this->m_sUrl = $_SERVER['REQUEST_URI'];
 
@@ -120,6 +133,17 @@ class QlRequest {
 	*/
 	public function get_client_local_addr() {
 		return $this->m_sClientLocalAddr;
+	}
+
+
+	/** Returns an array associating each encoding accepted by the client with a grade of preference
+	expressed by the client, sorted by the latter.
+
+	array<string => float>& return
+		Array with the accepted encodings.
+	*/
+	public function & get_accepted_encodings() {
+		return $this->m_arrAcceptedEncodings;
 	}
 
 

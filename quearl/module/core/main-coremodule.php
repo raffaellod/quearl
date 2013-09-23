@@ -516,17 +516,6 @@ class QlCoreModule extends QlModule {
 			$_SERVER['HTTP_PROTOCOL'] = 'http://';
 		}
 
-		# Parse the compression methods accepted by the remote client; some code relies on this being
-		# an array.
-		if (isset($_SERVER['HTTP_ACCEPT_ENCODING'])) {
-			$_SERVER['HTTP_ACCEPT_ENCODING'] =& ql_parse_rfc2616_accept_field(
-				$_SERVER['HTTP_ACCEPT_ENCODING']
-			);
-		} else {
-			# Assume only “identity” is acceptable.
-			$_SERVER['HTTP_ACCEPT_ENCODING'] = array('identity' => 1.0);
-		}
-
 
 		# Initialize the response object.
 		$response = new QlResponse($request);

@@ -119,7 +119,7 @@ class QlResponse {
 		$this->m_bHeaderSent = false;
 
 		/*
-		foreach ($_SERVER['HTTP_ACCEPT_ENCODING'] as $sEncoding) {
+		foreach ($this->m_request->get_accepted_encodings() as $sEncoding) {
 			switch ($sEncoding) {
 				case 'x-gzip':
 				case 'gzip':
@@ -600,9 +600,9 @@ class QlStaticResponseEntity extends QlResponseEntity {
 	string $sContentType
 		MIME content type of the file.
 	[bool $bHasCompressedVersion]
-		If true, the remote client can will be served with a compressed version of the file, provided
-		that the client accepts one of the supported compression encodings, and that such version of
-		the file exists.
+		If true, the remote client will be served with a compressed version of the file, provided that
+		the client accepts one of the supported compression encodings, and that such version of the
+		file exists.
 	*/
 	public function set_file($sFileName, $sContentType, $bHasCompressedVersion = false) {
 		if (!is_file($sFileName) || !is_readable($sFileName)) {
@@ -618,7 +618,7 @@ class QlStaticResponseEntity extends QlResponseEntity {
 			#    <http://support.microsoft.com/default.aspx?scid=kb;en-us;Q312496>
 			#    <http://www.vervestudios.co/projects/compression-tests/results>
 			#
-			foreach ($_SERVER['HTTP_ACCEPT_ENCODING'] as $sEncoding => $fQ) {
+			foreach ($this->m_request->get_accepted_encodings() as $sEncoding => $fQ) {
 				switch ($sEncoding) {
 					case 'gzip':
 					case 'x-gzip':
