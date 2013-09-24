@@ -15,8 +15,8 @@
 # not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------------------------------
 
-# Bootstrap configuration file for the “core” module. See [DESIGN_8261 QlApplication] for why these
-# few “core” module configuration entries are in this file.
+# Bootstrap configuration file for the “core” module. See [DOC:8261 QlApplication] for why these few
+# “core” module configuration entries are in this file.
 
 
 ####################################################################################################
@@ -29,7 +29,7 @@ lock_lpath: data.rw/core/
 ## Logs directory. Must be writable by the web server.
 log_lpath: data.rw/core/log/
 
-## Installation root as seen from a remote client; see [DESIGN_5011 Remote root path].
+## Installation root as seen from a remote client; see [DOC:5011 Remote root path].
 root_rpath: /
 
 ## Private read-only data directory, for files generated automatically by processes outside of the
@@ -42,12 +42,12 @@ rwdata_lpath: data.rw/
 
 ## Host for static files (JS, CSS, graphics), as seen from a remote client. The actual server can
 # still be the same machine running Quearl, but in any case it must be using the same protocol
-# (http:// or https://). See [DESIGN_5015 Static files].
+# (http:// or https://). See [DOC:5015 Static files].
 static_host:
 
 ## Path at which static files can be accessed by a remote client on the server specified by
 # “static_host”; if the latter is empty, this must be an absolute remote path on the server running
-# Quearl, i.e. it must include “root_rpath”. See [DESIGN_5015 Static files].
+# Quearl, i.e. it must include “root_rpath”. See [DOC:5015 Static files].
 static_root_rpath: /.static/
 
 

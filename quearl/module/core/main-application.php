@@ -32,7 +32,7 @@ require_once 'main.php';
 # Classes
 
 
-/** DESIGN_8261 QlApplication
+/** DOC:8261 QlApplication
 
 QlApplication stores any non-session-specific data, from the most essential (e.g. Quearl core
 directories) to the most frivolous (e.g. color theme configuration).

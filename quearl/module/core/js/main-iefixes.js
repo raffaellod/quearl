@@ -18,16 +18,16 @@ see <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------------------------*/
 
 /** Fixes specific to MS Internet Explorer: implementation of some necessary parts of W3C standards,
-and much more. See [DESIGN_6350 JS: IE fixes]. */
+and much more. See [DOC:6350 JS: IE fixes]. */
 
-/** DESIGN_6350 JS: IE fixes
+/** DOC:6350 JS: IE fixes
 
 Fixes for older versions of Internet Explorer are generally moved out of the main source files, to
 help separate “real code” from “workaround code”.
 
 In most cases, a specific operation which required a fix was wrapped in a Ql.DOM._*() static method,
 which has an alternate IE-friendly version in main-iefixes.js; this due to augmentation (see
-[DESIGN_2632 JS: Inheritance and augmentation]), which will copy methods from a base class into the
+[DOC:2632 JS: Inheritance and augmentation]), which will copy methods from a base class into the
 derived class’s prototype, causing the redefinition (fix) of the base class’s methods to be
 ineffective (copied methods will stay unaffected).
 
@@ -35,11 +35,11 @@ Bugs and inconsistencies related to DOM event handling proved to be particularly
 are well documented in the source file, with the most complicated ones featuring additional
 documentation here. Generally, they are all due to one or more of these reasons:
 
-•	IE5.5/IE6/IE7/IE8 have a vastly insufficient event handling model; see [DESIGN_6353 JS: IE fixes:
+•	IE5.5/IE6/IE7/IE8 have a vastly insufficient event handling model; see [DOC:6353 JS: IE fixes:
 	Events];
 
 •	IE5.5 features completely off-standard semantics for the Node.document property which, by the
-	way, should be ownerDocument; see [DESIGN_6351 JS: IE fixes: IE5.5 documents];
+	way, should be ownerDocument; see [DOC:6351 JS: IE fixes: IE5.5 documents];
 
 •	IE5.5/IE6/IE7 have a very delicate memory management logic, and you can’t just use closures to
 	fix everything;
@@ -265,7 +265,7 @@ if (Browser.version < 60000) {
 }
 
 
-/** DESIGN_6351 JS: IE fixes: IE5.5 documents
+/** DOC:6351 JS: IE fixes: IE5.5 documents
 
 IE5.5 has serious issues with the Node.ownerDocument property, starting from the fact that it calls
 it just document.
@@ -321,7 +321,7 @@ down its document (Node.document).
 */
 
 /* Rationale: IE5.5 is very wildly off-standard regarding DOM documents, and requires quite a lot of
-working around it. See [DESIGN_6351 JS: IE fixes: IE5.5 documents] to see just how bad it is.
+working around it. See [DOC:6351 JS: IE fixes: IE5.5 documents] to see just how bad it is.
 */
 if (Browser.version < 60000) {
 
@@ -417,7 +417,7 @@ if (Browser.version < 60000) {
 
 /* Rationale: in IE5.5/IE6/IE7/IE8, frames need to appear in the document.frames collection in order
 to be used as targets for forms; this requies some cooperation from Ql.DOM.Node.appendChild() and
-Ql.DOM.Node.insertBefore(). Read [DESIGN_4780 JS: AsyncRequest: IFrame quirks] to find out why this
+Ql.DOM.Node.insertBefore(). Read [DOC:4780 JS: AsyncRequest: IFrame quirks] to find out why this
 can’t be any less ugly than it is.
 */
 if (Browser.version < 90000) {
@@ -472,7 +472,7 @@ if (Browser.version < 90000) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Event classes and amendments to Ql.EventTarget and Ql.DOM.Document - DOM2-Events
 
-/** DESIGN_6353 JS: IE fixes: Events
+/** DOC:6353 JS: IE fixes: Events
 
 Events handling in every version of IE before 9 is almost completely non-standard, meaning that it’s
 hard to find something standards-compliant in their implementation.
@@ -1263,7 +1263,7 @@ if (Browser.version < 90000) {
 // Amendments to other classes
 
 
-/** DESIGN_6352 JS: AsyncRequest: XMLHTTP ActiveX
+/** DOC:6352 JS: AsyncRequest: XMLHTTP ActiveX
 
 The now-standard XMLHttpRequest originated as an ActiveX (COM) component named Microsoft.XMLHTTP,
 shipped with IE4 (nonetheless!). Over the years, Microsoft has updated the component many times;
@@ -1290,7 +1290,7 @@ alternative should always be tried.
 
 Ql.AsyncRequest.prototype._createXhr = (function() {
 
-	/** ProgIDs that we’ll try to instantiate. See [DESIGN_6352 JS: AsyncRequest: XMLHTTP ActiveX] to
+	/** ProgIDs that we’ll try to instantiate. See [DOC:6352 JS: AsyncRequest: XMLHTTP ActiveX] to
 	understand why only these ProgIDs are here. */
 	var arrProgIDs = ["MSXML2.XMLHTTP.6.0", "MSXML2.XMLHTTP.3.0", "Microsoft.XMLHTTP"];
 

@@ -57,7 +57,7 @@ class QlRequest {
 	private /*int*/ $m_iClientType;
 	/** Map of header field names => values. */
 	private /*array<string => mixed>*/ $m_arrHeaderFields;
-	/** true if the request is for a static file (see [DESIGN_5015 Static files]). */
+	/** true if the request is for a static file (see [DOC:5015 Static files]). */
 	private /*int*/ $m_bStaticUrl;
 	/** Requested URL. */
 	private /*string*/ $m_sUrl;
@@ -105,7 +105,7 @@ class QlRequest {
 		$this->m_bStaticUrl = false;
 
 		$this->m_sUrl = $_SERVER['REQUEST_URI'];
-		# If this server is also serving static files (see [DESIGN_5015 Static files]) and…
+		# If this server is also serving static files (see [DOC:5015 Static files]) and…
 		global $_APP;
 		if (
 			$_APP['core']['static_host'] == '' ||
@@ -206,7 +206,7 @@ class QlRequest {
 	}
 
 
-	/** Returns true if the request is for a static file (see [DESIGN_5015 Static files]), or false
+	/** Returns true if the request is for a static file (see [DOC:5015 Static files]), or false
 	otherwise.
 
 	bool return

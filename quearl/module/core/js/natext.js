@@ -1053,7 +1053,7 @@ Date.prototype.toJSONString = $Date$toJSONString;
 // Function
 
 
-/** DESIGN_2632 JS: Inheritance and augmentation
+/** DOC:2632 JS: Inheritance and augmentation
 
 JavaScript only offers a built-in single inheritance mechanism; in some cases though, it would be
 nice for a class to just pack together functionality from more classes at once.
@@ -1111,7 +1111,7 @@ Credits go to Gavin Kistner and Doug Crockford for the ideas behind this concept
 
 
 /** Unique value that, if passed to a constructor, should cause it to skip the regular
-initialization of the object; see [DESIGN_2632 JS: Inheritance and augmentation]. */
+initialization of the object; see [DOC:2632 JS: Inheritance and augmentation]. */
 Function.PROTOTYPING/*:Object*/ = {};
 Function.PROTOTYPING.toString = Function.createToStringMethod("Function.PROTOTYPING");
 
@@ -1122,8 +1122,8 @@ Function.Abstract = null;
 
 
 /** Extends a class with the members of another class, thereby imitating multiple inheritance;
-members already present in the prototype will not be overwritten. See [DESIGN_2632 JS: Inheritance
-and augmentation].
+members already present in the prototype will not be overwritten. See [DOC:2632 JS: Inheritance and
+augmentation].
 
 vParent:(Function|Object)
 	The parent class (Function), or an Object to be used as prototype.
@@ -1311,7 +1311,7 @@ function $Function$Identity(v) {
 Function.Identity = $Function$Identity;
 
 
-/** Makes a class (Function) a descendant of the specified class or prototype. See [DESIGN_2632 JS:
+/** Makes a class (Function) a descendant of the specified class or prototype. See [DOC:2632 JS:
 Inheritance and augmentation] for more information.
 
 vParent:(Function|Object)

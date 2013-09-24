@@ -456,7 +456,7 @@ mapStats:Object(Number*)
 })();
 
 
-/** DESIGN_4780 JS: AsyncRequest: IFrame quirks
+/** DOC:4780 JS: AsyncRequest: IFrame quirks
 
 IFrames, used as a fallback mechanism in place of XMLHttpRequest, and also used to send files
 asynchronously à la XHR, exhibit a wide array of “browser customizations”, i.e. there are quite a
@@ -544,14 +544,14 @@ function $Ql$AsyncRequest$_onIFrameLoad(e) {
 			if (this.debugResponse) {
 				alert(nd.innerHTML);
 			}
-			// Enter whatever nodes the browser added to display text/plain; see [DESIGN_4780 JS:
+			// Enter whatever nodes the browser added to display text/plain; see [DOC:4780 JS:
 			// AsyncRequest: IFrame quirks] for details.
 			while (Ql.DOM._getNodeType(nd) != Node.TEXT_NODE) {
 				nd = nd.lastChild;
 			}
 			// Move to the first sibling.
 			nd = nd.parentNode.firstChild;
-			// Some browsers break down long text nodes in smaller chunks; again, see [DESIGN_4780 JS:
+			// Some browsers break down long text nodes in smaller chunks; again, see [DOC:4780 JS:
 			// AsyncRequest: IFrame quirks].
 			sResponse = "";
 			do {

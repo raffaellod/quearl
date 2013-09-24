@@ -30,11 +30,11 @@ require_once 'main.php';
 # Classes
 
 
-/** DESIGN_5010 Local root path
+/** DOC:5010 Local root path
 
 Quearl has two root paths: a local one and a remote one. The local root path is the one Quearl has
 been deployed to; the remote root path is the root for all the URLs that Quearl will provide
-contents for (see also [DESIGN_5011 Remote root path]).
+contents for (see also [DOC:5011 Remote root path]).
 
 Quearl is designed to be deployed to any location within the domain’s web server root; the default
 name of the local root folder is “quearl”, but since all paths within Quearl are relative, this can
@@ -42,11 +42,11 @@ be changed by modifying the URL rewriting rule in the web server root to refer t
 location of module/core/main.php (see htaccess.example).
 */
 
-/** DESIGN_5011 Remote root path
+/** DOC:5011 Remote root path
 
 Quearl has two root paths: a local one and a remote one. The local root path is the one Quearl has
-been deployed to (see also [DESIGN_5010 Local root path]); the remote root path is the root for all
-the URLs that Quearl will provide contents for.
+been deployed to (see also [DOC:5010 Local root path]); the remote root path is the root for all the
+URLs that Quearl will provide contents for.
 
 If the remote root path is configured to be “/” (the host’s root directory), Quearl will respond to
 every request received by the web host; this is the default for a clean installation. The remote
@@ -62,11 +62,11 @@ In order to configure the remote root path:
 	path.
 */
 
-/** DESIGN_5015 Static files
+/** DOC:5015 Static files
 
 Due to the amount of resources (CPU, database connection, sessions, locking, and of course time)
 used up to serve each HTTP request for dynamic content, and because Quearl processes every file
-request within its installation remote root path (see [DESIGN_5011 Remote root path]), Quearl has a
+request within its installation remote root path (see [DOC:5011 Remote root path]), Quearl has a
 separate subpath for “fast-lane” files, referred to as “static files” to distinguish them from
 dynamic content (though static files are not necessarily static - keep on reading).
 
@@ -91,7 +91,7 @@ are handled in full by a single module, so once a module generates a response, n
 know about it.
 
 To guarantee the fastest execution, QlModule::handle_static_request() is invoked before most Quearl
-services are made available; the only one that can be relied upon is QlApplication (see [DESIGN_8261
+services are made available; the only one that can be relied upon is QlApplication (see [DOC:8261
 QlApplication]). This means that no session data is available, and no database connection is
 established yet.
 
@@ -350,7 +350,7 @@ abstract class QlModule {
 	static file. If the module won’t handle the request, it must return null.
 
 	Note: this method is called before QlModule::init(), so extra attention must be made to avoid
-	trying to access resources that are not yet available (e.g. QlDb, QlSession). See [DESIGN_5015
+	trying to access resources that are not yet available (e.g. QlDb, QlSession). See [DOC:5015
 	Static files] for more information.
 
 	QlRequest $request

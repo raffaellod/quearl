@@ -25,9 +25,9 @@ see <http://www.gnu.org/licenses/>.
 // Ql.SelectorEval
 
 /** Provides evaluation of selector-like expressions, in a subset of the Selectors1 specification;
-see [DESIGN_1136 JS: Ql.SelectorEval.evaluate()] for the allowed selectors. Will take advantage of
+see [DOC:1136 JS: Ql.SelectorEval.evaluate()] for the allowed selectors. Will take advantage of
 Selectors1.NodeSelector.querySelectAll() or HTML5.HTMLDocument.getElementsByClassName() and
-HTML5.HTMLElement.getElementsByClassName() if available; see also [DESIGN_1139 JS: Ql.SelectorEval
+HTML5.HTMLElement.getElementsByClassName() if available; see also [DOC:1139 JS: Ql.SelectorEval
 optimizations]
 
 The rules employed are largely based on <http://www.w3.org/TR/css3-selectors/#w3cselgrammar>, with
@@ -64,7 +64,7 @@ Ql.SelectorEval.STRING1/*:RegExp*/ = /^'([^\n\f\r']*)'/;
 Ql.SelectorEval.STRING2/*:RegExp*/ = /^"([^\n\f\r"]*)"/;
 
 
-/** DESIGN_1136 JS: Ql.SelectorEval.evaluate()
+/** DOC:1136 JS: Ql.SelectorEval.evaluate()
 
 The Ql.DOM.Dokelement.select() method accepts a selector expression constructed according to the
 Selectors 1 API. The allowed selectors are (see <http://www.w3.org/TR/css3-selectors/>):
@@ -154,11 +154,11 @@ function $Ql$SelectorEval$evaluate(ndRoot, sSel) {
 Ql.SelectorEval.prototype.evaluate = $Ql$SelectorEval$evaluate;
 
 
-/** DESIGN_1138 JS: Ql.SelectorEval.evaluateUp()
+/** DOC:1138 JS: Ql.SelectorEval.evaluateUp()
 
 The Ql.SelectorEval.evaluateUp() method (implementation of Ql.DOM.Node.selectAncestor()) applies a
 selector expression against the ancestors of a node, returning the first full match; this makes it a
-reverse-direction counterpart to [DESIGN_1136 JS: Ql.SelectorEval.evaluate()].
+reverse-direction counterpart to [DOC:1136 JS: Ql.SelectorEval.evaluate()].
 
 Due to the limited scope and use-cases, the accepted syntax is very limited:
 
@@ -172,7 +172,7 @@ Due to the limited scope and use-cases, the accepted syntax is very limited:
 */
 
 /** Evaluates a selector-like expression, applying it to the parents of the specified node, instead
-of its children. See [DESIGN_1138 JS: Ql.SelectorEval.evaluateUp()] for the supported syntax.
+of its children. See [DOC:1138 JS: Ql.SelectorEval.evaluateUp()] for the supported syntax.
 
 TODO: namespace support!
 
@@ -224,7 +224,7 @@ function $Ql$SelectorEval$toString() {
 Ql.SelectorEval.prototype.toString = $Ql$SelectorEval$toString;
 
 
-/** DESIGN_1139 JS: Ql.SelectorEval optimizations
+/** DOC:1139 JS: Ql.SelectorEval optimizations
 
 Even though at <http://www.w3.org/TR/css3-selectors/#universal-selector> it’s stated that the lack
 of a type_selector token (an element name specifier) should be treated as a type_selector of value

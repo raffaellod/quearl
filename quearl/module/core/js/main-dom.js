@@ -25,7 +25,7 @@ see <http://www.gnu.org/licenses/>.
 // DOM enhancement classes
 
 
-/** DESIGN_7850 JS: DOM: Wrappers
+/** DOC:7850 JS: DOM: Wrappers
 
 A DOM wrapper enhances (and hides the bugs of) a browser-defined DOM Node. Thin wrappers are defined
 for most standard HTML element types, and they mostly add minor helper methods and bug fixes to
@@ -47,12 +47,12 @@ that clients won’t need to explicitly create them. Clients should always store
 plain DOM objects.
 
 A Ql.DOM.Element wrapper can be locked on necessity, so that any other requests for wrappers on its
-wrapped object will be satisfied by the very same object. See [DESIGN_7853 JS: DOM: Wrappers: Locks]
+wrapped object will be satisfied by the very same object. See [DOC:7853 JS: DOM: Wrappers: Locks]
 for more information on wrapper locks and for details on how a wrapper is really instantiated when
 e.g. Ql.DOM.document.createElement() is invoked.
 */
 
-/** DESIGN_7853 JS: DOM: Wrappers: Locks
+/** DOC:7853 JS: DOM: Wrappers: Locks
 
 Locking a wrapper can be helpful for elements which are going to be used frequently, avoiding new
 temporary wrappers to be created over and over again.
@@ -193,7 +193,7 @@ Ql.DOM.namespaces/*:Object(String+)*/ = {
 Ql.DOM.document/*:Ql.DOM.Document*/ = null;
 
 
-/** DESIGN_9384 JS: DOM: Static methods
+/** DOC:9384 JS: DOM: Static methods
 
 Several Ql.DOM.Node.*() methods have a static counterpart in Ql.DOM._*(), which helps avoiding
 wrapping an object when only one method is to be called on it; it also prevents Quearl internal code
@@ -756,7 +756,7 @@ function $Ql$DOM$Node$replaceChild(ndNew, ndOld) {
 Ql.DOM.Node.prototype.replaceChild = $Ql$DOM$Node$replaceChild;
 
 
-/** Returns the first ancestor node matching the specified selector. See [DESIGN_1138 JS:
+/** Returns the first ancestor node matching the specified selector. See [DOC:1138 JS:
 Ql.SelectorEval.evaluateUp()] for details on the supported subset of the Selectors 1 API syntax.
 
 TODO: namespace support!
@@ -895,8 +895,8 @@ function $Ql$DOM$Dokelement$getTextContent() {
 Ql.DOM.Dokelement.prototype.getTextContent = $Ql$DOM$Dokelement$getTextContent;
 
 
-/** Evaluates a selector-like expression. See the documentation of the implementation, [DESIGN_1136
-JS: Ql.SelectorEval.evaluate()], for more information and for the supported syntax.
+/** Evaluates a selector-like expression. See the documentation of the implementation, [DOC:1136 JS:
+Ql.SelectorEval.evaluate()], for more information and for the supported syntax.
 
 sSel:String
 	Selector to be evaulated.
@@ -962,7 +962,7 @@ Ql.DOM.Document.prototype._sm_mapBuiltinLists/*:Object(String*)*/ = {
 };
 
 
-/** DESIGN_8067 JS: DOM: Page loading events
+/** DOC:8067 JS: DOM: Page loading events
 
 With Quearl, two distinct “page loaded” events are provided: earlyload and lateload. Both are fired
 by the Ql.DOM.document object, and occur at two possibly different page loading stages; their order
@@ -983,11 +983,11 @@ or requesting a computed CSS property value.
 */
 
 /** Notifies that the DOM tree is completely loaded and usable, and every Ql module has been
-initialized; see [DESIGN_8067 JS: DOM: Page loading events] for more details. */
+initialized; see [DOC:8067 JS: DOM: Page loading events] for more details. */
 Ql.EventTarget.declareEvent(Ql.DOM.Document, "earlyload");
 
-/** Notifies that the page is completely loaded, including external entities; see [DESIGN_8067 JS:
-DOM: Page loading events] for more details. */
+/** Notifies that the page is completely loaded, including external entities; see [DOC:8067 JS: DOM:
+Page loading events] for more details. */
 Ql.EventTarget.declareEvent(Ql.DOM.Document, "lateload");
 
 
@@ -1762,8 +1762,8 @@ function $Ql$DOM$Element$removeStyle(sName) {
 Ql.DOM.Element.prototype.removeStyle = $Ql$DOM$Element$removeStyle;
 
 
-/** See Ql.DOM.Dokelement.select(), or [DESIGN_1136 JS: Ql.SelectorEval.evaluate()] for the
-supported sytax.
+/** See Ql.DOM.Dokelement.select(), or [DOC:1136 JS: Ql.SelectorEval.evaluate()] for the supported
+sytax.
 
 An additional, non-standard selector is allowed:
 
@@ -3207,8 +3207,8 @@ Ql.DOM.TextAreaInput.prototype._sClassName/*:String*/ = "Ql.DOM.TextAreaInput";
 
 
 /** Initializes the page as soon as the DOM tree has been fully loaded; it is also (possibly, only)
-invoked during a load event. It fires the earlyload and/or lateload events; see [DESIGN_8067 JS:
-DOM: Page loading events] for information on these.
+invoked during a load event. It fires the earlyload and/or lateload events; see [DOC:8067 JS: DOM:
+Page loading events] for information on these.
 
 sSource:String
 	Type of the event that triggered the call to this function.

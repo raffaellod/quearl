@@ -510,8 +510,8 @@ class QlCoreModule extends QlModule {
 		$arrModules =& QlModule::get_loaded_modules();
 
 		if ($request->is_url_static_file()) {
-			# If this is a request for a static file (see [DESIGN_5015 Static files]), ask each module
-			# to respond to it.
+			# If this is a request for a static file (see [DOC:5015 Static files]), ask each module to
+			# respond to it.
 			foreach ($arrModules as $module) {
 				$ent = $module->handle_static_request($request, $response);
 				# Unlike regular responses, static responses are handled in full by a single module, so
