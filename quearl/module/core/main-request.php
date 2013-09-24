@@ -57,6 +57,8 @@ class QlRequest {
 	private /*int*/ $m_iClientType;
 	/** Map of header field names => values. */
 	private /*array<string => mixed>*/ $m_arrHeaderFields;
+	/** true if the request is for a static file (see [DESIGN_5015 Static files]). */
+	private /*int*/ $m_bStaticUrl;
 	/** Requested URL. */
 	private /*string*/ $m_sUrl;
 	/** Scheme component of the requested URL. */
@@ -100,8 +102,23 @@ class QlRequest {
 		}
 
 		$this->m_arrHeaderFields = array();
+		$this->m_bStaticUrl = false;
 
 		$this->m_sUrl = $_SERVER['REQUEST_URI'];
+		# If this server is also serving static files (see [DESIGN_5015 Static files]) and…
+		global $_APP;
+		if (
+			$_APP['core']['static_host'] == '' ||
+			$_APP['core']['static_host'] == $_SERVER['HTTP_HOST']
+		) {
+			$cchStaticRoot = strlen($_APP['core']['static_root_rpath']);
+			# …the requested URL is in the static files directory…
+			if (strncmp($this->m_sUrl, $_APP['core']['static_root_rpath'], $cchStaticRoot) == 0) {
+				# …strip the static root, but remember that this is a request for a static file.
+				$this->m_sUrl = substr($this->m_sUrl, $cchStaticRoot);
+				$this->m_bStaticUrl = true;
+			}
+		}
 
 		# Protocol through which this request was made (http or https).
 		if (
@@ -119,7 +136,6 @@ class QlRequest {
 		$this->m_iClientType = QL_CLIENTTYPE_USER;
 		if ($this->m_sUserAgent != '') {
 			# Detect search engine bots.
-			global $_APP;
 			$sBotList = file_get_contents($_APP['core']['rodata_lpath'] . 'core/robotuseragents.txt');
 			if (strpos($sBotList, "\n" . $this->m_sUserAgent . "\n") !== false) {
 				$this->m_iClientType = QL_CLIENTTYPE_CRAWLER;
@@ -187,6 +203,17 @@ class QlRequest {
 	*/
 	public function get_user_agent() {
 		return $this->m_sUserAgent;
+	}
+
+
+	/** Returns true if the request is for a static file (see [DESIGN_5015 Static files]), or false
+	otherwise.
+
+	bool return
+		true if the request is for a static file.
+	*/
+	public function is_url_static_file() {
+		return $this->m_bStaticUrl;
 	}
 
 

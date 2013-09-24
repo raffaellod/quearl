@@ -509,33 +509,20 @@ class QlCoreModule extends QlModule {
 		# Notice that this variable is a reference, so it will stay up-to-date.
 		$arrModules =& QlModule::get_loaded_modules();
 
-		# If this server is also serving static files (see [DESIGN_5015 Static files]) and…
-		if (
-			$_APP['core']['static_host'] == '' ||
-			$_APP['core']['static_host'] == $_SERVER['HTTP_HOST']
-		) {
-			# …the requested URL is in the static files directory…
-			if (strncmp(
-				$_SERVER['REQUEST_URI'],
-				$_APP['core']['static_root_rpath'],
-				strlen($_APP['core']['static_root_rpath'])
-			) == 0) {
-				# …ask each module to serve this requested static file.
-				$request->set_url(substr(
-					$_SERVER['REQUEST_URI'], strlen($_APP['core']['static_root_rpath'])
-				));
-				foreach ($arrModules as $module) {
-					$ent = $module->handle_static_request($request, $response);
-					# Unlike regular responses, static responses are handled in full by a single module,
-					# so if this module instantiated a response entity, stop now.
-					if ($ent) {
-						return $ent;
-					}
+		if ($request->is_url_static_file()) {
+			# If this is a request for a static file (see [DESIGN_5015 Static files]), ask each module
+			# to respond to it.
+			foreach ($arrModules as $module) {
+				$ent = $module->handle_static_request($request, $response);
+				# Unlike regular responses, static responses are handled in full by a single module, so
+				# if this module instantiated a response entity, stop now.
+				if ($ent) {
+					return $ent;
 				}
-				# If we’re still here, no module knows how to respond to the request for this URL as a
-				# static resource. Fall through to let them process this as a request for a regular
-				# resource.
 			}
+			# If we’re still here, no module knows how to respond to the request for this URL as a
+			# static resource. Fall through to let them process this as a request for a regular
+			# resource.
 		}
 
 
