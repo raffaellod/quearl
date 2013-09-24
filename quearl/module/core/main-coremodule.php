@@ -349,7 +349,7 @@ class QlCoreModule extends QlModule {
 	}
 
 
-	/** Initializes Quearl and processeses the request, generating and sending a response. Does not
+	/** Initializes Quearl and processes the request, generating and sending a response. Does not
 	return.
 	*/
 	public static function main() {
@@ -361,9 +361,8 @@ class QlCoreModule extends QlModule {
 
 
 	/** Initializes the environment for Quearl: enforces required PHP settings, figures out the
-	installation’s directory structure, instantiates QlApplication (loading at least the bootstrap
-	part of the “core” section, which provides more path information), and loads all the configured
-	modules.
+	installation’s directory structure and instantiates QlApplication (loading at least the bootstrap
+	part of the “core” section, which provides more path information).
 	*/
 	private static function main_init() {
 		# Required settings.
@@ -477,8 +476,27 @@ class QlCoreModule extends QlModule {
 		# Like RFULLPATH, but may include “fixed” query string parameters (e.g. doc?id=927), which
 		# will be set at a later point.
 		$_SERVER['RFULLPATHQ'] = $_SERVER['RFULLPATH'];
+	}
+
+
+	/** Quearl execution stage: initializes request and response objects, loads all the configured
+	modules, possibly responds to HTTP requests for static files; sets up a database connection,
+	authenticates the user, initializes all modules, and responds the HTTP request.
+
+	QlResponseEntity return
+		Generated response entity.
+	*/
+	private static function main_run() {
+		# Initialize the request and response objects.
+		$request = new QlRequest();
+		$response = new QlResponse($request);
+		$ent = QlSession::discard_get_sid_if_redundant($request, $response);
+		if ($ent) {
+			return $ent;
+		}
 
 		# Load all the modules.
+		global $_APP;
 		foreach ($_APP['core']['load_modules'] as $sModule) {
 			if ($sModule == 'core') {
 				# We don’t need to include anything for the “core” module, just instantiate it.
@@ -488,31 +506,10 @@ class QlCoreModule extends QlModule {
 				require_once '../' . $sModule . '/main.php';
 			}
 		}
-	}
-
-
-	/** Quearl execution stage: adds a few useful variables to $_SERVER, possibly responds to HTTP
-	requests for static files; sets up a database connection, authenticates the user, initializes all
-	modules, and responds the HTTP request.
-
-	QlResponseEntity return
-		Generated response entity.
-	*/
-	private static function main_run() {
 		# Notice that this variable is a reference, so it will stay up-to-date.
 		$arrModules =& QlModule::get_loaded_modules();
 
-
-		# Initialize the request and response objects.
-		$request = new QlRequest();
-		$response = new QlResponse($request);
-		$ent = QlSession::discard_get_sid_if_redundant($request, $response);
-		if ($ent) {
-			return $ent;
-		}
-
 		# If this server is also serving static files (see [DESIGN_5015 Static files]) and…
-		global $_APP;
 		if (
 			$_APP['core']['static_host'] == '' ||
 			$_APP['core']['static_host'] == $_SERVER['HTTP_HOST']
