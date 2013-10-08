@@ -40,5 +40,5 @@ other software:
    the subdirectory name. (Note that the quearl subdirectory may be renamed, so
    use the name it was changed to if that’s the case.)
 
-See [DESIGN_5011 Remote root path] for more information.
+See [DOC:5011 Remote root path] for more information.
 
