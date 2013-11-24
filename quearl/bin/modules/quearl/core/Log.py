@@ -46,6 +46,12 @@ class Logger(object):
       pass
 
 
+   def __call__(self, *args, **kwargs):
+      """Shorthand for write(). See Logger.write()."""
+
+      return self.write(*args, **kwargs)
+
+
    @staticmethod
    def enc(s):
       """Converts characters forbidden or deprecated in XML to XML entities. Similar to
