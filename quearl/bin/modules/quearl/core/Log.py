@@ -38,7 +38,7 @@ class Logger(object):
 
    def __init__(self, app):
       """Constructor.
-      
+
       quearl.core.Application app
          Application instance.
       """

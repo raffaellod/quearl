@@ -42,5 +42,7 @@ s += sys.stdin.read()
 
 
 sys.path.append(os.path.abspath(os.environ['QUEARL_REL_PATH']))
+from modules.quearl.core import Application
 
 http_write(s)
+
