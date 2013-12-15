@@ -42,7 +42,7 @@ class l10n_generator(object):
 		"""
 
 		sL10nDir = module.l10n_dir()
-		if sL10nDir == None:
+		if sL10nDir is None:
 			# This module has no localization files.
 			return
 
@@ -87,7 +87,7 @@ class l10n_generator(object):
 				pass
 
 			# Make sure we read and processed the source .l10n file…
-			if dictL10nEntries == None:
+			if dictL10nEntries is None:
 				# …and if we didn’t, do it now.
 				sys.stdout.write('Processing l10n file {}\n'.format(sL10nFileName))
 				dictL10nEntries = cls.parse_l10n(sL10nFileName)
